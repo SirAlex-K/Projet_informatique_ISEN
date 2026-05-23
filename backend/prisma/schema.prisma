@@ -1,0 +1,225 @@
+// ============================================
+// Prisma Schema — Plateforme Projets ISEN 2026
+// BDD : PostgreSQL  |  ORM : Prisma
+// Conforme au Cahier des Charges v2
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUM : rôles utilisateurs
+// ============================================
+enum UserRole {
+  student
+  supervisor
+}
+
+// ============================================
+// ENUM : statuts de projet
+// ============================================
+enum ProjectStatut {
+  actif
+  en_pause
+  termine
+}
+
+// ============================================
+// ENUM : colonnes Kanban (4 colonnes fixes)
+// ============================================
+enum CardStatut {
+  todo      // À faire
+  en_cours  // En cours
+  done      // Terminé
+  bloque    // Bloqué
+}
+
+// ============================================
+// ENUM : priorité des cartes
+// ============================================
+enum Priorite {
+  basse
+  normale
+  haute
+}
+
+// ============================================
+// ENUM : rôle dans l'équipe
+// ============================================
+enum RoleInProject {
+  member
+  lead
+}
+
+
+// ============================================
+// MODEL : users
+// Table centrale — étudiants et encadrants
+// différenciés par le champ "role"
+// ============================================
+model User {
+  id            Int       @id @default(autoincrement())
+  nom           String    @db.VarChar(100)
+  prenom        String    @db.VarChar(100)
+  email         String    @unique @db.VarChar(150)
+  password_hash String
+  role          UserRole  @default(student)
+  avatar_url    String?
+  created_at    DateTime  @default(now())
+
+  // Relations
+  projects_supervised Project[]    @relation("SupervisorProjects")
+  team_memberships    TeamMember[]
+  kanban_cards        KanbanCard[] @relation("AssignedCards")
+  deliverables        Deliverable[]
+  messages_sent       Message[]
+  card_history        CardHistory[]
+
+  @@map("users")
+}
+
+
+// ============================================
+// MODEL : projects
+// Chaque projet est lié à un encadrant (supervisor)
+// ============================================
+model Project {
+  id            Int            @id @default(autoincrement())
+  titre         String         @db.VarChar(200)
+  description   String?
+  supervisor_id Int
+  date_debut    DateTime?      @db.Date
+  date_fin      DateTime?      @db.Date
+  statut        ProjectStatut  @default(actif)
+  created_at    DateTime       @default(now())
+
+  // Relations
+  supervisor    User           @relation("SupervisorProjects", fields: [supervisor_id], references: [id], onDelete: Cascade)
+  members       TeamMember[]
+  kanban_cards  KanbanCard[]
+  deliverables  Deliverable[]
+  messages      Message[]
+
+  @@map("projects")
+}
+
+
+// ============================================
+// MODEL : team_members
+// Table pivot N:N — un étudiant peut être
+// dans plusieurs projets, avec un rôle
+// ============================================
+model TeamMember {
+  project_id      Int
+  user_id         Int
+  role_in_project RoleInProject @default(member)
+  joined_at       DateTime      @default(now())
+
+  // Relations
+  project         Project       @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // Clé primaire composite : un user ne peut être qu'une fois dans un projet
+  @@id([project_id, user_id])
+  @@map("team_members")
+}
+
+
+// ============================================
+// MODEL : kanban_cards
+// Cœur du suivi — cartes Kanban avec
+// 4 colonnes fixes, drag & drop (position)
+// Seul l'encadrant peut déplacer les cartes
+// ============================================
+model KanbanCard {
+  id          Int        @id @default(autoincrement())
+  project_id  Int
+  assigned_to Int?
+  titre       String     @db.VarChar(200)
+  description String?
+  statut      CardStatut @default(todo)
+  priorite    Priorite   @default(normale)
+  deadline    DateTime?  @db.Date
+  position    Int        @default(0)   // ordre dans la colonne (drag & drop)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  // Relations
+  project     Project    @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  assignee    User?      @relation("AssignedCards", fields: [assigned_to], references: [id], onDelete: SetNull)
+  history     CardHistory[]
+
+  @@map("kanban_cards")
+}
+
+
+// ============================================
+// MODEL : deliverables
+// Dépôt de fichiers (Multer) — max 10MB
+// Formats : PDF, ZIP, DOCX, PNG, JPG
+// On stocke les métadonnées, pas le fichier
+// ============================================
+model Deliverable {
+  id             Int      @id @default(autoincrement())
+  project_id     Int
+  uploaded_by    Int
+  nom_fichier    String   @db.VarChar(255)
+  chemin_fichier String                        // chemin serveur ex: /uploads/rapport.pdf
+  type_fichier   String   @db.VarChar(50)      // ex: application/pdf, image/png
+  taille         Int                           // taille en octets
+  uploaded_at    DateTime @default(now())
+
+  // Relations
+  project        Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  uploader       User     @relation(fields: [uploaded_by], references: [id], onDelete: Cascade)
+
+  @@map("deliverables")
+}
+
+
+// ============================================
+// MODEL : messages
+// Chat par projet — polling toutes les 5s (v1)
+// Chaque projet = un canal de discussion
+// ============================================
+model Message {
+  id         Int      @id @default(autoincrement())
+  project_id Int
+  sender_id  Int
+  contenu    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  // Relations
+  project    Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  sender     User     @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+
+// ============================================
+// MODEL : card_history
+// Historique des déplacements de cartes Kanban
+// Qui a bougé quelle carte, depuis quel statut
+// ============================================
+model CardHistory {
+  id             Int        @id @default(autoincrement())
+  card_id        Int
+  changed_by     Int
+  ancien_statut  CardStatut
+  nouveau_statut CardStatut
+  changed_at     DateTime   @default(now())
+
+  // Relations
+  card           KanbanCard @relation(fields: [card_id], references: [id], onDelete: Cascade)
+  user           User       @relation(fields: [changed_by], references: [id], onDelete: Cascade)
+
+  @@map("card_history")
+}

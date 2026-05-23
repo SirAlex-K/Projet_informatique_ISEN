@@ -1,22 +1,31 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// Routes (à connecter au fur et à mesure)
-// app.use('/api/auth', require('./src/routes/auth.routes'));
-// app.use('/api/projects', require('./src/routes/projects.routes'));
-// app.use('/api/tasks', require('./src/routes/tasks.routes'));
-// app.use('/api/teams', require('./src/routes/teams.routes'));
-// app.use('/api/deliverables', require('./src/routes/deliverables.routes'));
-// app.use('/api/dashboard', require('./src/routes/dashboard.routes'));
+// Servir les fichiers uploadés statiquement
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Routes
+app.use('/api/auth',       require('./src/routes/auth.routes'));
+app.use('/api/projects',   require('./src/routes/projects.routes'));
+app.use('/api/projects',   require('./src/routes/teams.routes'));
+app.use('/api/projects',   require('./src/routes/deliverables.routes'));
+app.use('/api',            require('./src/routes/kanban.routes'));
+app.use('/api',            require('./src/routes/messages.routes'));
+app.use('/api/dashboard',  require('./src/routes/dashboard.routes'));
+
+// Route de test
 app.get('/', (req, res) => {
-  res.json({ message: 'API Plateforme Projets ISEN — opérationnelle' });
+  res.json({ message: 'API Plateforme Projets ISEN — opérationnelle ✅' });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Serveur démarré sur http://localhost:${PORT}`);
+});
