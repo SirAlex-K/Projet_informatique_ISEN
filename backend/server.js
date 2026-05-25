@@ -7,39 +7,16 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Auth
 app.use('/api/auth',          require('./src/routes/auth.routes'));
-
-// Projets, équipes, livrables
 app.use('/api/projects',      require('./src/routes/projects.routes'));
-app.use('/api/projects',      require('./src/routes/teams.routes'));
-app.use('/api/projects',      require('./src/routes/deliverables.routes'));
-
-// Tâches (Kanban)
-app.use('/api',               require('./src/routes/tasks.routes'));
-
-// Commentaires
-app.use('/api',               require('./src/routes/comments.routes'));
-
-// Jalons
-app.use('/api',               require('./src/routes/milestones.routes'));
-
-// Messages
-app.use('/api',               require('./src/routes/messages.routes'));
-
-// Notifications
+app.use('/api/tasks',         require('./src/routes/tasks.routes'));
+app.use('/api/milestones',    require('./src/routes/milestones.routes'));
+app.use('/api/comments',      require('./src/routes/comments.routes'));
+app.use('/api/deliverables',  require('./src/routes/deliverable_reviews.routes'));
+app.use('/api/evaluations',   require('./src/routes/evaluations.routes'));
 app.use('/api/notifications', require('./src/routes/notifications.routes'));
-
-// Validation livrables
-app.use('/api',               require('./src/routes/deliverable_reviews.routes'));
-
-// Évaluations soutenance
-app.use('/api',               require('./src/routes/evaluations.routes'));
-
-// Dashboard
 app.use('/api/dashboard',     require('./src/routes/dashboard.routes'));
 
 app.get('/', (req, res) => {

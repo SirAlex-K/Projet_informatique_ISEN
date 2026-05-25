@@ -1,13 +1,14 @@
 const router = require('express').Router();
-const { getTasks, createTask, updateTask, moveTask, deleteTask, getTaskHistory } = require('../controllers/taskController');
 const auth = require('../middlewares/auth.middleware');
 const role = require('../middlewares/role.middleware');
+const { updateTask, moveTask, deleteTask, getTaskHistory } = require('../controllers/taskController');
+const { getTaskComments }                                  = require('../controllers/commentController');
 
-router.get('/projects/:id/tasks',          auth, getTasks);
-router.post('/projects/:id/tasks',         auth, role('supervisor', 'team_leader'), createTask);
-router.put('/tasks/:id',                   auth, role('supervisor', 'team_leader'), updateTask);
-router.put('/tasks/:id/move',              auth, role('supervisor', 'team_leader'), moveTask);
-router.delete('/tasks/:id',               auth, role('supervisor', 'team_leader'), deleteTask);
-router.get('/tasks/:id/history',           auth, getTaskHistory);
+// /api/tasks/:id
+router.put('/:id',          auth, role('supervisor', 'team_leader'), updateTask);
+router.put('/:id/move',     auth, role('supervisor', 'team_leader'), moveTask);
+router.delete('/:id',       auth, role('supervisor', 'team_leader'), deleteTask);
+router.get('/:id/history',  auth, getTaskHistory);
+router.get('/:id/comments', auth, getTaskComments);
 
 module.exports = router;
