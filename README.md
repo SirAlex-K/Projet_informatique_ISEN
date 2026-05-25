@@ -7,9 +7,11 @@
 
 ## Objectif
 
-Proposer une application web permettant :
-- aux **encadrants** de superviser, suivre et piloter l'ensemble des projets étudiants grâce à une vision globale et des indicateurs d'avancement
-- aux **étudiants** de collaborer, s'organiser et suivre la progression de leurs projets de manière structurée
+Application web permettant :
+- aux **encadrants** de superviser, suivre et piloter l'ensemble des projets étudiants
+- aux **étudiants** de collaborer, s'organiser et suivre la progression de leurs projets
+- au **jury** de noter les soutenances
+- aux **chefs de projet** de coordonner leur équipe
 
 ---
 
@@ -19,22 +21,27 @@ Proposer une application web permettant :
 |---|---|
 | Frontend | React + Vite + TypeScript |
 | Backend | Node.js + Express |
-| Base de données | MySQL |
-| Authentification | JWT + bcrypt |
-| Upload fichiers | Multer |
+| Base de données | PostgreSQL |
+| ORM | Prisma |
+| Authentification | JWT + bcryptjs |
+| Upload fichiers | Multer (max 10MB) |
 | État global | Zustand |
 | Routage | React Router v6 |
 
 ---
 
-## Fonctionnalités clés
+## Fonctionnalités (conformes au CDC)
 
-- **Gestion des projets & équipes** — création, membres, encadrants
-- **Suivi des tâches** — statuts (todo / en cours / done), priorités, deadlines, assignation
-- **Tableau de bord encadrant** — vue globale, indicateurs d'avancement, graphiques
-- **Upload de livrables** — dépôt de fichiers PDF/ZIP par projet
-- **Commentaires** — fil de discussion par projet ou par tâche
-- **Authentification par rôle** — étudiant / encadrant avec JWT
+- **4 rôles** — étudiant, chef de projet, encadrant, jury (CDC §2)
+- **Gestion des projets** — 7 statuts : proposé → validé → en cours → en retard → livré → soutenu → clôturé (CDC §3)
+- **Suivi des tâches** — 3 statuts : à faire / en cours / terminé, priorités, deadlines, historique (CDC §4)
+- **Jalons** — dates cibles, marquage atteint/non atteint (CDC §4)
+- **Commentaires** — par projet ou par tâche (CDC §5)
+- **Messagerie** — chat par projet (CDC §5)
+- **Notifications** — alertes automatiques : tâche assignée, livrable déposé, jalon atteint... (CDC §5)
+- **Livrables** — dépôt fichiers PDF/ZIP/DOCX, validation encadrant (accepté/rejeté/révision) (CDC §6)
+- **Évaluations** — notes de soutenance par le jury (0–20) (CDC §7)
+- **Dashboard** — vue globale encadrant avec indicateurs d'avancement
 
 ---
 
@@ -43,18 +50,46 @@ Proposer une application web permettant :
 ```
 projet/
 ├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma     # 12 modèles PostgreSQL
+│   │   └── seed.js           # données de test (5 users, 4 rôles)
 │   ├── src/
-│   │   ├── controllers/      # authController, projectController, taskController...
-│   │   ├── models/           # User, Project, Task, TeamMember, Deliverable, Comment
-│   │   ├── routes/           # auth, projects, tasks, teams, deliverables, dashboard
-│   │   ├── middlewares/      # auth.middleware (JWT), role.middleware, upload.middleware
-│   │   └── config/           # database.js (MySQL), jwt.js
-│   ├── db/
-│   │   ├── schema.sql        # CREATE TABLE
-│   │   └── seed.sql          # données de test
-│   ├── .env                  # DB_HOST, JWT_SECRET (non versionné)
+│   │   ├── controllers/
+│   │   │   ├── authController.js
+│   │   │   ├── projectController.js
+│   │   │   ├── teamController.js
+│   │   │   ├── taskController.js
+│   │   │   ├── deliverableController.js
+│   │   │   ├── deliverableReviewController.js
+│   │   │   ├── messageController.js
+│   │   │   ├── commentController.js
+│   │   │   ├── milestoneController.js
+│   │   │   ├── notificationController.js
+│   │   │   ├── evaluationController.js
+│   │   │   └── dashboardController.js
+│   │   ├── routes/
+│   │   │   ├── auth.routes.js
+│   │   │   ├── projects.routes.js
+│   │   │   ├── teams.routes.js
+│   │   │   ├── tasks.routes.js
+│   │   │   ├── deliverables.routes.js
+│   │   │   ├── deliverable_reviews.routes.js
+│   │   │   ├── messages.routes.js
+│   │   │   ├── comments.routes.js
+│   │   │   ├── milestones.routes.js
+│   │   │   ├── notifications.routes.js
+│   │   │   ├── evaluations.routes.js
+│   │   │   └── dashboard.routes.js
+│   │   ├── middlewares/
+│   │   │   ├── auth.middleware.js    # JWT
+│   │   │   ├── role.middleware.js    # contrôle des rôles
+│   │   │   └── upload.middleware.js  # Multer
+│   │   └── config/
+│   │       ├── prisma.js
+│   │       └── jwt.js
+│   ├── .env                  # DATABASE_URL, JWT_SECRET (non versionné)
 │   ├── package.json
-│   └── server.js             # point d'entrée
+│   └── server.js
 │
 └── frontend/
     ├── src/
@@ -64,9 +99,9 @@ projet/
     │   │   ├── Sidebar.tsx
     │   │   ├── TaskCard.tsx
     │   │   └── ProjectCard.tsx
-    │   ├── pages/            # Login, Dashboard, Projects, Tasks, Team, Deliverables, SupervisorDash
-    │   ├── services/         # api.ts (axios), auth.service, projects.service, tasks.service
-    │   ├── store/            # authStore.ts, projectStore.ts (Zustand)
+    │   ├── pages/
+    │   ├── services/         # api.ts (axios)
+    │   ├── store/            # Zustand
     │   ├── App.tsx
     │   └── main.tsx
     ├── package.json
@@ -75,45 +110,46 @@ projet/
 
 ---
 
-## Schéma BDD (6 tables)
+## Schéma BDD — 12 tables
 
-```
-users           — id, nom, prenom, email, password_hash, role (student|supervisor), avatar_url, created_at
-projects        — id, titre, description, supervisor_id (FK→users), date_debut, date_fin, statut, created_at
-team_members    — project_id (FK), user_id (FK), role_in_project (member|lead), joined_at   [PK composite]
-tasks           — id, project_id (FK), assigned_to (FK→users), titre, description, statut, priorite, deadline
-deliverables    — id, project_id (FK), uploaded_by (FK→users), nom_fichier, chemin_fichier, uploaded_at
-comments        — id, project_id (FK), user_id (FK), task_id (FK NULL), contenu, created_at
-```
-
-**Relations :** `users` ←1:N→ `projects` (supervisor) · `users` ←N:N→ `projects` (via team_members) · `projects` ←1:N→ `tasks` · `projects` ←1:N→ `deliverables` · `projects` ←1:N→ `comments`
+| Table | Description |
+|---|---|
+| `users` | 4 rôles : student, team_leader, supervisor, jury |
+| `projects` | 7 statuts CDC |
+| `team_members` | Pivot N:N user ↔ project |
+| `tasks` | Tâches avec 3 statuts, priorité, deadline |
+| `task_history` | Historique des changements de statut |
+| `deliverables` | Fichiers déposés (métadonnées) |
+| `deliverable_reviews` | Validation encadrant : accepté/rejeté/révision |
+| `messages` | Chat par projet |
+| `comments` | Commentaires sur projets et tâches |
+| `milestones` | Jalons avec date cible |
+| `notifications` | Alertes système automatiques |
+| `evaluations` | Notes de soutenance par le jury |
 
 ---
 
-## API REST — Endpoints
+## API REST — Principaux endpoints
 
-| Méthode | Route | Description |
+| Méthode | Route | Rôles |
 |---|---|---|
-| POST | `/api/auth/register` | Créer un compte |
-| POST | `/api/auth/login` | Connexion → JWT |
-| GET | `/api/auth/me` | Profil connecté |
-| GET | `/api/projects` | Liste tous les projets |
-| POST | `/api/projects` | Créer un projet |
-| GET | `/api/projects/:id` | Détail d'un projet |
-| PUT | `/api/projects/:id` | Modifier un projet |
-| DELETE | `/api/projects/:id` | Supprimer un projet |
-| GET | `/api/projects/:id/tasks` | Tâches d'un projet |
-| POST | `/api/projects/:id/tasks` | Créer une tâche |
-| PUT | `/api/tasks/:id` | Modifier / changer statut |
-| DELETE | `/api/tasks/:id` | Supprimer une tâche |
-| GET | `/api/projects/:id/members` | Membres d'un projet |
-| POST | `/api/projects/:id/members` | Ajouter un membre |
-| DELETE | `/api/projects/:id/members/:uid` | Retirer un membre |
-| GET | `/api/projects/:id/deliverables` | Liste livrables |
-| POST | `/api/projects/:id/deliverables` | Upload fichier (multipart) |
-| DELETE | `/api/deliverables/:id` | Supprimer un livrable |
-| GET | `/api/dashboard/supervisor` | Vue globale encadrant |
-| GET | `/api/dashboard/project/:id` | Stats d'un projet |
+| POST | `/api/auth/register` | tous |
+| POST | `/api/auth/login` | tous |
+| GET/POST | `/api/projects` | auth / supervisor |
+| GET/PUT | `/api/projects/:id` | auth / supervisor |
+| GET/POST | `/api/projects/:id/members` | auth / supervisor |
+| GET/POST | `/api/projects/:id/tasks` | auth / supervisor, team_leader |
+| PUT | `/api/tasks/:id/move` | supervisor, team_leader |
+| GET/POST | `/api/projects/:id/milestones` | auth / supervisor |
+| PUT | `/api/milestones/:id/reach` | supervisor, team_leader |
+| GET/POST | `/api/projects/:id/deliverables` | auth |
+| POST | `/api/deliverables/:id/reviews` | supervisor |
+| GET/POST | `/api/projects/:id/comments` | auth |
+| GET/POST | `/api/messages/:projectId` | auth |
+| GET | `/api/notifications` | auth |
+| PUT | `/api/notifications/read-all` | auth |
+| GET/POST | `/api/projects/:id/evaluations` | auth / jury |
+| GET | `/api/dashboard` | auth |
 
 ---
 
@@ -122,18 +158,28 @@ comments        — id, project_id (FK), user_id (FK), task_id (FK NULL), conten
 ### Prérequis
 
 - Node.js ≥ 18
-- MySQL ≥ 8
-- npm ou pnpm
+- PostgreSQL ≥ 14
+- npm
 
 ### Backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env      # remplir DB_HOST, DB_USER, DB_PASS, DB_NAME, JWT_SECRET
-mysql -u root -p < db/schema.sql
-mysql -u root -p < db/seed.sql
-npm run dev
+
+# Créer le fichier .env
+cp .env.example .env
+# Remplir : DATABASE_URL="postgresql://user:password@localhost:5432/plateforme_projets"
+#           JWT_SECRET="votre_secret"
+
+# Appliquer le schéma BDD
+.\node_modules\.bin\prisma db push
+
+# Insérer les données de test
+node prisma/seed.js
+
+# Lancer le serveur
+node server.js
 ```
 
 ### Frontend
@@ -144,7 +190,19 @@ npm install
 npm run dev
 ```
 
-L'application est accessible sur `http://localhost:5173`, l'API sur `http://localhost:3000`.
+L'API est accessible sur `http://localhost:3000`, le frontend sur `http://localhost:5173`.
+
+---
+
+## Comptes de test
+
+| Email | Rôle | Mot de passe |
+|---|---|---|
+| dupont.marc@isen.fr | supervisor | password123 |
+| alex.komenan@isen.fr | team_leader | password123 |
+| etudiant1@isen.fr | student | password123 |
+| etudiant2@isen.fr | student | password123 |
+| jury1@isen.fr | jury | password123 |
 
 ---
 
@@ -155,19 +213,7 @@ L'application est accessible sur `http://localhost:5173`, l'API sur `http://loca
 | Phase 1 — Cadrage & Conception | 18 – 25 mai | Stack, BDD, arborescence, routes, planning |
 | Phase 2 — Développement Core | 26 mai – 8 juin | CRUD, Auth JWT, équipes, upload livrables |
 | Phase 3 — Dashboards & Tests | 9 – 15 juin | Dashboard encadrant, tests, corrections |
-| Phase 4 — Rapport & Soutenance | 16 – 24 juin | Rapport, slides, demo finale |
-
----
-
-## Équipe
-
-| Rôle | Responsabilités |
-|---|---|
-| Chef de projet | Coordination, suivi, rapport, slides soutenance |
-| Backend / BDD | API REST, schéma MySQL, auth JWT |
-| Frontend / UI | React, design system, intégration API |
-| Data / Dashboard | Graphiques, indicateurs, dashboard encadrant |
-| QA / Tests | Tests unitaires & intégration, revue de code |
+| Phase 4 — Rapport & Soutenance | 16 – 24 juin | Rapport, slides, démo finale |
 
 ---
 
@@ -175,16 +221,18 @@ L'application est accessible sur `http://localhost:5173`, l'API sur `http://loca
 
 - [x] Organisation de l'équipe & rôles
 - [x] Stack technique choisie
-- [x] Schéma BDD conçu (6 tables)
+- [x] Schéma BDD conçu — 12 tables, conformes au CDC
 - [x] Arborescence des fichiers définie
-- [x] Routes API définies (20+ endpoints)
-- [x] Planning 5 semaines établi
-- [ ] Init backend (Node.js + Express + MySQL)
+- [x] Routes API définies (30+ endpoints)
+- [x] Planning établi
+- [x] Init backend (Node.js + Express + PostgreSQL + Prisma)
+- [x] Authentification JWT (register / login)
+- [x] CRUD Projets & Tâches
+- [x] Gestion des équipes
+- [x] Upload de livrables (Multer)
+- [x] Jalons, commentaires, notifications, évaluations
+- [x] Données de test (seed)
 - [ ] Init frontend (React + Vite)
-- [ ] Authentification JWT
-- [ ] CRUD Projets & Tâches
-- [ ] Gestion des équipes
-- [ ] Upload de livrables (Multer)
 - [ ] Dashboard encadrant
 - [ ] Tests & corrections
 - [ ] Rapport & soutenance
