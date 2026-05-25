@@ -12,8 +12,8 @@
 |---|---|---|
 | `users` | 4 rôles : student, team_leader, supervisor, jury | §2 |
 | `projects` | 7 statuts : proposé → clôturé | §3 |
-| `team_members` | Pivot N:N user ↔ project | §2 |
-| `tasks` | Tâches (vue Kanban en bonus), 3 statuts | §4 |
+| `team_members` | Pivot N:N — un étudiant appartient à un seul projet | §2 |
+| `tasks` | Tâches, 3 statuts CDC | §4 |
 | `task_history` | Historique des changements de statut | §4 |
 | `deliverables` | Dépôt fichiers via Multer (max 10MB) | §6 |
 | `deliverable_reviews` | Validation encadrant : accepté/rejeté/révision | §6 |
@@ -61,7 +61,7 @@ accepte | rejete | revision
 backend/
 ├── prisma/
 │   ├── schema.prisma        ← 12 modèles
-│   └── seed.js              ← données de test (5 users, 1 projet, tâches...)
+│   └── seed.js              ← données de test (5 users, 4 rôles)
 ├── src/
 │   ├── config/
 │   │   ├── prisma.js
@@ -70,32 +70,29 @@ backend/
 │   │   ├── authController.js
 │   │   ├── projectController.js
 │   │   ├── teamController.js
-│   │   ├── taskController.js           ← (ex kanbanController)
+│   │   ├── taskController.js
 │   │   ├── deliverableController.js
-│   │   ├── deliverableReviewController.js  ← NOUVEAU
+│   │   ├── deliverableReviewController.js
 │   │   ├── messageController.js
-│   │   ├── commentController.js        ← NOUVEAU
-│   │   ├── milestoneController.js      ← NOUVEAU
-│   │   ├── notificationController.js   ← NOUVEAU
-│   │   ├── evaluationController.js     ← NOUVEAU
+│   │   ├── commentController.js
+│   │   ├── milestoneController.js
+│   │   ├── notificationController.js
+│   │   ├── evaluationController.js
 │   │   └── dashboardController.js
 │   ├── middlewares/
-│   │   ├── auth.middleware.js
-│   │   ├── role.middleware.js
-│   │   └── upload.middleware.js
+│   │   ├── auth.middleware.js      ← vérifie le JWT
+│   │   ├── role.middleware.js      ← vérifie le rôle (4 rôles)
+│   │   └── upload.middleware.js    ← Multer 10MB
 │   └── routes/
-│       ├── auth.routes.js
-│       ├── projects.routes.js
-│       ├── teams.routes.js
-│       ├── tasks.routes.js             ← (ex kanban.routes)
-│       ├── deliverables.routes.js
-│       ├── deliverable_reviews.routes.js  ← NOUVEAU
-│       ├── messages.routes.js
-│       ├── comments.routes.js          ← NOUVEAU
-│       ├── milestones.routes.js        ← NOUVEAU
-│       ├── notifications.routes.js     ← NOUVEAU
-│       ├── evaluations.routes.js       ← NOUVEAU
-│       └── dashboard.routes.js
+│       ├── auth.routes.js          → /api/auth
+│       ├── projects.routes.js      → /api/projects (+ membres, tâches, jalons, livrables, messages, commentaires, évaluations)
+│       ├── tasks.routes.js         → /api/tasks
+│       ├── milestones.routes.js    → /api/milestones
+│       ├── comments.routes.js      → /api/comments
+│       ├── deliverable_reviews.routes.js → /api/deliverables
+│       ├── evaluations.routes.js   → /api/evaluations
+│       ├── notifications.routes.js → /api/notifications
+│       └── dashboard.routes.js     → /api/dashboard
 └── server.js
 ```
 
@@ -107,35 +104,46 @@ backend/
 |---|---|---|---|
 | POST | `/api/auth/register` | tous | Inscription |
 | POST | `/api/auth/login` | tous | Connexion JWT |
+| GET | `/api/auth/me` | auth | Profil connecté |
 | GET | `/api/projects` | auth | Liste des projets |
 | POST | `/api/projects` | supervisor | Créer un projet |
 | GET | `/api/projects/:id` | auth | Détail projet |
 | PUT | `/api/projects/:id` | supervisor | Modifier projet |
+| DELETE | `/api/projects/:id` | supervisor | Supprimer projet |
 | GET | `/api/projects/:id/members` | auth | Membres de l'équipe |
 | POST | `/api/projects/:id/members` | supervisor | Ajouter membre |
 | DELETE | `/api/projects/:id/members/:uid` | supervisor | Retirer membre |
 | GET | `/api/projects/:id/tasks` | auth | Tâches du projet |
 | POST | `/api/projects/:id/tasks` | supervisor, team_leader | Créer tâche |
+| PUT | `/api/tasks/:id` | supervisor, team_leader | Modifier tâche |
 | PUT | `/api/tasks/:id/move` | supervisor, team_leader | Changer statut |
 | DELETE | `/api/tasks/:id` | supervisor, team_leader | Supprimer tâche |
 | GET | `/api/tasks/:id/history` | auth | Historique tâche |
+| GET | `/api/tasks/:id/comments` | auth | Commentaires tâche |
+| GET | `/api/projects/:id/milestones` | auth | Jalons |
+| POST | `/api/projects/:id/milestones` | supervisor | Créer jalon |
+| PUT | `/api/milestones/:id` | supervisor | Modifier jalon |
+| PUT | `/api/milestones/:id/reach` | supervisor, team_leader | Marquer atteint |
+| DELETE | `/api/milestones/:id` | supervisor | Supprimer jalon |
 | GET | `/api/projects/:id/deliverables` | auth | Livrables |
 | POST | `/api/projects/:id/deliverables` | auth | Déposer fichier |
 | GET | `/api/deliverables/:id/reviews` | auth | Avis sur livrable |
 | POST | `/api/deliverables/:id/reviews` | supervisor | Valider livrable |
-| GET | `/api/projects/:id/milestones` | auth | Jalons |
-| POST | `/api/projects/:id/milestones` | supervisor | Créer jalon |
-| PUT | `/api/milestones/:id/reach` | supervisor, team_leader | Marquer atteint |
+| GET | `/api/projects/:id/messages` | auth | Messages du projet |
+| POST | `/api/projects/:id/messages` | auth | Envoyer message |
 | GET | `/api/projects/:id/comments` | auth | Commentaires projet |
 | POST | `/api/projects/:id/comments` | auth | Poster commentaire |
-| GET | `/api/tasks/:id/comments` | auth | Commentaires tâche |
-| GET | `/api/messages/:projectId` | auth | Messages du projet |
-| POST | `/api/messages` | auth | Envoyer message |
+| PUT | `/api/comments/:id` | auteur | Modifier commentaire |
+| DELETE | `/api/comments/:id` | auteur / supervisor | Supprimer commentaire |
 | GET | `/api/notifications` | auth | Mes notifications |
+| GET | `/api/notifications/unread-count` | auth | Nb non lues |
 | PUT | `/api/notifications/read-all` | auth | Tout marquer lu |
+| PUT | `/api/notifications/:id/read` | auth | Marquer une lue |
 | GET | `/api/projects/:id/evaluations` | auth | Notes soutenance |
 | POST | `/api/projects/:id/evaluations` | jury | Noter le projet |
-| GET | `/api/dashboard` | auth | Stats globales |
+| DELETE | `/api/evaluations/:id` | jury | Supprimer évaluation |
+| GET | `/api/dashboard/supervisor` | supervisor | Stats globales |
+| GET | `/api/dashboard/project/:id` | auth | Stats d'un projet |
 
 ---
 
@@ -156,8 +164,6 @@ node prisma/seed.js
 
 # Lancer le serveur
 node server.js
-# ou avec nodemon
-npx nodemon server.js
 ```
 
 ---

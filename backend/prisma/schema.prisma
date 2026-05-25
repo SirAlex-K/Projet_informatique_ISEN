@@ -148,8 +148,8 @@ model Project {
 
 // ============================================
 // MODEL : team_members
-// Table pivot N:N — un étudiant peut être
-// dans plusieurs projets, avec un rôle
+// Table pivot N:N — un étudiant appartient
+// à un seul projet, avec un rôle
 // ============================================
 model TeamMember {
   project_id      Int
