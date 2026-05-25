@@ -24,7 +24,7 @@ const getOne = async (req, res) => {
       include: {
         supervisor: { select: { id: true, nom: true, prenom: true } },
         members: { include: { user: { select: { id: true, nom: true, prenom: true, email: true } } } },
-        kanban_cards: true,
+        tasks: true,
         deliverables: true
       }
     });
