@@ -1,243 +1,70 @@
-# Plateforme de Gestion et Suivi des Projets Étudiants
+# Getting Started with Create React App
 
-> Sujet 1 — JUNIA ISEN3 · 2026  
-> Projet informatique · Équipe de 5 · 18 mai → 24 juin 2026
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
----
+## Available Scripts
 
-## Objectif
+In the project directory, you can run:
 
-Application web permettant :
-- aux **encadrants** de superviser, suivre, piloter et évaluer les projets étudiants
-- aux **étudiants** de collaborer, s'organiser et suivre la progression de leurs projets
-- à l'**admin** de gérer tous les comptes utilisateurs
+### `npm start`
 
----
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-## Stack technique
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-| Couche | Technologie |
-|---|---|
-| Frontend | React + Vite + TypeScript |
-| Backend | Node.js + Express |
-| Base de données | PostgreSQL |
-| ORM | Prisma |
-| Authentification | JWT + bcryptjs |
-| Upload fichiers | Multer (max 10MB) |
-| État global | Zustand |
-| Routage | React Router v6 |
+### `npm test`
 
----
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-## Fonctionnalités (conformes au CDC)
+### `npm run build`
 
-- **3 rôles** — admin, étudiant, encadrant (CDC §2)
-- **Team Leader** — étudiant désigné chef d'équipe (`role_in_project: lead`)
-- **Gestion des projets** — 7 statuts : proposé → validé → en cours → en retard → livré → soutenu → clôturé (CDC §3)
-- **Suivi des tâches** — 3 statuts : à faire / en cours / terminé, priorités, deadlines, historique (CDC §4)
-- **Jalons** — dates cibles, marquage atteint/non atteint (CDC §4)
-- **Commentaires** — par projet ou par tâche (CDC §5)
-- **Messagerie** — chat par projet (CDC §5)
-- **Notifications** — alertes automatiques : tâche assignée, livrable déposé, jalon atteint... (CDC §5)
-- **Livrables** — dépôt fichiers PDF/ZIP/DOCX, validation encadrant (accepté/rejeté/révision) (CDC §6)
-- **Évaluations** — notes de soutenance par l'encadrant (0–20) (CDC §7)
-- **Dashboard** — vue globale encadrant avec indicateurs d'avancement
-- **Admin** — gestion complète des comptes utilisateurs
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
----
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-## Structure du projet
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-```
-projet/
-├── backend/
-│   ├── prisma/
-│   │   ├── schema.prisma     # 12 modèles PostgreSQL
-│   │   └── seed.js           # données de test (3 rôles)
-│   ├── src/
-│   │   ├── controllers/
-│   │   │   ├── authController.js
-│   │   │   ├── adminController.js
-│   │   │   ├── projectController.js
-│   │   │   ├── teamController.js
-│   │   │   ├── taskController.js
-│   │   │   ├── deliverableController.js
-│   │   │   ├── deliverableReviewController.js
-│   │   │   ├── messageController.js
-│   │   │   ├── commentController.js
-│   │   │   ├── milestoneController.js
-│   │   │   ├── notificationController.js
-│   │   │   ├── evaluationController.js
-│   │   │   └── dashboardController.js
-│   │   ├── routes/
-│   │   │   ├── auth.routes.js
-│   │   │   ├── admin.routes.js
-│   │   │   ├── projects.routes.js
-│   │   │   ├── tasks.routes.js
-│   │   │   ├── milestones.routes.js
-│   │   │   ├── comments.routes.js
-│   │   │   ├── deliverable_reviews.routes.js
-│   │   │   ├── evaluations.routes.js
-│   │   │   ├── notifications.routes.js
-│   │   │   └── dashboard.routes.js
-│   │   ├── middlewares/
-│   │   │   ├── auth.middleware.js       # JWT
-│   │   │   ├── role.middleware.js       # contrôle des rôles
-│   │   │   ├── projectRole.middleware.js # supervisor ou TL du projet
-│   │   │   └── upload.middleware.js     # Multer
-│   │   └── config/
-│   │       ├── prisma.js
-│   │       └── jwt.js
-│   ├── .env                  # DATABASE_URL, JWT_SECRET (non versionné)
-│   ├── package.json
-│   └── server.js
-│
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   ├── pages/
-    │   ├── services/         # api.ts (axios)
-    │   ├── store/            # Zustand
-    │   ├── App.tsx
-    │   └── main.tsx
-    ├── package.json
-    └── vite.config.ts
-```
+### `npm run eject`
 
----
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-## Schéma BDD — 12 tables
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-| Table | Description |
-|---|---|
-| `users` | 3 rôles : admin, student, supervisor |
-| `projects` | 7 statuts CDC |
-| `team_members` | Pivot — un étudiant dans un seul projet (lead ou member) |
-| `tasks` | Tâches avec 3 statuts, priorité, deadline |
-| `task_history` | Historique des changements de statut |
-| `deliverables` | Fichiers déposés (métadonnées) |
-| `deliverable_reviews` | Validation encadrant : accepté/rejeté/révision |
-| `messages` | Chat par projet |
-| `comments` | Commentaires sur projets et tâches |
-| `milestones` | Jalons avec date cible |
-| `notifications` | Alertes système automatiques |
-| `evaluations` | Notes de soutenance par l'encadrant |
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
----
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-## API REST — Principaux endpoints
+## Learn More
 
-| Méthode | Route | Rôles |
-|---|---|---|
-| POST | `/api/auth/login` | tous |
-| GET | `/api/auth/me` | auth |
-| GET | `/api/admin/users` | admin |
-| POST | `/api/admin/users` | admin |
-| PUT | `/api/admin/users/:id` | admin |
-| DELETE | `/api/admin/users/:id` | admin |
-| GET/POST | `/api/projects` | auth / admin, supervisor |
-| GET/PUT | `/api/projects/:id` | auth / admin, supervisor |
-| GET/POST | `/api/projects/:id/members` | auth / admin, supervisor |
-| GET/POST | `/api/projects/:id/tasks` | auth / supervisor ou TL |
-| PUT | `/api/tasks/:id/move` | supervisor ou TL |
-| GET/POST | `/api/projects/:id/milestones` | auth / supervisor ou TL |
-| PUT | `/api/milestones/:id/reach` | supervisor ou TL |
-| GET/POST | `/api/projects/:id/deliverables` | auth |
-| POST | `/api/deliverables/:id/reviews` | supervisor |
-| GET/POST | `/api/projects/:id/comments` | auth |
-| GET/POST | `/api/projects/:id/messages` | auth |
-| GET | `/api/notifications` | auth |
-| PUT | `/api/notifications/read-all` | auth |
-| GET/POST | `/api/projects/:id/evaluations` | auth / supervisor |
-| GET | `/api/dashboard/supervisor` | supervisor |
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
----
+To learn React, check out the [React documentation](https://reactjs.org/).
 
-## Installation
+### Code Splitting
 
-### Prérequis
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
 
-- Node.js ≥ 18
-- PostgreSQL ≥ 14
-- npm
+### Analyzing the Bundle Size
 
-### Backend
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
 
-```bash
-cd backend
-npm install
+### Making a Progressive Web App
 
-# Créer le fichier .env
-cp .env.example .env
-# Remplir : DATABASE_URL="postgresql://user:password@localhost:5432/plateforme_projets"
-#           JWT_SECRET="votre_secret"
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
 
-# Appliquer le schéma BDD
-.\node_modules\.bin\prisma db push
+### Advanced Configuration
 
-# Insérer les données de test
-node prisma/seed.js
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-# Lancer le serveur
-node server.js
-```
+### Deployment
 
-### Frontend
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### `npm run build` fails to minify
 
-L'API est accessible sur `http://localhost:3000`, le frontend sur `http://localhost:5173`.
-
----
-
-## Comptes de test
-
-| Email | Rôle | Mot de passe |
-|---|---|---|
-| admin@isen.fr | admin | admin2026 |
-| meryem.benyoussef@junia.com | supervisor | password123 |
-| alex.komenan@junia.com | student (TL) | password123 |
-| etudiant1@junia.com | student | password123 |
-| etudiant2@junia.com | student | password123 |
-
----
-
-## Planning
-
-| Phase | Période | Objectif |
-|---|---|---|
-| Phase 1 — Cadrage & Conception | 18 – 25 mai | Stack, BDD, arborescence, routes, planning |
-| Phase 2 — Développement Core | 26 mai – 8 juin | CRUD, Auth JWT, équipes, upload livrables |
-| Phase 3 — Dashboards & Tests | 9 – 15 juin | Dashboard encadrant, tests, corrections |
-| Phase 4 — Rapport & Soutenance | 16 – 24 juin | Rapport, slides, démo finale |
-
----
-
-## Avancement
-
-- [x] Organisation de l'équipe & rôles
-- [x] Stack technique choisie
-- [x] Schéma BDD conçu — 12 tables, conformes au CDC
-- [x] Arborescence des fichiers définie
-- [x] Routes API définies (30+ endpoints)
-- [x] Planning établi
-- [x] Init backend (Node.js + Express + PostgreSQL + Prisma)
-- [x] Authentification JWT (login)
-- [x] Gestion admin — CRUD utilisateurs
-- [x] CRUD Projets & Tâches
-- [x] Gestion des équipes
-- [x] Upload de livrables (Multer)
-- [x] Jalons, commentaires, notifications, évaluations
-- [x] Données de test (seed)
-- [ ] Init frontend (React + Vite)
-- [ ] Dashboard encadrant
-- [ ] Tests & corrections
-- [ ] Rapport & soutenance
-
----
-
-*JUNIA ISEN3 · 2026*
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
