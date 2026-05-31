@@ -1,6 +1,6 @@
 // ============================================
 // Evaluation Controller
-// Notes de soutenance par le jury (CDC §7)
+// Notes de soutenance par l'encadrant (CDC §7)
 // ============================================
 
 const prisma = require('../config/prisma');
@@ -26,7 +26,7 @@ const getEvaluations = async (req, res) => {
   }
 };
 
-// POST /api/projects/:id/evaluations — jury only
+// POST /api/projects/:id/evaluations — supervisor only
 const createEvaluation = async (req, res) => {
   try {
     const { note, commentaire } = req.body;
@@ -56,7 +56,7 @@ const createEvaluation = async (req, res) => {
   }
 };
 
-// DELETE /api/evaluations/:id — jury only
+// DELETE /api/evaluations/:id — supervisor only
 const deleteEvaluation = async (req, res) => {
   try {
     const evaluation = await prisma.evaluation.findUnique({ where: { id: parseInt(req.params.id) } });

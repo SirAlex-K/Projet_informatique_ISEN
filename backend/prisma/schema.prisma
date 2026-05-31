@@ -344,7 +344,7 @@ model DeliverableReview {
 
 // ============================================
 // MODEL : evaluations
-// Notes de soutenance par le jury (CDC §7)
+// Notes de soutenance par l'encadrant (CDC §7)
 // ============================================
 model Evaluation {
   id           Int      @id @default(autoincrement())

@@ -161,7 +161,7 @@ async function main() {
   console.log('\n   Comptes de test :');
   console.log('   admin      : admin@isen.fr          | admin2026');
   console.log('   supervisor : meryem.benyoussef@junia.com | password123');
-  console.log('   team_leader: alex.komenan@junia.com  | password123');
+  console.log('   TL (student): alex.komenan@junia.com  | password123');
   console.log('   student    : etudiant1@junia.com ... etudiant4@junia.com | password123');
 }
 

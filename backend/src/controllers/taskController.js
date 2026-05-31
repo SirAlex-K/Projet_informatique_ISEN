@@ -63,7 +63,7 @@ const updateTask = async (req, res) => {
   }
 };
 
-// PUT /api/tasks/:id/move — changer de statut (supervisor / team_leader)
+// PUT /api/tasks/:id/move — changer de statut (supervisor ou team leader du projet)
 const moveTask = async (req, res) => {
   try {
     const { statut, position } = req.body;

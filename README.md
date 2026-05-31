@@ -8,10 +8,9 @@
 ## Objectif
 
 Application web permettant :
-- aux **encadrants** de superviser, suivre et piloter l'ensemble des projets étudiants
+- aux **encadrants** de superviser, suivre, piloter et évaluer les projets étudiants
 - aux **étudiants** de collaborer, s'organiser et suivre la progression de leurs projets
-- au **jury** de noter les soutenances
-- aux **chefs de projet** de coordonner leur équipe
+- à l'**admin** de gérer tous les comptes utilisateurs
 
 ---
 
@@ -32,7 +31,8 @@ Application web permettant :
 
 ## Fonctionnalités (conformes au CDC)
 
-- **4 rôles** — étudiant, chef de projet, encadrant, jury (CDC §2)
+- **3 rôles** — admin, étudiant, encadrant (CDC §2)
+- **Team Leader** — étudiant désigné chef d'équipe (`role_in_project: lead`)
 - **Gestion des projets** — 7 statuts : proposé → validé → en cours → en retard → livré → soutenu → clôturé (CDC §3)
 - **Suivi des tâches** — 3 statuts : à faire / en cours / terminé, priorités, deadlines, historique (CDC §4)
 - **Jalons** — dates cibles, marquage atteint/non atteint (CDC §4)
@@ -40,8 +40,9 @@ Application web permettant :
 - **Messagerie** — chat par projet (CDC §5)
 - **Notifications** — alertes automatiques : tâche assignée, livrable déposé, jalon atteint... (CDC §5)
 - **Livrables** — dépôt fichiers PDF/ZIP/DOCX, validation encadrant (accepté/rejeté/révision) (CDC §6)
-- **Évaluations** — notes de soutenance par le jury (0–20) (CDC §7)
+- **Évaluations** — notes de soutenance par l'encadrant (0–20) (CDC §7)
 - **Dashboard** — vue globale encadrant avec indicateurs d'avancement
+- **Admin** — gestion complète des comptes utilisateurs
 
 ---
 
@@ -52,10 +53,11 @@ projet/
 ├── backend/
 │   ├── prisma/
 │   │   ├── schema.prisma     # 12 modèles PostgreSQL
-│   │   └── seed.js           # données de test (5 users, 4 rôles)
+│   │   └── seed.js           # données de test (3 rôles)
 │   ├── src/
 │   │   ├── controllers/
 │   │   │   ├── authController.js
+│   │   │   ├── adminController.js
 │   │   │   ├── projectController.js
 │   │   │   ├── teamController.js
 │   │   │   ├── taskController.js
@@ -69,21 +71,20 @@ projet/
 │   │   │   └── dashboardController.js
 │   │   ├── routes/
 │   │   │   ├── auth.routes.js
+│   │   │   ├── admin.routes.js
 │   │   │   ├── projects.routes.js
-│   │   │   ├── teams.routes.js
 │   │   │   ├── tasks.routes.js
-│   │   │   ├── deliverables.routes.js
-│   │   │   ├── deliverable_reviews.routes.js
-│   │   │   ├── messages.routes.js
-│   │   │   ├── comments.routes.js
 │   │   │   ├── milestones.routes.js
-│   │   │   ├── notifications.routes.js
+│   │   │   ├── comments.routes.js
+│   │   │   ├── deliverable_reviews.routes.js
 │   │   │   ├── evaluations.routes.js
+│   │   │   ├── notifications.routes.js
 │   │   │   └── dashboard.routes.js
 │   │   ├── middlewares/
-│   │   │   ├── auth.middleware.js    # JWT
-│   │   │   ├── role.middleware.js    # contrôle des rôles
-│   │   │   └── upload.middleware.js  # Multer
+│   │   │   ├── auth.middleware.js       # JWT
+│   │   │   ├── role.middleware.js       # contrôle des rôles
+│   │   │   ├── projectRole.middleware.js # supervisor ou TL du projet
+│   │   │   └── upload.middleware.js     # Multer
 │   │   └── config/
 │   │       ├── prisma.js
 │   │       └── jwt.js
@@ -94,11 +95,6 @@ projet/
 └── frontend/
     ├── src/
     │   ├── components/
-    │   │   ├── ui/           # Button, Card, Badge, Modal, Table
-    │   │   ├── Navbar.tsx
-    │   │   ├── Sidebar.tsx
-    │   │   ├── TaskCard.tsx
-    │   │   └── ProjectCard.tsx
     │   ├── pages/
     │   ├── services/         # api.ts (axios)
     │   ├── store/            # Zustand
@@ -114,9 +110,9 @@ projet/
 
 | Table | Description |
 |---|---|
-| `users` | 4 rôles : student, team_leader, supervisor, jury |
+| `users` | 3 rôles : admin, student, supervisor |
 | `projects` | 7 statuts CDC |
-| `team_members` | Pivot N:N user ↔ project |
+| `team_members` | Pivot — un étudiant dans un seul projet (lead ou member) |
 | `tasks` | Tâches avec 3 statuts, priorité, deadline |
 | `task_history` | Historique des changements de statut |
 | `deliverables` | Fichiers déposés (métadonnées) |
@@ -125,7 +121,7 @@ projet/
 | `comments` | Commentaires sur projets et tâches |
 | `milestones` | Jalons avec date cible |
 | `notifications` | Alertes système automatiques |
-| `evaluations` | Notes de soutenance par le jury |
+| `evaluations` | Notes de soutenance par l'encadrant |
 
 ---
 
@@ -133,23 +129,27 @@ projet/
 
 | Méthode | Route | Rôles |
 |---|---|---|
-| POST | `/api/auth/register` | tous |
 | POST | `/api/auth/login` | tous |
-| GET/POST | `/api/projects` | auth / supervisor |
-| GET/PUT | `/api/projects/:id` | auth / supervisor |
-| GET/POST | `/api/projects/:id/members` | auth / supervisor |
-| GET/POST | `/api/projects/:id/tasks` | auth / supervisor, team_leader |
-| PUT | `/api/tasks/:id/move` | supervisor, team_leader |
-| GET/POST | `/api/projects/:id/milestones` | auth / supervisor |
-| PUT | `/api/milestones/:id/reach` | supervisor, team_leader |
+| GET | `/api/auth/me` | auth |
+| GET | `/api/admin/users` | admin |
+| POST | `/api/admin/users` | admin |
+| PUT | `/api/admin/users/:id` | admin |
+| DELETE | `/api/admin/users/:id` | admin |
+| GET/POST | `/api/projects` | auth / admin, supervisor |
+| GET/PUT | `/api/projects/:id` | auth / admin, supervisor |
+| GET/POST | `/api/projects/:id/members` | auth / admin, supervisor |
+| GET/POST | `/api/projects/:id/tasks` | auth / supervisor ou TL |
+| PUT | `/api/tasks/:id/move` | supervisor ou TL |
+| GET/POST | `/api/projects/:id/milestones` | auth / supervisor ou TL |
+| PUT | `/api/milestones/:id/reach` | supervisor ou TL |
 | GET/POST | `/api/projects/:id/deliverables` | auth |
 | POST | `/api/deliverables/:id/reviews` | supervisor |
 | GET/POST | `/api/projects/:id/comments` | auth |
-| GET/POST | `/api/messages/:projectId` | auth |
+| GET/POST | `/api/projects/:id/messages` | auth |
 | GET | `/api/notifications` | auth |
 | PUT | `/api/notifications/read-all` | auth |
-| GET/POST | `/api/projects/:id/evaluations` | auth / jury |
-| GET | `/api/dashboard` | auth |
+| GET/POST | `/api/projects/:id/evaluations` | auth / supervisor |
+| GET | `/api/dashboard/supervisor` | supervisor |
 
 ---
 
@@ -198,11 +198,11 @@ L'API est accessible sur `http://localhost:3000`, le frontend sur `http://localh
 
 | Email | Rôle | Mot de passe |
 |---|---|---|
-| dupont.marc@isen.fr | supervisor | password123 |
-| alex.komenan@isen.fr | team_leader | password123 |
-| etudiant1@isen.fr | student | password123 |
-| etudiant2@isen.fr | student | password123 |
-| jury1@isen.fr | jury | password123 |
+| admin@isen.fr | admin | admin2026 |
+| meryem.benyoussef@junia.com | supervisor | password123 |
+| alex.komenan@junia.com | student (TL) | password123 |
+| etudiant1@junia.com | student | password123 |
+| etudiant2@junia.com | student | password123 |
 
 ---
 
@@ -226,7 +226,8 @@ L'API est accessible sur `http://localhost:3000`, le frontend sur `http://localh
 - [x] Routes API définies (30+ endpoints)
 - [x] Planning établi
 - [x] Init backend (Node.js + Express + PostgreSQL + Prisma)
-- [x] Authentification JWT (register / login)
+- [x] Authentification JWT (login)
+- [x] Gestion admin — CRUD utilisateurs
 - [x] CRUD Projets & Tâches
 - [x] Gestion des équipes
 - [x] Upload de livrables (Multer)

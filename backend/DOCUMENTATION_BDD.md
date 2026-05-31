@@ -10,9 +10,9 @@
 
 | Table | Description | CDC |
 |---|---|---|
-| `users` | 4 rôles : student, team_leader, supervisor, jury | §2 |
+| `users` | 3 rôles : admin, student, supervisor | §2 |
 | `projects` | 7 statuts : proposé → clôturé | §3 |
-| `team_members` | Pivot N:N — un étudiant appartient à un seul projet | §2 |
+| `team_members` | Pivot — un étudiant dans un seul projet (lead ou member) | §2 |
 | `tasks` | Tâches, 3 statuts CDC | §4 |
 | `task_history` | Historique des changements de statut | §4 |
 | `deliverables` | Dépôt fichiers via Multer (max 10MB) | §6 |
@@ -21,7 +21,7 @@
 | `comments` | Commentaires sur projets et tâches | §5 |
 | `milestones` | Jalons avec date cible et statut atteint | §4 |
 | `notifications` | Alertes système automatiques | §5 |
-| `evaluations` | Notes de soutenance par le jury (0–20) | §7 |
+| `evaluations` | Notes de soutenance par l'encadrant (0–20) | §7 |
 
 ---
 
@@ -29,7 +29,7 @@
 
 ### UserRole
 ```
-student | team_leader | supervisor | jury
+admin | student | supervisor
 ```
 
 ### ProjectStatut (7 états CDC §3)
@@ -61,13 +61,14 @@ accepte | rejete | revision
 backend/
 ├── prisma/
 │   ├── schema.prisma        ← 12 modèles
-│   └── seed.js              ← données de test (5 users, 4 rôles)
+│   └── seed.js              ← données de test (3 rôles)
 ├── src/
 │   ├── config/
 │   │   ├── prisma.js
 │   │   └── jwt.js
 │   ├── controllers/
 │   │   ├── authController.js
+│   │   ├── adminController.js
 │   │   ├── projectController.js
 │   │   ├── teamController.js
 │   │   ├── taskController.js
@@ -80,12 +81,14 @@ backend/
 │   │   ├── evaluationController.js
 │   │   └── dashboardController.js
 │   ├── middlewares/
-│   │   ├── auth.middleware.js      ← vérifie le JWT
-│   │   ├── role.middleware.js      ← vérifie le rôle (4 rôles)
-│   │   └── upload.middleware.js    ← Multer 10MB
+│   │   ├── auth.middleware.js        ← vérifie le JWT
+│   │   ├── role.middleware.js        ← vérifie le rôle (3 rôles)
+│   │   ├── projectRole.middleware.js ← supervisor ou TL du projet
+│   │   └── upload.middleware.js      ← Multer 10MB
 │   └── routes/
 │       ├── auth.routes.js          → /api/auth
-│       ├── projects.routes.js      → /api/projects (+ membres, tâches, jalons, livrables, messages, commentaires, évaluations)
+│       ├── admin.routes.js         → /api/admin
+│       ├── projects.routes.js      → /api/projects (+ toutes ressources imbriquées)
 │       ├── tasks.routes.js         → /api/tasks
 │       ├── milestones.routes.js    → /api/milestones
 │       ├── comments.routes.js      → /api/comments
@@ -102,29 +105,34 @@ backend/
 
 | Méthode | Route | Rôles | Description |
 |---|---|---|---|
-| POST | `/api/auth/register` | tous | Inscription |
 | POST | `/api/auth/login` | tous | Connexion JWT |
 | GET | `/api/auth/me` | auth | Profil connecté |
+| GET | `/api/admin/users` | admin | Liste tous les users |
+| POST | `/api/admin/users` | admin | Créer un compte |
+| GET | `/api/admin/users/:id` | admin | Détail user |
+| PUT | `/api/admin/users/:id` | admin | Modifier user |
+| DELETE | `/api/admin/users/:id` | admin | Supprimer user |
+| GET | `/api/admin/users/by-role/:role` | admin | Filtrer par rôle |
 | GET | `/api/projects` | auth | Liste des projets |
-| POST | `/api/projects` | supervisor | Créer un projet |
+| POST | `/api/projects` | admin, supervisor | Créer un projet |
 | GET | `/api/projects/:id` | auth | Détail projet |
-| PUT | `/api/projects/:id` | supervisor | Modifier projet |
-| DELETE | `/api/projects/:id` | supervisor | Supprimer projet |
+| PUT | `/api/projects/:id` | admin, supervisor | Modifier projet |
+| DELETE | `/api/projects/:id` | admin, supervisor | Supprimer projet |
 | GET | `/api/projects/:id/members` | auth | Membres de l'équipe |
-| POST | `/api/projects/:id/members` | supervisor | Ajouter membre |
-| DELETE | `/api/projects/:id/members/:uid` | supervisor | Retirer membre |
+| POST | `/api/projects/:id/members` | admin, supervisor | Ajouter membre |
+| DELETE | `/api/projects/:id/members/:uid` | admin, supervisor | Retirer membre |
 | GET | `/api/projects/:id/tasks` | auth | Tâches du projet |
-| POST | `/api/projects/:id/tasks` | supervisor, team_leader | Créer tâche |
-| PUT | `/api/tasks/:id` | supervisor, team_leader | Modifier tâche |
-| PUT | `/api/tasks/:id/move` | supervisor, team_leader | Changer statut |
-| DELETE | `/api/tasks/:id` | supervisor, team_leader | Supprimer tâche |
+| POST | `/api/projects/:id/tasks` | supervisor ou TL | Créer tâche |
+| PUT | `/api/tasks/:id` | supervisor ou TL | Modifier tâche |
+| PUT | `/api/tasks/:id/move` | supervisor ou TL | Changer statut |
+| DELETE | `/api/tasks/:id` | supervisor ou TL | Supprimer tâche |
 | GET | `/api/tasks/:id/history` | auth | Historique tâche |
 | GET | `/api/tasks/:id/comments` | auth | Commentaires tâche |
 | GET | `/api/projects/:id/milestones` | auth | Jalons |
-| POST | `/api/projects/:id/milestones` | supervisor | Créer jalon |
-| PUT | `/api/milestones/:id` | supervisor | Modifier jalon |
-| PUT | `/api/milestones/:id/reach` | supervisor, team_leader | Marquer atteint |
-| DELETE | `/api/milestones/:id` | supervisor | Supprimer jalon |
+| POST | `/api/projects/:id/milestones` | supervisor ou TL | Créer jalon |
+| PUT | `/api/milestones/:id` | admin, supervisor | Modifier jalon |
+| PUT | `/api/milestones/:id/reach` | supervisor ou TL | Marquer atteint |
+| DELETE | `/api/milestones/:id` | admin, supervisor | Supprimer jalon |
 | GET | `/api/projects/:id/deliverables` | auth | Livrables |
 | POST | `/api/projects/:id/deliverables` | auth | Déposer fichier |
 | GET | `/api/deliverables/:id/reviews` | auth | Avis sur livrable |
@@ -140,8 +148,8 @@ backend/
 | PUT | `/api/notifications/read-all` | auth | Tout marquer lu |
 | PUT | `/api/notifications/:id/read` | auth | Marquer une lue |
 | GET | `/api/projects/:id/evaluations` | auth | Notes soutenance |
-| POST | `/api/projects/:id/evaluations` | jury | Noter le projet |
-| DELETE | `/api/evaluations/:id` | jury | Supprimer évaluation |
+| POST | `/api/projects/:id/evaluations` | admin, supervisor | Noter le projet |
+| DELETE | `/api/evaluations/:id` | admin, supervisor | Supprimer évaluation |
 | GET | `/api/dashboard/supervisor` | supervisor | Stats globales |
 | GET | `/api/dashboard/project/:id` | auth | Stats d'un projet |
 
@@ -172,8 +180,10 @@ node server.js
 
 | Email | Rôle | Mot de passe |
 |---|---|---|
-| dupont.marc@isen.fr | supervisor | password123 |
-| alex.komenan@isen.fr | team_leader | password123 |
-| etudiant1@isen.fr | student | password123 |
-| etudiant2@isen.fr | student | password123 |
-| jury1@isen.fr | jury | password123 |
+| admin@isen.fr | admin | admin2026 |
+| meryem.benyoussef@junia.com | supervisor | password123 |
+| alex.komenan@junia.com | student (TL) | password123 |
+| etudiant1@junia.com | student | password123 |
+| etudiant2@junia.com | student | password123 |
+| etudiant3@junia.com | student | password123 |
+| etudiant4@junia.com | student | password123 |
