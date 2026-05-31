@@ -18,8 +18,8 @@ datasource db {
 // ENUM : rôles utilisateurs (CDC §2 — 4 rôles)
 // ============================================
 enum UserRole {
-  student       // Étudiant
-  team_leader   // Chef de projet (Team Leader)
+  admin         // Administrateur — gère tous les comptes
+  student       // Étudiant (dont le Team Leader via role_in_project)
   supervisor    // Encadrant
   jury          // Jury de soutenance
 }

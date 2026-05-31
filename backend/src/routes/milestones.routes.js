@@ -4,8 +4,8 @@ const role = require('../middlewares/role.middleware');
 const { updateMilestone, reachMilestone, deleteMilestone } = require('../controllers/milestoneController');
 
 // /api/milestones/:id
-router.put('/:id',       auth, role('supervisor'), updateMilestone);
-router.put('/:id/reach', auth, role('supervisor', 'team_leader'), reachMilestone);
-router.delete('/:id',    auth, role('supervisor'), deleteMilestone);
+router.put('/:id',       auth, role('admin', 'supervisor'), updateMilestone);
+router.put('/:id/reach', auth, role('admin', 'supervisor', 'student'), reachMilestone);
+router.delete('/:id',    auth, role('admin', 'supervisor'), deleteMilestone);
 
 module.exports = router;

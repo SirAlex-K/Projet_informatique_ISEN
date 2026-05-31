@@ -10,6 +10,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth',          require('./src/routes/auth.routes'));
+app.use('/api/admin',         require('./src/routes/admin.routes'));
 app.use('/api/projects',      require('./src/routes/projects.routes'));
 app.use('/api/tasks',         require('./src/routes/tasks.routes'));
 app.use('/api/milestones',    require('./src/routes/milestones.routes'));

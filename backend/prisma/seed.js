@@ -1,5 +1,6 @@
 // ============================================
 // Seed — données de test pour la soutenance
+// Données issues du fichier ISEN3_25-26_Lancement-PFA3.pdf
 // node prisma/seed.js
 // ============================================
 
@@ -11,51 +12,73 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding...');
 
-  // ---- Users ----
   const hash = await bcrypt.hash('password123', 10);
+  const adminHash = await bcrypt.hash('admin2026', 10);
 
-  const supervisor = await prisma.user.upsert({
-    where: { email: 'dupont.marc@isen.fr' },
+  // ---- Admin ----
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@isen.fr' },
     update: {},
-    create: { nom: 'Dupont', prenom: 'Marc', email: 'dupont.marc@isen.fr', password_hash: hash, role: 'supervisor' }
+    create: { nom: 'Admin', prenom: 'ISEN', email: 'admin@isen.fr', password_hash: adminHash, role: 'admin' }
   });
 
-  const leader = await prisma.user.upsert({
-    where: { email: 'alex.komenan@isen.fr' },
+  // ---- Supervisor (données réelles PDF) ----
+  const supervisor = await prisma.user.upsert({
+    where: { email: 'meryem.benyoussef@junia.com' },
     update: {},
-    create: { nom: 'Komenan', prenom: 'Alex', email: 'alex.komenan@isen.fr', password_hash: hash, role: 'team_leader' }
+    create: { nom: 'Benyoussef', prenom: 'Meryem', email: 'meryem.benyoussef@junia.com', password_hash: hash, role: 'supervisor' }
+  });
+
+  // ---- Étudiants (Équipe 5 — Sujet 1) ----
+  const leader = await prisma.user.upsert({
+    where: { email: 'alex.komenan@junia.com' },
+    update: {},
+    create: { nom: 'Komenan', prenom: 'Alex', email: 'alex.komenan@junia.com', password_hash: hash, role: 'student' }
   });
 
   const student1 = await prisma.user.upsert({
-    where: { email: 'etudiant1@isen.fr' },
+    where: { email: 'etudiant1@junia.com' },
     update: {},
-    create: { nom: 'Martin', prenom: 'Sophie', email: 'etudiant1@isen.fr', password_hash: hash, role: 'student' }
+    create: { nom: 'Etudiant1', prenom: 'Prénom1', email: 'etudiant1@junia.com', password_hash: hash, role: 'student' }
   });
 
   const student2 = await prisma.user.upsert({
-    where: { email: 'etudiant2@isen.fr' },
+    where: { email: 'etudiant2@junia.com' },
     update: {},
-    create: { nom: 'Bernard', prenom: 'Lucas', email: 'etudiant2@isen.fr', password_hash: hash, role: 'student' }
+    create: { nom: 'Etudiant2', prenom: 'Prénom2', email: 'etudiant2@junia.com', password_hash: hash, role: 'student' }
   });
 
-  const jury = await prisma.user.upsert({
-    where: { email: 'jury1@isen.fr' },
+  const student3 = await prisma.user.upsert({
+    where: { email: 'etudiant3@junia.com' },
     update: {},
-    create: { nom: 'Leroy', prenom: 'Claire', email: 'jury1@isen.fr', password_hash: hash, role: 'jury' }
+    create: { nom: 'Etudiant3', prenom: 'Prénom3', email: 'etudiant3@junia.com', password_hash: hash, role: 'student' }
+  });
+
+  const student4 = await prisma.user.upsert({
+    where: { email: 'etudiant4@junia.com' },
+    update: {},
+    create: { nom: 'Etudiant4', prenom: 'Prénom4', email: 'etudiant4@junia.com', password_hash: hash, role: 'student' }
+  });
+
+  // ---- Jury ----
+  const jury = await prisma.user.upsert({
+    where: { email: 'jury@junia.com' },
+    update: {},
+    create: { nom: 'Jury', prenom: 'Membre', email: 'jury@junia.com', password_hash: hash, role: 'jury' }
   });
 
   console.log('✅ Users créés');
 
-  // ---- Project ----
+  // ---- Projet (données réelles PDF) ----
   const project = await prisma.project.upsert({
     where: { id: 1 },
     update: {},
     create: {
-      titre: 'Plateforme de Gestion des Projets Étudiants',
-      description: 'Application web de suivi des projets ISEN — Sujet 1',
+      titre: 'Plateforme de gestion et suivi des projets étudiants',
+      description: 'Sujet 1 — Proposer une solution permettant aux encadrants de superviser les projets étudiants et aux étudiants de collaborer et suivre leur progression.',
       supervisor_id: supervisor.id,
-      date_debut: new Date('2025-09-01'),
-      date_fin: new Date('2026-06-30'),
+      date_debut: new Date('2026-05-18'),
+      date_fin: new Date('2026-06-24'),
       statut: 'en_cours'
     }
   });
@@ -68,72 +91,51 @@ async function main() {
     update: {},
     create: { project_id: project.id, user_id: leader.id, role_in_project: 'lead' }
   });
-  await prisma.teamMember.upsert({
-    where: { project_id_user_id: { project_id: project.id, user_id: student1.id } },
-    update: {},
-    create: { project_id: project.id, user_id: student1.id, role_in_project: 'member' }
-  });
-  await prisma.teamMember.upsert({
-    where: { project_id_user_id: { project_id: project.id, user_id: student2.id } },
-    update: {},
-    create: { project_id: project.id, user_id: student2.id, role_in_project: 'member' }
-  });
+  for (const student of [student1, student2, student3, student4]) {
+    await prisma.teamMember.upsert({
+      where: { project_id_user_id: { project_id: project.id, user_id: student.id } },
+      update: {},
+      create: { project_id: project.id, user_id: student.id, role_in_project: 'member' }
+    });
+  }
 
-  console.log('✅ Membres de l\'équipe ajoutés');
+  console.log('✅ Membres de l\'équipe ajoutés (1 TL + 4 membres)');
 
-  // ---- Tasks ----
-  const tasks = await Promise.all([
-    prisma.task.create({
-      data: { project_id: project.id, titre: 'Initialiser le projet backend', statut: 'done', priorite: 'haute', assigned_to: leader.id }
-    }),
-    prisma.task.create({
-      data: { project_id: project.id, titre: 'Schéma BDD (entités & relations)', statut: 'done', priorite: 'haute', assigned_to: leader.id }
-    }),
-    prisma.task.create({
-      data: { project_id: project.id, titre: 'Authentification JWT', statut: 'done', priorite: 'haute', assigned_to: leader.id }
-    }),
-    prisma.task.create({
-      data: { project_id: project.id, titre: 'Interface Kanban (frontend)', statut: 'en_cours', priorite: 'normale', assigned_to: student1.id }
-    }),
-    prisma.task.create({
-      data: { project_id: project.id, titre: 'Page de gestion des livrables', statut: 'en_cours', priorite: 'normale', assigned_to: student2.id }
-    }),
-    prisma.task.create({
-      data: { project_id: project.id, titre: 'Système de notifications', statut: 'todo', priorite: 'basse', assigned_to: null }
-    }),
+  // ---- Tâches ----
+  await Promise.all([
+    prisma.task.create({ data: { project_id: project.id, titre: 'Initialiser le projet backend', statut: 'done', priorite: 'haute', assigned_to: leader.id } }),
+    prisma.task.create({ data: { project_id: project.id, titre: 'Schéma BDD — 12 modèles', statut: 'done', priorite: 'haute', assigned_to: leader.id } }),
+    prisma.task.create({ data: { project_id: project.id, titre: 'Authentification JWT + rôles', statut: 'done', priorite: 'haute', assigned_to: leader.id } }),
+    prisma.task.create({ data: { project_id: project.id, titre: 'Interface Kanban (frontend)', statut: 'en_cours', priorite: 'normale', assigned_to: student1.id } }),
+    prisma.task.create({ data: { project_id: project.id, titre: 'Dashboard encadrant', statut: 'en_cours', priorite: 'normale', assigned_to: student2.id } }),
+    prisma.task.create({ data: { project_id: project.id, titre: 'Page de gestion des livrables', statut: 'todo', priorite: 'normale', assigned_to: student3.id } }),
+    prisma.task.create({ data: { project_id: project.id, titre: 'Système de notifications', statut: 'todo', priorite: 'basse', assigned_to: student4.id } }),
+    prisma.task.create({ data: { project_id: project.id, titre: 'Tests & corrections', statut: 'todo', priorite: 'haute', assigned_to: null } }),
   ]);
 
   console.log('✅ Tâches créées');
 
-  // ---- Milestones ----
+  // ---- Jalons réels (données PDF) ----
   await prisma.milestone.createMany({
     data: [
-      { project_id: project.id, titre: 'Maquettes validées', date_cible: new Date('2025-10-15'), atteint: true, atteint_le: new Date('2025-10-12') },
-      { project_id: project.id, titre: 'Backend opérationnel', date_cible: new Date('2026-01-31'), atteint: true, atteint_le: new Date('2026-01-28') },
-      { project_id: project.id, titre: 'Version beta livrée', date_cible: new Date('2026-04-30'), atteint: false },
-      { project_id: project.id, titre: 'Soutenance finale', date_cible: new Date('2026-06-20'), atteint: false },
+      { project_id: project.id, titre: 'Démarrage du projet', date_cible: new Date('2026-05-18'), atteint: true, atteint_le: new Date('2026-05-18') },
+      { project_id: project.id, titre: 'Point de suivi 1', date_cible: new Date('2026-05-20'), atteint: true, atteint_le: new Date('2026-05-20') },
+      { project_id: project.id, titre: 'Point de suivi 2', date_cible: new Date('2026-05-26'), atteint: true, atteint_le: new Date('2026-05-26') },
+      { project_id: project.id, titre: 'Point de suivi 3', date_cible: new Date('2026-06-01'), atteint: false },
+      { project_id: project.id, titre: 'Présentation mi-parcours', date_cible: new Date('2026-06-08'), atteint: false },
+      { project_id: project.id, titre: 'Point de suivi 4', date_cible: new Date('2026-06-15'), atteint: false },
+      { project_id: project.id, titre: 'Livraison finale', date_cible: new Date('2026-06-20'), atteint: false },
+      { project_id: project.id, titre: 'Soutenance', date_cible: new Date('2026-06-23'), atteint: false },
     ]
   });
 
-  console.log('✅ Jalons créés');
-
-  // ---- Comments ----
-  await prisma.comment.createMany({
-    data: [
-      { project_id: project.id, task_id: tasks[3].id, author_id: supervisor.id, contenu: 'Bien avancé, pensez à gérer le drag & drop mobile.' },
-      { project_id: project.id, task_id: tasks[3].id, author_id: student1.id, contenu: 'Noted, je l\'ajoute dans la prochaine itération.' },
-      { project_id: project.id, author_id: leader.id, contenu: 'Réunion de suivi prévue le 30 mai à 14h.' },
-    ]
-  });
-
-  console.log('✅ Commentaires créés');
+  console.log('✅ Jalons créés (données réelles PDF)');
 
   // ---- Messages ----
   await prisma.message.createMany({
     data: [
-      { project_id: project.id, sender_id: leader.id, contenu: 'Bonjour l\'équipe ! Bon courage pour la sprint !' },
-      { project_id: project.id, sender_id: student1.id, contenu: 'Merci ! On avance bien sur le frontend.' },
-      { project_id: project.id, sender_id: supervisor.id, contenu: 'Pensez à mettre à jour le Trello régulièrement.' },
+      { project_id: project.id, sender_id: leader.id, contenu: 'Bonjour l\'équipe ! Backend opérationnel, on passe au frontend.' },
+      { project_id: project.id, sender_id: supervisor.id, contenu: 'Bon travail ! Pensez à préparer la démo pour le point de suivi 3.' },
     ]
   });
 
@@ -142,32 +144,20 @@ async function main() {
   // ---- Notifications ----
   await prisma.notification.createMany({
     data: [
+      { user_id: leader.id, project_id: project.id, type: 'milestone_reached', contenu: 'Jalon "Point de suivi 2" atteint !' },
       { user_id: student1.id, project_id: project.id, type: 'task_assigned', contenu: 'Vous avez été assigné à la tâche "Interface Kanban"' },
-      { user_id: student2.id, project_id: project.id, type: 'task_assigned', contenu: 'Vous avez été assigné à la tâche "Page de gestion des livrables"' },
-      { user_id: leader.id, project_id: project.id, type: 'milestone_reached', contenu: 'Jalon "Backend opérationnel" atteint !' },
     ]
   });
 
   console.log('✅ Notifications créées');
 
-  // ---- Evaluation ----
-  await prisma.evaluation.create({
-    data: {
-      project_id: project.id,
-      evaluator_id: jury.id,
-      note: 16.5,
-      commentaire: 'Très bon projet, architecture solide et présentation claire.'
-    }
-  });
-
-  console.log('✅ Évaluation créée');
-
   console.log('\n🎉 Seed terminé avec succès !');
-  console.log('   Comptes de test (mot de passe : password123)');
-  console.log('   supervisor : dupont.marc@isen.fr');
-  console.log('   team_leader: alex.komenan@isen.fr');
-  console.log('   student    : etudiant1@isen.fr / etudiant2@isen.fr');
-  console.log('   jury       : jury1@isen.fr');
+  console.log('\n   Comptes de test :');
+  console.log('   admin      : admin@isen.fr          | admin2026');
+  console.log('   supervisor : meryem.benyoussef@junia.com | password123');
+  console.log('   team_leader: alex.komenan@junia.com  | password123');
+  console.log('   student    : etudiant1@junia.com ... etudiant4@junia.com | password123');
+  console.log('   jury       : jury@junia.com          | password123');
 }
 
 main()

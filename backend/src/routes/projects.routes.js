@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const auth = require('../middlewares/auth.middleware');
 const role = require('../middlewares/role.middleware');
+const { isLeaderOrSupervisor } = require('../middlewares/projectRole.middleware');
 const upload = require('../middlewares/upload.middleware');
 
 const { getAll, getOne, create, update, remove }   = require('../controllers/projectController');
@@ -14,23 +15,23 @@ const { getEvaluations, createEvaluation }          = require('../controllers/ev
 
 // ── Projets ──────────────────────────────────────────
 router.get('/',       auth, getAll);
-router.post('/',      auth, role('supervisor'), create);
+router.post('/',      auth, role('admin', 'supervisor'), create);
 router.get('/:id',    auth, getOne);
-router.put('/:id',    auth, role('supervisor'), update);
-router.delete('/:id', auth, role('supervisor'), remove);
+router.put('/:id',    auth, role('admin', 'supervisor'), update);
+router.delete('/:id', auth, role('admin', 'supervisor'), remove);
 
 // ── Membres ──────────────────────────────────────────
 router.get('/:id/members',         auth, getMembers);
-router.post('/:id/members',        auth, role('supervisor'), addMember);
-router.delete('/:id/members/:uid', auth, role('supervisor'), removeMember);
+router.post('/:id/members',        auth, role('admin', 'supervisor'), addMember);
+router.delete('/:id/members/:uid', auth, role('admin', 'supervisor'), removeMember);
 
 // ── Tâches ───────────────────────────────────────────
 router.get('/:id/tasks',  auth, getTasks);
-router.post('/:id/tasks', auth, role('supervisor', 'team_leader'), createTask);
+router.post('/:id/tasks', auth, isLeaderOrSupervisor, createTask);
 
 // ── Jalons ───────────────────────────────────────────
 router.get('/:id/milestones',  auth, getMilestones);
-router.post('/:id/milestones', auth, role('supervisor'), createMilestone);
+router.post('/:id/milestones', auth, isLeaderOrSupervisor, createMilestone);
 
 // ── Livrables ────────────────────────────────────────
 router.get('/:id/deliverables',  auth, getDeliverables);
