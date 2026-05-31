@@ -60,12 +60,6 @@ async function main() {
     create: { nom: 'Etudiant4', prenom: 'Prénom4', email: 'etudiant4@junia.com', password_hash: hash, role: 'student' }
   });
 
-  // ---- Jury ----
-  const jury = await prisma.user.upsert({
-    where: { email: 'jury@junia.com' },
-    update: {},
-    create: { nom: 'Jury', prenom: 'Membre', email: 'jury@junia.com', password_hash: hash, role: 'jury' }
-  });
 
   console.log('✅ Users créés');
 
@@ -151,13 +145,24 @@ async function main() {
 
   console.log('✅ Notifications créées');
 
+  // ---- Evaluation (par l'encadrant) ----
+  await prisma.evaluation.create({
+    data: {
+      project_id: project.id,
+      evaluator_id: supervisor.id,
+      note: 16.5,
+      commentaire: 'Tres bon projet, architecture solide et presentation claire.'
+    }
+  });
+
+  console.log('✅ Evaluation creee');
+
   console.log('\n🎉 Seed terminé avec succès !');
   console.log('\n   Comptes de test :');
   console.log('   admin      : admin@isen.fr          | admin2026');
   console.log('   supervisor : meryem.benyoussef@junia.com | password123');
   console.log('   team_leader: alex.komenan@junia.com  | password123');
   console.log('   student    : etudiant1@junia.com ... etudiant4@junia.com | password123');
-  console.log('   jury       : jury@junia.com          | password123');
 }
 
 main()

@@ -47,6 +47,6 @@ router.post('/:id/comments', auth, createComment);
 
 // ── Évaluations ──────────────────────────────────────
 router.get('/:id/evaluations',  auth, getEvaluations);
-router.post('/:id/evaluations', auth, role('jury'), createEvaluation);
+router.post('/:id/evaluations', auth, role('admin', 'supervisor'), createEvaluation);
 
 module.exports = router;

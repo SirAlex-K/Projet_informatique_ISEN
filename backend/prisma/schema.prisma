@@ -20,8 +20,7 @@ datasource db {
 enum UserRole {
   admin         // Administrateur — gère tous les comptes
   student       // Étudiant (dont le Team Leader via role_in_project)
-  supervisor    // Encadrant
-  jury          // Jury de soutenance
+  supervisor    // Encadrant — supervise, valide et évalue
 }
 
 // ============================================
