@@ -88,10 +88,13 @@ export default function Projects() {
 
         {/* Bottom */}
         <div className="p-5 border-t border-white/10">
-          <button className="flex items-center gap-4 text-gray-400 text-2xl hover:text-white transition">
-            <LogOut size={26} />
-            Changer de rôle
-          </button>
+          <Link
+  to="/login"
+  className="flex items-center gap-4 text-red-400 text-2xl hover:text-red-300 transition"
+>
+  <LogOut size={26} />
+  Déconnexion
+</Link>
         </div>
       </div>
 
