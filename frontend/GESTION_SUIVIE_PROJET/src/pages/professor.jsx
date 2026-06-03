@@ -79,12 +79,12 @@ export default function Professor() {
         {/* Bottom */}
 <div className="p-5 border-t border-white/10">
   <Link
-    to="/login"
-    className="w-full flex items-center gap-4 bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-red-400 text-2xl hover:bg-red-500/20 transition"
-  >
-    <LogOut size={26} />
-    Déconnexion
-  </Link>
+  to="/login"
+  className="w-full flex items-center gap-4 bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-red-400 text-2xl hover:bg-red-500/20 transition"
+>
+  <LogOut size={26} />
+  Déconnexion
+</Link>
 </div>
         
       </div>

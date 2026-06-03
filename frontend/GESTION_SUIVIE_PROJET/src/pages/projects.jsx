@@ -90,7 +90,7 @@ export default function Projects() {
         <div className="p-5 border-t border-white/10">
           <Link
   to="/login"
-  className="flex items-center gap-4 text-red-400 text-2xl hover:text-red-300 transition"
+  className="w-full flex items-center gap-4 bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-red-400 text-2xl hover:bg-red-500/20 transition"
 >
   <LogOut size={26} />
   Déconnexion
