@@ -143,11 +143,14 @@ export default function Groups() {
 
         {/* Bottom */}
         <div className="p-5 border-t border-white/10">
-          <button className="flex items-center gap-4 text-gray-400 text-2xl hover:text-white transition">
-            <LogOut size={26} />
-            Changer de rôle
-          </button>
-        </div>
+  <Link
+    to="/login"
+    className="w-full flex items-center gap-4 bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-red-400 text-2xl hover:bg-red-500/20 transition"
+  >
+    <LogOut size={26} />
+    Déconnexion
+  </Link>
+</div>
       </div>
 
       {/* Main */}
