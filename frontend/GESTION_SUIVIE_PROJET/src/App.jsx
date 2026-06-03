@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 
+import LoginPage from "./pages/LoginPage";
 import Home from "./pages/home";
 import Professor from "./pages/professor";
 import Projects from "./pages/projects";
@@ -12,6 +13,7 @@ import Messages from "./pages/messages";
 export default function App() {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<Home />} />
       <Route path="/professor" element={<Professor />} />
       <Route path="/projects" element={<Projects />} />
