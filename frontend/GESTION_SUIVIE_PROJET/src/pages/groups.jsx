@@ -102,13 +102,7 @@ export default function Groups() {
               <LayoutDashboard size={26} />
               Tableau de bord
             </Link>
-            <Link
-  to="/evaluation"
-  className="p-5 flex items-center gap-4 text-2xl text-gray-400 hover:text-white transition"
->
-  <ClipboardCheck size={26} />
-  Évaluation
-</Link>
+            
 
             <Link
               to="/projects"
