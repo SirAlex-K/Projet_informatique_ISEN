@@ -8,6 +8,8 @@ import {
   LogOut,
   Search,
   ClipboardCheck,
+  Plus,
+  Lock,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
