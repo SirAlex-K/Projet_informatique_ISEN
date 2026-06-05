@@ -9,6 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ClipboardCheck } from "lucide-react";
 
 export default function Professor() {
   return (
@@ -36,6 +37,13 @@ export default function Professor() {
               <LayoutDashboard size={26} />
               Tableau de bord
             </div>
+            <Link
+  to="/evaluation"
+  className="p-5 flex items-center gap-4 text-2xl text-gray-400 hover:text-white transition"
+>
+  <ClipboardCheck size={26} />
+  Évaluation
+</Link>
 
             <Link
   to="/projects"
@@ -129,7 +137,19 @@ export default function Professor() {
           </p>
 
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-8 mb-10">
+          
+          <div className="grid grid-cols-5 gap-8 mb-10">
+            <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8">
+  <div className="w-16 h-16 rounded-2xl bg-green-600 flex items-center justify-center mb-8">
+    <ClipboardCheck size={28} />
+  </div>
+
+  <h1 className="text-6xl font-bold">8</h1>
+
+  <p className="text-gray-400 text-2xl mt-4">
+    Évaluations réalisées
+  </p>
+</div>
             <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8">
               <div className="w-16 h-16 rounded-2xl bg-purple-600 flex items-center justify-center mb-8">
                 <FolderKanban size={28} />
@@ -180,7 +200,9 @@ export default function Professor() {
           </div>
 
           {/* Bottom */}
-          <div className="grid grid-cols-2 gap-8">
+          
+<div className="grid grid-cols-2 gap-8">
+  
             <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8">
               <h2 className="text-4xl font-bold mb-8">
                 Projets récents

@@ -9,6 +9,7 @@ import Students from "./pages/students";
 import Groups from "./pages/groups";
 import DatabaseGroups from "./pages/DatabaseGroups";
 import Messages from "./pages/messages";
+import Evaluation from "./pages/evaluation";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/new-project" element={<NewProject />} />
       <Route path="/messages" element={<Messages />} />
       <Route path="/students" element={<Students />} />
+      <Route path="/evaluation" element={<Evaluation />} />
       <Route path="/groups" element={<Groups />} />
       <Route
         path="/database-groups"
