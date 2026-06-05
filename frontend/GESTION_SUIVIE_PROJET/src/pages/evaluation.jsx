@@ -59,10 +59,18 @@ export default function Evaluation() {
 
           {/* Menu */}
           <div className="p-5 space-y-4">
-            <div className="bg-gradient-to-r from-purple-500 to-purple-400 rounded-2xl p-5 flex items-center gap-4 text-2xl font-semibold shadow-lg">
-              <LayoutDashboard size={26} />
-              Tableau de bord
-            </div>
+            <Link
+  to="/professor"
+  className="p-5 flex items-center gap-4 text-2xl text-gray-400 hover:text-white transition"
+>
+  <LayoutDashboard size={26} />
+  Tableau de bord
+</Link>
+
+<div className="bg-gradient-to-r from-purple-500 to-purple-400 rounded-2xl p-5 flex items-center gap-4 text-2xl font-semibold shadow-lg">
+  <ClipboardCheck size={26} />
+  Évaluation
+</div>
             <Link
   to="/evaluation"
   className="p-5 flex items-center gap-4 text-2xl text-gray-400 hover:text-white transition"
@@ -124,7 +132,20 @@ export default function Evaluation() {
         
       </div>
 
-      <h1 className="text-5xl font-bold mb-2">
+{/* Main */}
+<div className="flex-1">
+
+  {/* Header */}
+  <div className="border-b border-white/10 px-10 py-6">
+    <h1 className="text-5xl font-bold">
+      Évaluation
+    </h1>
+  </div>
+
+  {/* Content */}
+  <div className="p-10">
+
+    <h1 className="text-5xl font-bold mb-2">
         Évaluation des groupes
       </h1>
 
@@ -279,6 +300,8 @@ export default function Evaluation() {
 
       </div>
 
+          </div>
     </div>
-  );
+  </div>
+);
 }
