@@ -66,9 +66,7 @@ export default function Evaluation() {
             </option>
 
             {Object.keys(groupesParSujet).map((s) => (
-              <option key={s}>
-                {s}
-              </option>
+              <option key={s}>{s}</option>
             ))}
           </select>
         </div>
@@ -90,64 +88,24 @@ export default function Evaluation() {
 
             {sujet &&
               groupesParSujet[sujet].map((g) => (
-                <option key={g}>
-                  {g}
-                </option>
+                <option key={g}>{g}</option>
               ))}
           </select>
         </div>
 
-        {/* Notes */}
-        <div className="grid grid-cols-2 gap-6">
+        {/* Note globale */}
+        <div className="mb-6">
+          <label className="block text-gray-400 mb-2">
+            Note globale /20
+          </label>
 
-          <div>
-            <label className="block text-gray-400 mb-2">
-              Technique /20
-            </label>
-
-            <input
-              type="number"
-              placeholder="16"
-              className="w-full bg-[#0B1220] p-4 rounded-xl border border-white/10"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-400 mb-2">
-              Interface /20
-            </label>
-
-            <input
-              type="number"
-              placeholder="15"
-              className="w-full bg-[#0B1220] p-4 rounded-xl border border-white/10"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-400 mb-2">
-              Documentation /20
-            </label>
-
-            <input
-              type="number"
-              placeholder="18"
-              className="w-full bg-[#0B1220] p-4 rounded-xl border border-white/10"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-400 mb-2">
-              Présentation /20
-            </label>
-
-            <input
-              type="number"
-              placeholder="17"
-              className="w-full bg-[#0B1220] p-4 rounded-xl border border-white/10"
-            />
-          </div>
-
+          <input
+            type="number"
+            min="0"
+            max="20"
+            placeholder="Ex : 16"
+            className="w-full bg-[#0B1220] p-4 rounded-xl border border-white/10"
+          />
         </div>
 
         {/* Commentaire */}
@@ -196,7 +154,7 @@ export default function Evaluation() {
               </td>
               <td>Groupe A</td>
               <td className="text-green-400">
-                16.5 / 20
+                16 / 20
               </td>
             </tr>
 
