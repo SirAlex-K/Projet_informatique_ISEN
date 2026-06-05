@@ -67,10 +67,7 @@ export default function Evaluation() {
   Tableau de bord
 </Link>
 
-<div className="bg-gradient-to-r from-purple-500 to-purple-400 rounded-2xl p-5 flex items-center gap-4 text-2xl font-semibold shadow-lg">
-  <ClipboardCheck size={26} />
-  Évaluation
-</div>
+
             <Link
   to="/evaluation"
   className="p-5 flex items-center gap-4 text-2xl text-gray-400 hover:text-white transition"
