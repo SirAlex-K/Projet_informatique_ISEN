@@ -1,12 +1,13 @@
 import {
   GraduationCap,
-  FolderKanban,
   Users,
+  FolderKanban,
   MessageSquare,
   LayoutDashboard,
   Bell,
   LogOut,
-  Plus,
+  Search,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";

@@ -6,7 +6,8 @@ import {
   LayoutDashboard,
   Bell,
   LogOut,
-  ChevronDown,
+  Search,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
