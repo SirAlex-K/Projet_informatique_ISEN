@@ -1,8 +1,3 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
-
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
-});
+// Tests à implémenter
+// Le fichier de test par défaut CRA a été supprimé car il testait
+// un élément ("learn react link") qui n'existe pas dans EduFlow.

@@ -7,7 +7,8 @@ import SupervisorStudents   from './pages/SupervisorStudents';
 import SupervisorProjects   from './pages/SupervisorProjects';
 import SupervisorMessages   from './pages/SupervisorMessages';
 import SupervisorEvaluation from './pages/SupervisorEvaluation';
-import SupervisorGroups     from './pages/SupervisorGroups';
+import SupervisorGroups      from './pages/SupervisorGroups';
+import SupervisorNewProject  from './pages/SupervisorNewProject';
 import StudentPage          from './pages/StudentPage';
 
 function PrivateRoute({ children, roles }) {
@@ -56,6 +57,11 @@ function AppRoutes() {
       <Route path="/supervisor/groups" element={
         <PrivateRoute roles={['supervisor', 'admin']}>
           <SupervisorGroups />
+        </PrivateRoute>
+      } />
+      <Route path="/supervisor/new-project" element={
+        <PrivateRoute roles={['supervisor', 'admin']}>
+          <SupervisorNewProject />
         </PrivateRoute>
       } />
 
