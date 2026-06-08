@@ -6,6 +6,8 @@ import {
   LayoutDashboard,
   Bell,
   LogOut,
+  Search,
+  ClipboardCheck,
   Plus,
   Lock,
 } from "lucide-react";
@@ -47,6 +49,13 @@ export default function Projects() {
               <LayoutDashboard size={26} />
               Tableau de bord
             </Link>
+                        <Link
+  to="/evaluation"
+  className="p-5 flex items-center gap-4 text-2xl text-gray-400 hover:text-white transition"
+>
+  <ClipboardCheck size={26} />
+  Évaluation
+</Link>
 
             <div className="bg-gradient-to-r from-purple-500 to-purple-400 rounded-2xl p-5 flex items-center gap-4 text-2xl font-semibold shadow-lg">
               <FolderKanban size={26} />
@@ -88,13 +97,7 @@ export default function Projects() {
 
         {/* Bottom */}
         <div className="p-5 border-t border-white/10">
-          <Link
-  to="/login"
-  className="w-full flex items-center gap-4 bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-red-400 text-2xl hover:bg-red-500/20 transition"
->
-  <LogOut size={26} />
-  Déconnexion
-</Link>
+          
         </div>
       </div>
 

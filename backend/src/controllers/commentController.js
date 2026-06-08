@@ -80,7 +80,7 @@ const deleteComment = async (req, res) => {
   try {
     const comment = await prisma.comment.findUnique({ where: { id: parseInt(req.params.id) } });
     if (!comment) return res.status(404).json({ message: 'Commentaire introuvable' });
-    if (comment.author_id !== req.user.id && req.user.role !== 'supervisor') {
+    if (comment.author_id !== req.user.id && req.user.role !== 'supervisor' && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Non autorisé' });
     }
     await prisma.comment.delete({ where: { id: parseInt(req.params.id) } });

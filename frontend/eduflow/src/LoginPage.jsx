@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Layers, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
-import { ThemeToggle } from '../components/ThemeToggle';
-import api from '../api';
+import { useAuth } from './contexts/AuthContext';
+import { ThemeToggle } from './components/ThemeToggle';
+import api from './services/api';
 
 export default function LoginPage() {
   const { login } = useAuth();

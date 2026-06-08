@@ -7,6 +7,7 @@ import Messages from "./pages/messages";
 import Students from "./pages/students";
 import Groups from "./pages/groups";
 import DatabaseGroups from "./pages/DatabaseGroups";
+<<<<<<< HEAD
 
 // Pages professeur
 import Professor from "./pages/professor";
@@ -19,6 +20,10 @@ import Kanban from "./pages/etudiant/kanban";
 import Livrables from "./pages/etudiant/livrables";
 import Notes from "./pages/etudiant/notes";
 import Chat from "./pages/etudiant/chat";
+=======
+import Messages from "./pages/messages";
+import Evaluation from "./pages/evaluation";
+>>>>>>> eaf4d0f6b49376f675104724444e7fe1627105f3
 
 export default function App() {
   return (
@@ -39,6 +44,7 @@ export default function App() {
       <Route path="/new-project" element={<NewProject />} />
       <Route path="/messages" element={<Messages />} />
       <Route path="/students" element={<Students />} />
+      <Route path="/evaluation" element={<Evaluation />} />
       <Route path="/groups" element={<Groups />} />
       <Route path="/database-groups" element={<DatabaseGroups />} />
     </Routes>

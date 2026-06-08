@@ -1,11 +1,13 @@
 import {
   GraduationCap,
-  FolderKanban,
   Users,
+  FolderKanban,
   MessageSquare,
   LayoutDashboard,
   Bell,
   LogOut,
+  Search,
+  ClipboardCheck,
   Plus,
 } from "lucide-react";
 
@@ -65,6 +67,13 @@ export default function Messages() {
               <LayoutDashboard size={26} />
               Tableau de bord
             </Link>
+                        <Link
+  to="/evaluation"
+  className="p-5 flex items-center gap-4 text-2xl text-gray-400 hover:text-white transition"
+>
+  <ClipboardCheck size={26} />
+  Évaluation
+</Link>
 
             <Link
               to="/projects"
@@ -73,6 +82,7 @@ export default function Messages() {
               <FolderKanban size={26} />
               Projets
             </Link>
+            
 
             <Link
               to="/groups"

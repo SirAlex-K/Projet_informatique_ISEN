@@ -10,7 +10,7 @@ const supervisorDashboard = async (req, res) => {
     const projects = await prisma.project.findMany({
       where: { supervisor_id: req.user.id },
       include: {
-        members: true,
+        members: { include: { user: { select: { id: true, nom: true, prenom: true, email: true } } } },
         tasks: true,
         deliverables: true
       }
@@ -27,7 +27,8 @@ const supervisorDashboard = async (req, res) => {
       nb_livrables: p.deliverables.length,
       avancement: p.tasks.length > 0
         ? Math.round((p.tasks.filter(t => t.statut === 'done').length / p.tasks.length) * 100)
-        : 0
+        : 0,
+      membres: p.members.map(m => ({ role_in_project: m.role_in_project, ...m.user }))
     }));
 
     res.json({ total_projets: projects.length, projets: stats });
@@ -66,4 +67,50 @@ const projectStats = async (req, res) => {
   }
 };
 
-module.exports = { supervisorDashboard, projectStats };
+// GET /api/dashboard/student
+const studentDashboard = async (req, res) => {
+  try {
+    const membership = await prisma.teamMember.findFirst({
+      where: { user_id: req.user.id },
+      include: {
+        project: {
+          include: {
+            tasks: { include: { assignee: { select: { id: true, nom: true, prenom: true } } } },
+            deliverables: true,
+            milestones: { orderBy: { date_cible: 'asc' } },
+            supervisor: { select: { id: true, nom: true, prenom: true, email: true } }
+          }
+        }
+      }
+    });
+
+    if (!membership) return res.status(404).json({ message: 'Aucun projet assigné' });
+
+    const project = membership.project;
+    const myTasks = project.tasks.filter(t => t.assigned_to === req.user.id);
+    const avancement = project.tasks.length > 0
+      ? Math.round((project.tasks.filter(t => t.statut === 'done').length / project.tasks.length) * 100)
+      : 0;
+
+    res.json({
+      project: {
+        id: project.id,
+        titre: project.titre,
+        description: project.description,
+        statut: project.statut,
+        date_debut: project.date_debut,
+        date_fin: project.date_fin,
+        supervisor: project.supervisor
+      },
+      role_in_project: membership.role_in_project,
+      avancement,
+      mes_taches: myTasks,
+      livrables: project.deliverables,
+      jalons: project.milestones
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', error: err.message });
+  }
+};
+
+module.exports = { supervisorDashboard, studentDashboard, projectStats };
