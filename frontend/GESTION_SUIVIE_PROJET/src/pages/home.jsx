@@ -27,7 +27,7 @@ export default function Home() {
       color: "from-blue-500 to-cyan-500",
       text: "text-blue-400",
       icon: <GraduationCap size={28} />,
-      link: "/student",
+      link: "/etudiant",
     },
 
     {

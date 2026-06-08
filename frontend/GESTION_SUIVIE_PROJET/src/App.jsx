@@ -1,30 +1,46 @@
 import { Routes, Route } from "react-router-dom";
 
+// Pages générales
 import LoginPage from "./pages/LoginPage.jsx";
 import Home from "./pages/home";
-import Professor from "./pages/professor";
-import Projects from "./pages/projects";
-import NewProject from "./pages/newproject";
+import Messages from "./pages/messages";
 import Students from "./pages/students";
 import Groups from "./pages/groups";
 import DatabaseGroups from "./pages/DatabaseGroups";
-import Messages from "./pages/messages";
+
+// Pages professeur
+import Professor from "./pages/professor";
+import Projects from "./pages/projects";
+import NewProject from "./pages/newproject";
+
+// Pages étudiant
+import Student from "./pages/etudiant/etudiant";
+import Kanban from "./pages/etudiant/kanban";
+import Livrables from "./pages/etudiant/livrables";
+import Notes from "./pages/etudiant/notes";
+import Chat from "./pages/etudiant/chat";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<Home />} />
+
+      {/* Routes étudiant */}
+      <Route path="/etudiant" element={<Student />} />
+      <Route path="/kanban" element={<Kanban />} />
+      <Route path="/livrables" element={<Livrables />} />
+      <Route path="/notes" element={<Notes />} />
+      <Route path="/chat" element={<Chat />} />
+
+      {/* Routes professeur / admin */}
       <Route path="/professor" element={<Professor />} />
       <Route path="/projects" element={<Projects />} />
       <Route path="/new-project" element={<NewProject />} />
       <Route path="/messages" element={<Messages />} />
       <Route path="/students" element={<Students />} />
       <Route path="/groups" element={<Groups />} />
-      <Route
-        path="/database-groups"
-        element={<DatabaseGroups />}
-      />
+      <Route path="/database-groups" element={<DatabaseGroups />} />
     </Routes>
   );
 }
