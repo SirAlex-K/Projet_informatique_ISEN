@@ -14,6 +14,9 @@ import {
   AlertCircle,
   X,
   File,
+  Download,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -25,6 +28,7 @@ const INITIAL_LIVRABLES = [
     deadline: "01/03/2024",
     status: "submitted",
     fileName: "CDC_Groupe3.pdf",
+    fileUrl: null, // fichier de démo : pas de contenu réel stocké
     grade: "16/20",
     comment: "Très bon travail, structure claire et bien détaillée.",
   },
@@ -35,6 +39,7 @@ const INITIAL_LIVRABLES = [
     deadline: "15/03/2024",
     status: "submitted",
     fileName: "Maquettes_EduFlow_v2.fig",
+    fileUrl: null,
     grade: "En attente",
     comment: null,
   },
@@ -45,6 +50,7 @@ const INITIAL_LIVRABLES = [
     deadline: "30/03/2024",
     status: "pending",
     fileName: null,
+    fileUrl: null,
     grade: null,
     comment: null,
   },
@@ -55,6 +61,7 @@ const INITIAL_LIVRABLES = [
     deadline: "15/04/2024",
     status: "upcoming",
     fileName: null,
+    fileUrl: null,
     grade: null,
     comment: null,
   },
@@ -83,19 +90,50 @@ function StatusBadge({ status }) {
 export default function Livrables() {
   const [livrables, setLivrables] = useState(INITIAL_LIVRABLES);
   const [dragOverId, setDragOverId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const fileRefs = useRef({});
 
   const handleUpload = (id, file) => {
     if (!file) return;
+    const url = URL.createObjectURL(file); // permet le téléchargement ultérieur
     setLivrables((prev) =>
-      prev.map((l) => l.id === id ? { ...l, fileName: file.name, status: "submitted" } : l)
+      prev.map((l) =>
+        l.id === id
+          ? { ...l, fileName: file.name, fileUrl: url, status: "submitted" }
+          : l
+      )
     );
   };
 
   const handleRemove = (id) => {
     setLivrables((prev) =>
-      prev.map((l) => l.id === id ? { ...l, fileName: null, status: "pending" } : l)
+      prev.map((l) => {
+        if (l.id !== id) return l;
+        if (l.fileUrl) URL.revokeObjectURL(l.fileUrl); // libère la mémoire
+        return { ...l, fileName: null, fileUrl: null, status: "pending" };
+      })
     );
+  };
+
+  const handleDownload = (livrable) => {
+    const a = document.createElement("a");
+    a.download = livrable.fileName;
+
+    if (livrable.fileUrl) {
+      // fichier réellement déposé pendant la session
+      a.href = livrable.fileUrl;
+      a.click();
+    } else {
+      // fichier de démonstration (pas de contenu réel) : on génère un placeholder
+      const blob = new Blob(
+        [`Fichier de démonstration : ${livrable.fileName}\n\n(Aucun contenu réel n'est stocké côté front-end.)`],
+        { type: "text/plain" }
+      );
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   const submitted = livrables.filter((l) => l.status === "submitted").length;
@@ -103,54 +141,60 @@ export default function Livrables() {
 
   return (
     <div className="min-h-screen bg-[#020817] text-white flex">
-      {/* Sidebar */}
-      <div className="w-72 border-r border-white/[0.06] bg-[#0B1220] flex flex-col justify-between flex-shrink-0">
-        <div>
-          <div className="p-6 border-b border-white/[0.06]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <GraduationCap size={20} />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold tracking-tight">ProjectHub</h1>
-                <p className="text-gray-500 text-xs">Étudiant</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 space-y-1">
-            <Link to="/etudiant" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
-              <LayoutDashboard size={18} />
-              Tableau de bord
-            </Link>
-            <Link to="/kanban" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
-              <FolderKanban size={18} />
-              Mon Projet
-            </Link>
-            <div className="relative bg-blue-600/90 rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-semibold shadow-lg shadow-blue-500/20">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-white rounded-r-full" />
-              <FileText size={18} />
-              Livrables
-            </div>
-            <Link to="/notes" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
-              <Star size={18} />
-              Notes
-            </Link>
-            <Link to="/chat" className="px-4 py-3 flex items-center justify-between text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+      {/* Sidebar (repliable) */}
+      <div
+        className={`${
+          sidebarOpen ? "w-72 border-r border-white/[0.06]" : "w-0"
+        } overflow-hidden flex-shrink-0 bg-[#0B1220] transition-[width] duration-300 ease-in-out`}
+      >
+        <div className="w-72 h-full flex flex-col justify-between">
+          <div>
+            <div className="p-6 border-b border-white/[0.06]">
               <div className="flex items-center gap-3">
-                <MessageSquare size={18} />
-                Chat du groupe
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <GraduationCap size={20} />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight">ProjectHub</h1>
+                  <p className="text-gray-500 text-xs">Étudiant</p>
+                </div>
               </div>
-              <span className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-xs font-bold">3</span>
+            </div>
+
+            <div className="p-4 space-y-1">
+              <Link to="/etudiant" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+                <LayoutDashboard size={18} />
+                Tableau de bord
+              </Link>
+              <Link to="/kanban" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+                <FolderKanban size={18} />
+                Mon Projet
+              </Link>
+              <div className="relative bg-blue-600/90 rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-semibold shadow-lg shadow-blue-500/20">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-white rounded-r-full" />
+                <FileText size={18} />
+                Livrables
+              </div>
+              <Link to="/notes" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+                <Star size={18} />
+                Notes
+              </Link>
+              <Link to="/chat" className="px-4 py-3 flex items-center justify-between text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+                <div className="flex items-center gap-3">
+                  <MessageSquare size={18} />
+                  Chat du groupe
+                </div>
+                <span className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-xs font-bold">3</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-white/[0.06]">
+            <Link to="/login" className="flex items-center gap-3 bg-red-500/[0.07] border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm hover:bg-red-500/15 transition-all duration-200">
+              <LogOut size={16} />
+              Déconnexion
             </Link>
           </div>
-        </div>
-
-        <div className="p-4 border-t border-white/[0.06]">
-          <Link to="/login" className="flex items-center gap-3 bg-red-500/[0.07] border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm hover:bg-red-500/15 transition-all duration-200">
-            <LogOut size={16} />
-            Déconnexion
-          </Link>
         </div>
       </div>
 
@@ -158,9 +202,20 @@ export default function Livrables() {
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Topbar */}
         <div className="border-b border-white/[0.06] px-8 py-4 flex justify-between items-center flex-shrink-0">
-          <div>
-            <h1 className="text-2xl font-bold">Livrables</h1>
-            <p className="text-gray-500 text-sm mt-0.5">Dépôt et suivi de vos rendus</p>
+          <div className="flex items-center gap-3">
+            {/* Bouton masquer / afficher le menu */}
+            <button
+              onClick={() => setSidebarOpen((v) => !v)}
+              title={sidebarOpen ? "Masquer le menu" : "Afficher le menu"}
+              aria-label={sidebarOpen ? "Masquer le menu" : "Afficher le menu"}
+              className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors flex-shrink-0"
+            >
+              {sidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold">Livrables</h1>
+              <p className="text-gray-500 text-sm mt-0.5">Dépôt et suivi de vos rendus</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <button className="relative p-2 rounded-xl hover:bg-white/[0.05] transition-colors">
@@ -255,10 +310,22 @@ export default function Livrables() {
                     livrable.fileName ? (
                       <div className="bg-green-500/[0.07] border border-green-500/20 rounded-xl p-3.5 flex items-center gap-3">
                         <File size={16} className="text-green-400 flex-shrink-0" />
-                        <span className="text-green-300 text-sm flex-1 font-medium">{livrable.fileName}</span>
+                        <span className="text-green-300 text-sm flex-1 font-medium truncate">{livrable.fileName}</span>
+
+                        {/* Bouton de téléchargement pour les membres du groupe */}
+                        <button
+                          onClick={() => handleDownload(livrable)}
+                          title="Télécharger le fichier"
+                          className="flex items-center gap-1.5 text-gray-400 hover:text-blue-300 text-xs font-medium bg-white/[0.04] hover:bg-blue-500/15 border border-white/[0.08] hover:border-blue-500/30 px-2.5 py-1.5 rounded-lg transition-all duration-150 flex-shrink-0"
+                        >
+                          <Download size={14} />
+                          Télécharger
+                        </button>
+
                         <button
                           onClick={() => handleRemove(livrable.id)}
-                          className="text-gray-600 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-500/10"
+                          title="Retirer le fichier"
+                          className="text-gray-600 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-red-500/10 flex-shrink-0"
                         >
                           <X size={15} />
                         </button>

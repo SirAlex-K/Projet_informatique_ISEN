@@ -10,6 +10,7 @@ import SupervisorEvaluation from './pages/SupervisorEvaluation';
 import SupervisorGroups      from './pages/SupervisorGroups';
 import SupervisorNewProject  from './pages/SupervisorNewProject';
 import StudentPage          from './pages/StudentPage';
+import Groupe from "./Groupe";
 
 function PrivateRoute({ children, roles }) {
   const { token, user } = useAuth();
@@ -21,6 +22,7 @@ function PrivateRoute({ children, roles }) {
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/groupe" element={<Groupe />} /> 
       <Route path="/" element={<LoginPage />} />
 
       <Route path="/admin" element={

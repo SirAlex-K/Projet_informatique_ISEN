@@ -11,6 +11,8 @@ import {
   Send,
   Paperclip,
   Users,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -33,6 +35,7 @@ const INITIAL_MESSAGES = [
 export default function Chat() {
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
 
@@ -60,51 +63,57 @@ export default function Chat() {
 
   return (
     <div className="min-h-screen bg-[#020817] text-white flex">
-      {/* Sidebar */}
-      <div className="w-72 border-r border-white/[0.06] bg-[#0B1220] flex flex-col justify-between flex-shrink-0">
-        <div>
-          <div className="p-6 border-b border-white/[0.06]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <GraduationCap size={20} />
+      {/* Sidebar (repliable) */}
+      <div
+        className={`${
+          sidebarOpen ? "w-72 border-r border-white/[0.06]" : "w-0"
+        } overflow-hidden flex-shrink-0 bg-[#0B1220] transition-[width] duration-300 ease-in-out`}
+      >
+        <div className="w-72 h-full flex flex-col justify-between">
+          <div>
+            <div className="p-6 border-b border-white/[0.06]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <GraduationCap size={20} />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight">ProjectHub</h1>
+                  <p className="text-gray-500 text-xs">Étudiant</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold tracking-tight">ProjectHub</h1>
-                <p className="text-gray-500 text-xs">Étudiant</p>
+            </div>
+
+            <div className="p-4 space-y-1">
+              <Link to="/etudiant" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+                <LayoutDashboard size={18} />
+                Tableau de bord
+              </Link>
+              <Link to="/kanban" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+                <FolderKanban size={18} />
+                Mon Projet
+              </Link>
+              <Link to="/livrables" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+                <FileText size={18} />
+                Livrables
+              </Link>
+              <Link to="/notes" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+                <Star size={18} />
+                Notes
+              </Link>
+              <div className="relative bg-blue-600/90 rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-semibold shadow-lg shadow-blue-500/20">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-white rounded-r-full" />
+                <MessageSquare size={18} />
+                Chat du groupe
               </div>
             </div>
           </div>
 
-          <div className="p-4 space-y-1">
-            <Link to="/etudiant" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
-              <LayoutDashboard size={18} />
-              Tableau de bord
+          <div className="p-4 border-t border-white/[0.06]">
+            <Link to="/login" className="flex items-center gap-3 bg-red-500/[0.07] border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm hover:bg-red-500/15 transition-all duration-200">
+              <LogOut size={16} />
+              Déconnexion
             </Link>
-            <Link to="/kanban" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
-              <FolderKanban size={18} />
-              Mon Projet
-            </Link>
-            <Link to="/livrables" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
-              <FileText size={18} />
-              Livrables
-            </Link>
-            <Link to="/notes" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
-              <Star size={18} />
-              Notes
-            </Link>
-            <div className="relative bg-blue-600/90 rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-semibold shadow-lg shadow-blue-500/20">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-white rounded-r-full" />
-              <MessageSquare size={18} />
-              Chat du groupe
-            </div>
           </div>
-        </div>
-
-        <div className="p-4 border-t border-white/[0.06]">
-          <Link to="/login" className="flex items-center gap-3 bg-red-500/[0.07] border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm hover:bg-red-500/15 transition-all duration-200">
-            <LogOut size={16} />
-            Déconnexion
-          </Link>
         </div>
       </div>
 
@@ -113,6 +122,15 @@ export default function Chat() {
         {/* Header */}
         <div className="border-b border-white/[0.06] px-8 py-4 flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-3">
+            {/* Bouton masquer / afficher le menu */}
+            <button
+              onClick={() => setSidebarOpen((v) => !v)}
+              title={sidebarOpen ? "Masquer le menu" : "Afficher le menu"}
+              aria-label={sidebarOpen ? "Masquer le menu" : "Afficher le menu"}
+              className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors flex-shrink-0"
+            >
+              {sidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
+            </button>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-md shadow-blue-500/20">
               <Users size={18} />
             </div>
