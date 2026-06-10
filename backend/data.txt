@@ -1,0 +1,514 @@
+// =============================================================================
+// EduFlow - Script de Seed Prisma
+// Projet : Mixeur Audio Professionnel basé sur PIC18F25K40 (Assembleur)
+// École   : JUNIA ISEN - Promotion Ingénieurs 2024-2025
+// =============================================================================
+
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log('🌱 Début du seed EduFlow...');
+
+  // ===========================================================================
+  // 1. NETTOYAGE (ordre inverse des dépendances FK)
+  // ===========================================================================
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE
+    "Evaluation", "Message", "Deliverable", "Task",
+    "GroupMember", "Group", "SubjectEnrollment", "Subject",
+    "Promotion", "User"
+    RESTART IDENTITY CASCADE`);
+  console.log('✅ Tables nettoyées');
+
+  // ===========================================================================
+  // 2. HACHAGE DES MOTS DE PASSE
+  // ===========================================================================
+  const SALT = 10;
+  const hash = (pwd) => bcrypt.hashSync(pwd, SALT);
+
+  // ===========================================================================
+  // 3. UTILISATEURS
+  // ===========================================================================
+
+  // ── Enseignants / Encadrants ────────────────────────────────────────────────
+  const teacher1 = await prisma.user.create({
+    data: {
+      id:           'usr_teach_001',
+      firstName:    'Marc',
+      lastName:     'Lefebvre',
+      email:        'marc.lefebvre@junia.com',
+      passwordHash: hash('EduFlow#Prof2025'),
+      role:         'TEACHER',
+      avatarUrl:    'https://i.pravatar.cc/150?u=marc.lefebvre',
+      bio:          'Professeur en Systèmes Embarqués & Électronique Numérique. Responsable pédagogique des projets PIC/DSP.',
+      createdAt:    new Date('2024-09-01'),
+    },
+  });
+
+  const teacher2 = await prisma.user.create({
+    data: {
+      id:           'usr_teach_002',
+      firstName:    'Sophie',
+      lastName:     'Marchand',
+      email:        'sophie.marchand@junia.com',
+      passwordHash: hash('EduFlow#Prof2025'),
+      role:         'TEACHER',
+      avatarUrl:    'https://i.pravatar.cc/150?u=sophie.marchand',
+      bio:          'Maître de conférences en Traitement du Signal et Architecture Logicielle embarquée.',
+      createdAt:    new Date('2024-09-01'),
+    },
+  });
+
+  // ── Membres du Jury ─────────────────────────────────────────────────────────
+  const jury1 = await prisma.user.create({
+    data: {
+      id:           'usr_jury_001',
+      firstName:    'Éric',
+      lastName:     'Dupont',
+      email:        'eric.dupont@junia.com',
+      passwordHash: hash('Jury@2025!'),
+      role:         'JURY',
+      avatarUrl:    'https://i.pravatar.cc/150?u=eric.dupont',
+      bio:          'Ingénieur R&D chez STMicroelectronics - Expert microcontrôleurs.',
+      createdAt:    new Date('2024-09-01'),
+    },
+  });
+
+  const jury2 = await prisma.user.create({
+    data: {
+      id:           'usr_jury_002',
+      firstName:    'Nathalie',
+      lastName:     'Renard',
+      email:        'nathalie.renard@junia.com',
+      passwordHash: hash('Jury@2025!'),
+      role:         'JURY',
+      avatarUrl:    'https://i.pravatar.cc/150?u=nathalie.renard',
+      bio:          'Directrice technique chez AudioTech Labs - Spécialiste traitement audio temps réel.',
+      createdAt:    new Date('2024-09-01'),
+    },
+  });
+
+  const jury3 = await prisma.user.create({
+    data: {
+      id:           'usr_jury_003',
+      firstName:    'Patrick',
+      lastName:     'Vidal',
+      email:        'patrick.vidal@junia.com',
+      passwordHash: hash('Jury@2025!'),
+      role:         'JURY',
+      avatarUrl:    'https://i.pravatar.cc/150?u=patrick.vidal',
+      bio:          'Professeur agrégé en Systèmes Numériques - JUNIA ISEN Lille.',
+      createdAt:    new Date('2024-09-01'),
+    },
+  });
+
+  // ── Étudiants ───────────────────────────────────────────────────────────────
+  // Groupe 1 : "en avance" — Team Leader + 3 membres
+  const s01 = await prisma.user.create({ data: { id: 'usr_stu_01', firstName: 'Lucas',    lastName: 'Bernard',    email: 'lucas.bernard@etu.junia.com',    passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=lucas.bernard',    createdAt: new Date('2024-09-05') } });
+  const s02 = await prisma.user.create({ data: { id: 'usr_stu_02', firstName: 'Emma',     lastName: 'Moreau',     email: 'emma.moreau@etu.junia.com',      passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=emma.moreau',      createdAt: new Date('2024-09-05') } });
+  const s03 = await prisma.user.create({ data: { id: 'usr_stu_03', firstName: 'Nathan',   lastName: 'Simon',      email: 'nathan.simon@etu.junia.com',     passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=nathan.simon',     createdAt: new Date('2024-09-05') } });
+  const s04 = await prisma.user.create({ data: { id: 'usr_stu_04', firstName: 'Chloé',    lastName: 'Petit',      email: 'chloe.petit@etu.junia.com',      passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=chloe.petit',      createdAt: new Date('2024-09-05') } });
+
+  // Groupe 2 : "dans les temps" — Team Leader + 2 membres
+  const s05 = await prisma.user.create({ data: { id: 'usr_stu_05', firstName: 'Hugo',     lastName: 'Leroy',      email: 'hugo.leroy@etu.junia.com',       passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=hugo.leroy',       createdAt: new Date('2024-09-05') } });
+  const s06 = await prisma.user.create({ data: { id: 'usr_stu_06', firstName: 'Inès',     lastName: 'Garcia',     email: 'ines.garcia@etu.junia.com',      passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=ines.garcia',      createdAt: new Date('2024-09-05') } });
+  const s07 = await prisma.user.create({ data: { id: 'usr_stu_07', firstName: 'Théo',     lastName: 'Roux',       email: 'theo.roux@etu.junia.com',        passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=theo.roux',        createdAt: new Date('2024-09-05') } });
+
+  // Groupe 3 : "en retard critique" — Team Leader + 2 membres
+  const s08 = await prisma.user.create({ data: { id: 'usr_stu_08', firstName: 'Maxime',   lastName: 'Laurent',    email: 'maxime.laurent@etu.junia.com',   passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=maxime.laurent',   createdAt: new Date('2024-09-05') } });
+  const s09 = await prisma.user.create({ data: { id: 'usr_stu_09', firstName: 'Jade',     lastName: 'Durand',     email: 'jade.durand@etu.junia.com',      passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=jade.durand',      createdAt: new Date('2024-09-05') } });
+  const s10 = await prisma.user.create({ data: { id: 'usr_stu_10', firstName: 'Axel',     lastName: 'Fontaine',   email: 'axel.fontaine@etu.junia.com',    passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=axel.fontaine',    createdAt: new Date('2024-09-05') } });
+
+  // Étudiants hors groupe principal (autres sujets de la promo)
+  const s11 = await prisma.user.create({ data: { id: 'usr_stu_11', firstName: 'Camille',  lastName: 'Blanc',      email: 'camille.blanc@etu.junia.com',    passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=camille.blanc',    createdAt: new Date('2024-09-05') } });
+  const s12 = await prisma.user.create({ data: { id: 'usr_stu_12', firstName: 'Tom',      lastName: 'Girard',     email: 'tom.girard@etu.junia.com',       passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=tom.girard',       createdAt: new Date('2024-09-05') } });
+  const s13 = await prisma.user.create({ data: { id: 'usr_stu_13', firstName: 'Lucie',    lastName: 'Morel',      email: 'lucie.morel@etu.junia.com',      passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=lucie.morel',      createdAt: new Date('2024-09-05') } });
+  const s14 = await prisma.user.create({ data: { id: 'usr_stu_14', firstName: 'Raphaël',  lastName: 'Legrand',    email: 'raphael.legrand@etu.junia.com',  passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=raphael.legrand',  createdAt: new Date('2024-09-05') } });
+  const s15 = await prisma.user.create({ data: { id: 'usr_stu_15', firstName: 'Manon',    lastName: 'Chevalier',  email: 'manon.chevalier@etu.junia.com',  passwordHash: hash('Etu2025!'), role: 'STUDENT', avatarUrl: 'https://i.pravatar.cc/150?u=manon.chevalier',  createdAt: new Date('2024-09-05') } });
+
+  console.log('✅ Utilisateurs créés (2 enseignants, 3 jurys, 15 étudiants)');
+
+  // ===========================================================================
+  // 4. PROMOTION
+  // ===========================================================================
+  const promotion = await prisma.promotion.create({
+    data: {
+      id:          'promo_isen_2025',
+      name:        'Ingénieurs ISEN — Promotion 2025',
+      year:        2025,
+      schoolName:  'JUNIA ISEN Lille',
+      description: 'Promotion de 3ème année cycle ingénieur, spécialité Systèmes Embarqués & IoT.',
+      teacherId:   teacher1.id,
+      createdAt:   new Date('2024-09-01'),
+    },
+  });
+  console.log('✅ Promotion créée');
+
+  // ===========================================================================
+  // 5. SUJET DU PROJET
+  // ===========================================================================
+  const subject = await prisma.subject.create({
+    data: {
+      id:              'subj_mixeur_audio_001',
+      title:           'Conception et réalisation d\'un Mixeur Audio Professionnel basé sur un microcontrôleur PIC18F25K40 en assembleur',
+      description:     `Objectif : Concevoir de A à Z un mixeur audio 4 canaux entièrement programmé en langage assembleur sur microcontrôleur PIC18F25K40.
+Le projet couvre l'ensemble de la chaîne : schéma électronique, routage PCB, soudure composants, développement des drivers SPI/I2C, gestion des interruptions, calibration et tests de validation.
+Environnement : MPLAB X IDE, PICkit 4, oscilloscope, analyseur logique.`,
+      promotionId:     promotion.id,
+      teacherId:       teacher1.id,
+      coTeacherId:     teacher2.id,
+      maxGroups:       4,
+      maxStudentsPerGroup: 4,
+      startDate:       new Date('2024-10-01'),
+      endDate:         new Date('2025-06-20'),
+      defenseDate:     new Date('2025-06-18'),
+      status:          'ACTIVE',
+      tags:            ['Assembleur', 'PIC18F25K40', 'SPI', 'PCB', 'Audio', 'Embarqué'],
+      createdAt:       new Date('2024-09-15'),
+    },
+  });
+  console.log('✅ Sujet créé');
+
+  // ===========================================================================
+  // 6. GROUPES
+  // ===========================================================================
+
+  // ── Groupe 1 : ALPHA — EN AVANCE ────────────────────────────────────────────
+  const group1 = await prisma.group.create({
+    data: {
+      id:          'grp_alpha_001',
+      name:        'Groupe Alpha',
+      subjectId:   subject.id,
+      promotionId: promotion.id,
+      leaderId:    s01.id,
+      status:      'ON_TRACK',
+      progress:    92,
+      createdAt:   new Date('2024-10-05'),
+    },
+  });
+  await prisma.groupMember.createMany({ data: [
+    { groupId: group1.id, userId: s01.id, role: 'LEADER',  joinedAt: new Date('2024-10-05') },
+    { groupId: group1.id, userId: s02.id, role: 'MEMBER',  joinedAt: new Date('2024-10-05') },
+    { groupId: group1.id, userId: s03.id, role: 'MEMBER',  joinedAt: new Date('2024-10-05') },
+    { groupId: group1.id, userId: s04.id, role: 'MEMBER',  joinedAt: new Date('2024-10-05') },
+  ]});
+
+  // ── Groupe 2 : BETA — DANS LES TEMPS ────────────────────────────────────────
+  const group2 = await prisma.group.create({
+    data: {
+      id:          'grp_beta_002',
+      name:        'Groupe Beta',
+      subjectId:   subject.id,
+      promotionId: promotion.id,
+      leaderId:    s05.id,
+      status:      'ON_TRACK',
+      progress:    58,
+      createdAt:   new Date('2024-10-06'),
+    },
+  });
+  await prisma.groupMember.createMany({ data: [
+    { groupId: group2.id, userId: s05.id, role: 'LEADER',  joinedAt: new Date('2024-10-06') },
+    { groupId: group2.id, userId: s06.id, role: 'MEMBER',  joinedAt: new Date('2024-10-06') },
+    { groupId: group2.id, userId: s07.id, role: 'MEMBER',  joinedAt: new Date('2024-10-06') },
+  ]});
+
+  // ── Groupe 3 : GAMMA — EN RETARD CRITIQUE ───────────────────────────────────
+  const group3 = await prisma.group.create({
+    data: {
+      id:          'grp_gamma_003',
+      name:        'Groupe Gamma',
+      subjectId:   subject.id,
+      promotionId: promotion.id,
+      leaderId:    s08.id,
+      status:      'CRITICAL',
+      progress:    21,
+      createdAt:   new Date('2024-10-07'),
+    },
+  });
+  await prisma.groupMember.createMany({ data: [
+    { groupId: group3.id, userId: s08.id, role: 'LEADER',  joinedAt: new Date('2024-10-07') },
+    { groupId: group3.id, userId: s09.id, role: 'MEMBER',  joinedAt: new Date('2024-10-07') },
+    { groupId: group3.id, userId: s10.id, role: 'MEMBER',  joinedAt: new Date('2024-10-07') },
+  ]});
+
+  console.log('✅ 3 groupes créés (Alpha, Beta, Gamma)');
+
+  // ===========================================================================
+  // 7. TÂCHES KANBAN
+  // ===========================================================================
+
+  // ── GROUPE ALPHA (en avance — quasi tout DONE) ──────────────────────────────
+  await prisma.task.createMany({ data: [
+    { id: 'task_a01', groupId: group1.id, title: 'Analyse du cahier des charges et spécifications fonctionnelles',           status: 'DONE',        assigneeId: s01.id, dueDate: new Date('2024-10-25'), completedAt: new Date('2024-10-22'), priority: 'HIGH',   description: 'Décomposition des fonctionnalités : 4 entrées audio, potentiomètres numériques, sortie stéréo, interface utilisateur.' },
+    { id: 'task_a02', groupId: group1.id, title: 'Sélection des composants et établissement de la BOM',                     status: 'DONE',        assigneeId: s02.id, dueDate: new Date('2024-11-01'), completedAt: new Date('2024-10-30'), priority: 'HIGH',   description: 'BOM finale : PIC18F25K40, MCP42100 (poti SPI), TL072, MCP3208 (ADC SPI), régulateurs LM7805/LM7905.' },
+    { id: 'task_a03', groupId: group1.id, title: 'Schéma électronique sur KiCad (Rev 1.0)',                                 status: 'DONE',        assigneeId: s02.id, dueDate: new Date('2024-11-15'), completedAt: new Date('2024-11-13'), priority: 'HIGH',   description: 'Schéma complet : alimentation symétrique ±12V, section analogique 4 canaux, section numérique PIC + SPI bus.' },
+    { id: 'task_a04', groupId: group1.id, title: 'Routage PCB 2 couches et envoi en fabrication (JLCPCB)',                 status: 'DONE',        assigneeId: s03.id, dueDate: new Date('2024-11-30'), completedAt: new Date('2024-11-28'), priority: 'HIGH',   description: 'Routage respectant les règles DRC : clearance 0.2mm, vias 0.8mm drill, plan de masse GND sur couche bottom.' },
+    { id: 'task_a05', groupId: group1.id, title: 'Soudure des composants SMD et traversants sur PCB v1',                   status: 'DONE',        assigneeId: s01.id, dueDate: new Date('2025-01-10'), completedAt: new Date('2025-01-08'), priority: 'MEDIUM', description: 'Soudure au fer et à la pâte pour CMS 0805. Tests de continuité au multimètre avant mise sous tension.' },
+    { id: 'task_a06', groupId: group1.id, title: 'Tests de continuité et validation alimentation PCB',                     status: 'DONE',        assigneeId: s03.id, dueDate: new Date('2025-01-15'), completedAt: new Date('2025-01-14'), priority: 'HIGH',   description: 'Vérification tensions ±12V et +5V. Mesure courant au repos. Aucun court-circuit détecté.' },
+    { id: 'task_a07', groupId: group1.id, title: 'Développement du driver SPI en assembleur (MCP42100)',                   status: 'DONE',        assigneeId: s01.id, dueDate: new Date('2025-02-01'), completedAt: new Date('2025-01-29'), priority: 'HIGH',   description: 'Implémentation bas niveau SPI mode 0,0 à 1MHz. Routines : SPI_INIT, SPI_WRITE_BYTE, POT_SET_WIPER. Testé à l\'oscilloscope.' },
+    { id: 'task_a08', groupId: group1.id, title: 'Développement du driver SPI pour ADC MCP3208 (lecture entrées audio)',   status: 'DONE',        assigneeId: s01.id, dueDate: new Date('2025-02-15'), completedAt: new Date('2025-02-12'), priority: 'HIGH',   description: 'Lecture 12 bits par canal, conversion en valeur de gain 0-255 pour le potentiomètre numérique.' },
+    { id: 'task_a09', groupId: group1.id, title: 'Gestion des interruptions (Timer0 + INT externe boutons)',               status: 'DONE',        assigneeId: s04.id, dueDate: new Date('2025-02-28'), completedAt: new Date('2025-02-25'), priority: 'MEDIUM', description: 'Timer0 8-bit @ 1ms pour rafraîchissement affichage. INT RB0 pour détection appui bouton sans rebond (debounce SW).' },
+    { id: 'task_a10', groupId: group1.id, title: 'Interface utilisateur : affichage LCD I2C + encodeur rotatif',           status: 'DONE',        assigneeId: s04.id, dueDate: new Date('2025-03-15'), completedAt: new Date('2025-03-10'), priority: 'MEDIUM', description: 'Driver I2C bitbang en assembleur pour LCD HD44780 via PCF8574. Affichage niveaux gains 4 canaux.' },
+    { id: 'task_a11', groupId: group1.id, title: 'Tests d\'intégration hardware/software et calibration',                  status: 'DONE',        assigneeId: s01.id, dueDate: new Date('2025-04-01'), completedAt: new Date('2025-03-28'), priority: 'HIGH',   description: 'Validation chaîne complète avec signal audio 1kHz. Mesure THD+N < 0.05% à -10dBu.' },
+    { id: 'task_a12', groupId: group1.id, title: 'Rédaction du rapport technique final (v1.0)',                            status: 'DONE',        assigneeId: s02.id, dueDate: new Date('2025-05-15'), completedAt: new Date('2025-05-12'), priority: 'HIGH',   description: '68 pages : introduction, architecture système, choix composants, firmware ASM, résultats mesures, conclusion.' },
+    { id: 'task_a13', groupId: group1.id, title: 'Préparation slides de soutenance (PowerPoint)',                          status: 'DONE',        assigneeId: s03.id, dueDate: new Date('2025-06-01'), completedAt: new Date('2025-05-30'), priority: 'MEDIUM', description: '25 slides, incluant démonstration live du mixeur et captures oscilloscope signaux SPI.' },
+    { id: 'task_a14', groupId: group1.id, title: 'Révision PCB v2.0 — correction bugs thermiques & découplage',           status: 'IN_PROGRESS', assigneeId: s03.id, dueDate: new Date('2025-06-10'), completedAt: null,                  priority: 'LOW',    description: 'Ajout condensateurs découplage 100nF plus proches des VDD PIC. Optimisation plan de masse.' },
+  ]});
+
+  // ── GROUPE BETA (dans les temps — mix TODO/IN_PROGRESS/DONE) ────────────────
+  await prisma.task.createMany({ data: [
+    { id: 'task_b01', groupId: group2.id, title: 'Analyse du cahier des charges et spécifications fonctionnelles',         status: 'DONE',        assigneeId: s05.id, dueDate: new Date('2024-10-25'), completedAt: new Date('2024-10-24'), priority: 'HIGH',   description: 'Définition du scope : 4 entrées mono, sortie stéréo, VU-mètre LED, contrôle gain par boutons.' },
+    { id: 'task_b02', groupId: group2.id, title: 'Sélection des composants et BOM initiale',                              status: 'DONE',        assigneeId: s06.id, dueDate: new Date('2024-11-01'), completedAt: new Date('2024-10-31'), priority: 'HIGH',   description: 'BOM provisoire validée. Choix MCP4131 pour poti SPI (moins de broches que MCP42100).' },
+    { id: 'task_b03', groupId: group2.id, title: 'Schéma électronique sur KiCad (Rev 1.0)',                               status: 'DONE',        assigneeId: s06.id, dueDate: new Date('2024-11-20'), completedAt: new Date('2024-11-22'), priority: 'HIGH',   description: 'Schéma validé par M. Lefebvre. Note : revoir le découplage alimentation op-amp en Rev 1.1.' },
+    { id: 'task_b04', groupId: group2.id, title: 'Routage PCB et validation DRC',                                         status: 'DONE',        assigneeId: s07.id, dueDate: new Date('2024-12-10'), completedAt: new Date('2025-01-05'), priority: 'HIGH',   description: 'Retard de 3 semaines dû à erreurs DRC sur couche silkscreen. PCB envoyé en fabrication le 05/01.' },
+    { id: 'task_b05', groupId: group2.id, title: 'Soudure des composants et tests de continuité',                         status: 'DONE',        assigneeId: s05.id, dueDate: new Date('2025-01-20'), completedAt: new Date('2025-01-28'), priority: 'MEDIUM', description: 'Composants soudés. Court-circuit détecté sur VCC/GND corrigé (pont de soudure sur CMS 0402).' },
+    { id: 'task_b06', groupId: group2.id, title: 'Développement driver SPI MCP4131 en assembleur',                        status: 'IN_PROGRESS', assigneeId: s05.id, dueDate: new Date('2025-03-01'), completedAt: null,                  priority: 'HIGH',   description: 'Routines SPI_INIT et SPI_WRITE partiellement fonctionnelles. Problème de timing sur SCK observé à l\'oscillo (voir ticket MSG_007).' },
+    { id: 'task_b07', groupId: group2.id, title: 'Développement driver ADC MCP3208 en assembleur',                        status: 'IN_PROGRESS', assigneeId: s07.id, dueDate: new Date('2025-03-15'), completedAt: null,                  priority: 'HIGH',   description: 'En attente de stabilisation du driver SPI de base. Début prévu semaine 11.' },
+    { id: 'task_b08', groupId: group2.id, title: 'Gestion des interruptions Timer0 et INT externe',                       status: 'TODO',        assigneeId: s06.id, dueDate: new Date('2025-04-01'), completedAt: null,                  priority: 'MEDIUM', description: 'À démarrer après validation complète du bus SPI.' },
+    { id: 'task_b09', groupId: group2.id, title: 'Interface utilisateur LCD I2C',                                         status: 'TODO',        assigneeId: s06.id, dueDate: new Date('2025-04-15'), completedAt: null,                  priority: 'MEDIUM', description: 'Dépend de la validation I2C bitbang.' },
+    { id: 'task_b10', groupId: group2.id, title: 'Tests d\'intégration et calibration',                                   status: 'TODO',        assigneeId: s05.id, dueDate: new Date('2025-05-01'), completedAt: null,                  priority: 'HIGH',   description: 'Planifié semaine 18 sous réserve avancement firmware.' },
+    { id: 'task_b11', groupId: group2.id, title: 'Rédaction du rapport technique',                                        status: 'IN_PROGRESS', assigneeId: s06.id, dueDate: new Date('2025-05-20'), completedAt: null,                  priority: 'HIGH',   description: '18 pages rédigées sur 60 estimées. Sections : Introduction, Architecture matérielle.' },
+    { id: 'task_b12', groupId: group2.id, title: 'Préparation slides de soutenance',                                      status: 'TODO',        assigneeId: s07.id, dueDate: new Date('2025-06-05'), completedAt: null,                  priority: 'MEDIUM', description: 'À démarrer après validation rapport.' },
+  ]});
+
+  // ── GROUPE GAMMA (en retard critique — BLOCKED, TODO, peu de DONE) ──────────
+  await prisma.task.createMany({ data: [
+    { id: 'task_g01', groupId: group3.id, title: 'Analyse du cahier des charges et spécifications fonctionnelles',         status: 'DONE',        assigneeId: s08.id, dueDate: new Date('2024-10-25'), completedAt: new Date('2024-11-10'), priority: 'HIGH',   description: 'Rendu avec 15 jours de retard. Spécifications incomplètes, pas de définition de la section VU-mètre.' },
+    { id: 'task_g02', groupId: group3.id, title: 'Sélection des composants et BOM',                                       status: 'DONE',        assigneeId: s09.id, dueDate: new Date('2024-11-01'), completedAt: new Date('2024-11-20'), priority: 'HIGH',   description: 'BOM validée tardivement. Composants commandés avec retard — rupture stock MCP42100 (délai 4 semaines).' },
+    { id: 'task_g03', groupId: group3.id, title: 'Schéma électronique sur KiCad',                                         status: 'DONE',        assigneeId: s08.id, dueDate: new Date('2024-11-20'), completedAt: new Date('2025-01-15'), priority: 'HIGH',   description: 'Schéma très en retard. Plusieurs erreurs relevées par M. Lefebvre lors de la review : polarité condensateurs électrolytiques inversée.' },
+    { id: 'task_g04', groupId: group3.id, title: 'Routage PCB et commande fabrication',                                   status: 'BLOCKED',     assigneeId: s10.id, dueDate: new Date('2024-12-10'), completedAt: null,                  priority: 'HIGH',   description: '⚠️ BLOQUÉ : Erreurs critiques DRC non résolues (28 erreurs short-circuit). En attente de correction schéma.' },
+    { id: 'task_g05', groupId: group3.id, title: 'Soudure des composants sur PCB',                                        status: 'TODO',        assigneeId: s08.id, dueDate: new Date('2025-01-20'), completedAt: null,                  priority: 'HIGH',   description: '⏳ En attente réception PCB. Bloqué par tâche G04.' },
+    { id: 'task_g06', groupId: group3.id, title: 'Développement driver SPI en assembleur (PIC18F25K40)',                  status: 'BLOCKED',     assigneeId: s08.id, dueDate: new Date('2025-02-01'), completedAt: null,                  priority: 'HIGH',   description: '⚠️ BLOQUÉ CRITIQUE : Le code ne compile pas sous MPLAB X. Erreurs de syntaxe assembleur PIC18 (mnémoniques PIC16 utilisés). M. Lefebvre alerté le 14/02.' },
+    { id: 'task_g07', groupId: group3.id, title: 'Développement driver ADC MCP3208',                                      status: 'TODO',        assigneeId: s09.id, dueDate: new Date('2025-02-28'), completedAt: null,                  priority: 'HIGH',   description: 'Dépend du driver SPI. Non démarré.' },
+    { id: 'task_g08', groupId: group3.id, title: 'Gestion des interruptions',                                             status: 'TODO',        assigneeId: s10.id, dueDate: new Date('2025-03-15'), completedAt: null,                  priority: 'MEDIUM', description: 'Non démarré. Deadline dépassée.' },
+    { id: 'task_g09', groupId: group3.id, title: 'Rédaction du rapport technique',                                        status: 'IN_PROGRESS', assigneeId: s09.id, dueDate: new Date('2025-05-20'), completedAt: null,                  priority: 'HIGH',   description: '6 pages rédigées. Contenu insuffisant selon M. Lefebvre. Manque sections firmware et résultats.' },
+    { id: 'task_g10', groupId: group3.id, title: 'Tests d\'intégration et calibration',                                   status: 'TODO',        assigneeId: s08.id, dueDate: new Date('2025-05-01'), completedAt: null,                  priority: 'HIGH',   description: '⚠️ Deadline dépassée. Hardware non opérationnel, tests impossibles.' },
+    { id: 'task_g11', groupId: group3.id, title: 'Préparation slides de soutenance',                                      status: 'TODO',        assigneeId: s08.id, dueDate: new Date('2025-06-05'), completedAt: null,                  priority: 'HIGH',   description: 'Non démarré. Risque fort de non-présentation dans les temps.' },
+  ]});
+
+  console.log('✅ Tâches Kanban créées (37 tâches réparties sur 3 groupes)');
+
+  // ===========================================================================
+  // 8. LIVRABLES
+  // ===========================================================================
+  await prisma.deliverable.createMany({ data: [
+    // ── Groupe Alpha ──
+    { id: 'del_a01', groupId: group1.id, uploadedBy: s02.id, name: 'Schema_Electronique_Alpha_V2.pdf',   type: 'PDF',  url: '/uploads/group_alpha/Schema_Electronique_Alpha_V2.pdf',   description: 'Schéma KiCad révisé V2.0 — corrigé suite review M. Lefebvre',                  status: 'APPROVED',  uploadedAt: new Date('2024-11-14'), reviewedBy: teacher1.id, reviewedAt: new Date('2024-11-16') },
+    { id: 'del_a02', groupId: group1.id, uploadedBy: s03.id, name: 'Fichiers_Gerber_PCB_Alpha_V1.zip',   type: 'ZIP',  url: '/uploads/group_alpha/Fichiers_Gerber_PCB_Alpha_V1.zip',   description: 'Fichiers Gerber PCB 2 couches prêts pour fabrication JLCPCB',                 status: 'APPROVED',  uploadedAt: new Date('2024-11-28'), reviewedBy: teacher1.id, reviewedAt: new Date('2024-11-30') },
+    { id: 'del_a03', groupId: group1.id, uploadedBy: s01.id, name: 'Code_Assembleur_SPI_Driver_v1.asm',  type: 'CODE', url: '/uploads/group_alpha/Code_Assembleur_SPI_Driver_v1.asm',  description: 'Driver SPI complet PIC18F25K40 — MCP42100 + MCP3208 validé oscilloscope',     status: 'APPROVED',  uploadedAt: new Date('2025-01-30'), reviewedBy: teacher2.id, reviewedAt: new Date('2025-02-03') },
+    { id: 'del_a04', groupId: group1.id, uploadedBy: s01.id, name: 'Code_Assembleur_Final_Alpha.asm',    type: 'CODE', url: '/uploads/group_alpha/Code_Assembleur_Final_Alpha.asm',    description: 'Firmware final complet : SPI + I2C + Interruptions + Machine d\'états',       status: 'APPROVED',  uploadedAt: new Date('2025-03-30'), reviewedBy: teacher2.id, reviewedAt: new Date('2025-04-04') },
+    { id: 'del_a05', groupId: group1.id, uploadedBy: s02.id, name: 'Rapport_Technique_Alpha_v1.0.pdf',   type: 'PDF',  url: '/uploads/group_alpha/Rapport_Technique_Alpha_v1.0.pdf',   description: 'Rapport technique final 68 pages — validé encadrant',                         status: 'APPROVED',  uploadedAt: new Date('2025-05-12'), reviewedBy: teacher1.id, reviewedAt: new Date('2025-05-15') },
+    { id: 'del_a06', groupId: group1.id, uploadedBy: s03.id, name: 'Slides_Soutenance_Alpha.pptx',       type: 'PPTX', url: '/uploads/group_alpha/Slides_Soutenance_Alpha.pptx',       description: 'Présentation soutenance finale — 25 slides',                                  status: 'APPROVED',  uploadedAt: new Date('2025-05-31'), reviewedBy: teacher1.id, reviewedAt: new Date('2025-06-02') },
+    { id: 'del_a07', groupId: group1.id, uploadedBy: s04.id, name: 'Photos_Carte_PCB_Alpha.zip',         type: 'ZIP',  url: '/uploads/group_alpha/Photos_Carte_PCB_Alpha.zip',         description: 'Photos haute résolution PCB soudé (recto/verso) + maquette en fonctionnement', status: 'APPROVED',  uploadedAt: new Date('2025-01-09'), reviewedBy: teacher1.id, reviewedAt: new Date('2025-01-11') },
+    { id: 'del_a08', groupId: group1.id, uploadedBy: s01.id, name: 'Captures_Oscilloscope_SPI.pdf',      type: 'PDF',  url: '/uploads/group_alpha/Captures_Oscilloscope_SPI.pdf',      description: 'Captures écran oscilloscope : signaux SCK, MOSI, CS# SPI @ 1MHz',            status: 'APPROVED',  uploadedAt: new Date('2025-02-15'), reviewedBy: teacher2.id, reviewedAt: new Date('2025-02-17') },
+
+    // ── Groupe Beta ──
+    { id: 'del_b01', groupId: group2.id, uploadedBy: s06.id, name: 'Schema_Electronique_Beta_V1.pdf',    type: 'PDF',  url: '/uploads/group_beta/Schema_Electronique_Beta_V1.pdf',    description: 'Schéma KiCad v1.0',                                                           status: 'REVISION_REQUESTED', uploadedAt: new Date('2024-11-23'), reviewedBy: teacher1.id, reviewedAt: new Date('2024-11-25') },
+    { id: 'del_b02', groupId: group2.id, uploadedBy: s07.id, name: 'Fichiers_Gerber_PCB_Beta_V1.zip',    type: 'ZIP',  url: '/uploads/group_beta/Fichiers_Gerber_PCB_Beta_V1.zip',    description: 'Gerber envoyés en fabrication — retard 3 semaines',                           status: 'APPROVED',  uploadedAt: new Date('2025-01-05'), reviewedBy: teacher1.id, reviewedAt: new Date('2025-01-07') },
+    { id: 'del_b03', groupId: group2.id, uploadedBy: s05.id, name: 'Code_SPI_Beta_WIP.asm',              type: 'CODE', url: '/uploads/group_beta/Code_SPI_Beta_WIP.asm',              description: 'Driver SPI en cours — SPI_INIT + SPI_WRITE partiels. Problème timing SCK.',  status: 'UNDER_REVIEW', uploadedAt: new Date('2025-02-20'), reviewedBy: teacher2.id, reviewedAt: null },
+    { id: 'del_b04', groupId: group2.id, uploadedBy: s06.id, name: 'Rapport_Partiel_Beta_18p.pdf',       type: 'PDF',  url: '/uploads/group_beta/Rapport_Partiel_Beta_18p.pdf',       description: 'Rapport partiel 18 pages — sections Introduction + Architecture matérielle',  status: 'UNDER_REVIEW', uploadedAt: new Date('2025-04-10'), reviewedBy: teacher1.id, reviewedAt: null },
+
+    // ── Groupe Gamma ──
+    { id: 'del_g01', groupId: group3.id, uploadedBy: s08.id, name: 'Schema_Electronique_Gamma_V1.pdf',   type: 'PDF',  url: '/uploads/group_gamma/Schema_Electronique_Gamma_V1.pdf',  description: 'Schéma v1 — erreurs signalées : condensateurs inversés, net power non connecté', status: 'REVISION_REQUESTED', uploadedAt: new Date('2025-01-16'), reviewedBy: teacher1.id, reviewedAt: new Date('2025-01-18') },
+    { id: 'del_g02', groupId: group3.id, uploadedBy: s09.id, name: 'Rapport_Partiel_Gamma_6p.pdf',       type: 'PDF',  url: '/uploads/group_gamma/Rapport_Partiel_Gamma_6p.pdf',      description: 'Rapport partiel 6 pages — insuffisant, sections firmware manquantes',          status: 'REVISION_REQUESTED', uploadedAt: new Date('2025-04-01'), reviewedBy: teacher1.id, reviewedAt: new Date('2025-04-03') },
+    { id: 'del_g03', groupId: group3.id, uploadedBy: s08.id, name: 'Code_ASM_Gamma_Tentative.asm',       type: 'CODE', url: '/uploads/group_gamma/Code_ASM_Gamma_Tentative.asm',      description: 'Tentative driver SPI — ne compile pas (mnémoniques PIC16 incorrects)',        status: 'REVISION_REQUESTED', uploadedAt: new Date('2025-02-18'), reviewedBy: teacher2.id, reviewedAt: new Date('2025-02-20') },
+  ]});
+
+  console.log('✅ Livrables créés (8 Alpha, 4 Beta, 3 Gamma)');
+
+  // ===========================================================================
+  // 9. MESSAGES / ÉCHANGES
+  // ===========================================================================
+  await prisma.message.createMany({ data: [
+
+    // ── Fil Alpha : échanges positifs ──────────────────────────────────────────
+    {
+      id: 'msg_001', senderId: teacher1.id, receiverId: s01.id, groupId: group1.id,
+      subject: 'Validation schéma électronique Alpha V2',
+      content: 'Bonjour Lucas, j\'ai examiné votre schéma V2. Excellent travail ! Le découplage alimentation est correct, le routage SPI est propre. Je valide ce document. Vous pouvez lancer la commande PCB. Bon courage pour la suite !',
+      isRead: true, createdAt: new Date('2024-11-16T09:30:00'),
+    },
+    {
+      id: 'msg_002', senderId: s01.id, receiverId: teacher1.id, groupId: group1.id,
+      subject: 'RE: Validation schéma électronique Alpha V2',
+      content: 'Merci beaucoup M. Lefebvre ! Nous avons passé la commande sur JLCPCB ce matin. Délai annoncé 8-10 jours ouvrés. Nous avançons en parallèle sur les premières routines assembleur. À bientôt !',
+      isRead: true, createdAt: new Date('2024-11-16T10:15:00'),
+    },
+    {
+      id: 'msg_003', senderId: s01.id, receiverId: teacher2.id, groupId: group1.id,
+      subject: 'Question timing SPI PIC18F25K40',
+      content: 'Bonjour Mme Marchand, nous avons implémenté SPI_WRITE_BYTE mais nous observons un glitch sur SCK à la fin de chaque transfert. Serait-il possible de nous expliquer comment gérer le bit SSPSTAT:BF pour s\'assurer que le buffer est vide avant de désélectionner le slave (CS# = 1) ?',
+      isRead: true, createdAt: new Date('2025-01-20T14:00:00'),
+    },
+    {
+      id: 'msg_004', senderId: teacher2.id, receiverId: s01.id, groupId: group1.id,
+      subject: 'RE: Question timing SPI PIC18F25K40',
+      content: 'Bonjour Lucas, très bonne observation ! En effet, il faut tester le bit BF (Buffer Full) du registre SSPSTAT avant de modifier CS#. Voici la séquence correcte en assembleur :\n\nWAIT_BF:\n  BTFSS  SSPSTAT, BF    ; Attendre que BF = 1\n  BRA    WAIT_BF\n  BCF    PORTC, RC2     ; CS# = 0 → désélection\n\nN\'oubliez pas aussi d\'ajouter un NOP après la désélection pour respecter le temps de setup tCSH du MCP42100. Bon courage !',
+      isRead: true, createdAt: new Date('2025-01-20T16:45:00'),
+    },
+    {
+      id: 'msg_005', senderId: s02.id, receiverId: teacher1.id, groupId: group1.id,
+      subject: 'Dépôt rapport technique final Alpha',
+      content: 'Bonjour M. Lefebvre, nous avons déposé notre rapport technique final (68 pages) sur la plateforme. Pourriez-vous le valider avant la deadline du 15 mai ? Nous y avons intégré toutes les corrections demandées lors de la review de mars. Cordialement, Emma.',
+      isRead: true, createdAt: new Date('2025-05-12T18:00:00'),
+    },
+    {
+      id: 'msg_006', senderId: teacher1.id, receiverId: s02.id, groupId: group1.id,
+      subject: 'RE: Dépôt rapport technique final Alpha',
+      content: 'Emma, rapport validé avec mention "Très Bien". La section sur le driver SPI est particulièrement bien rédigée et les captures oscilloscope sont de qualité professionnelle. Félicitations à toute l\'équipe, vous présentez un travail très solide pour la soutenance !',
+      isRead: true, createdAt: new Date('2025-05-15T11:00:00'),
+    },
+
+    // ── Fil Beta : suivi normal + blocage SPI ──────────────────────────────────
+    {
+      id: 'msg_007', senderId: s05.id, receiverId: teacher2.id, groupId: group2.id,
+      subject: 'Problème timing SCK — driver SPI MCP4131',
+      content: 'Bonjour Mme Marchand, nous avons un problème sérieux avec notre implémentation SPI. On observe que le signal SCK présente des oscillations parasites à la fin de chaque byte envoyé. L\'analyseur logique montre que le MCP4131 ne reconnaît pas la commande "Write Wiper". On a joint notre code en livrable. Pourriez-vous regarder ?',
+      isRead: true, createdAt: new Date('2025-02-18T11:30:00'),
+    },
+    {
+      id: 'msg_008', senderId: teacher2.id, receiverId: s05.id, groupId: group2.id,
+      subject: 'RE: Problème timing SCK — driver SPI MCP4131',
+      content: 'Bonjour Hugo, j\'ai examiné votre code ASM. J\'ai identifié le problème : vous utilisez le mode SPI 1,1 (CPOL=1, CPHA=1) alors que le MCP4131 requiert le mode 0,0 (CPOL=0, CPHA=0). Il faut corriger SSPCON1 : mettre les bits SSPM3:SSPM0 = 0010 (SPI Master, Fosc/64) ET vérifier que CKP=0 et CKE=1 dans SSPCON1/SSPSTAT. Essayez cette correction et revenez-moi avec les nouvelles captures oscillo.',
+      isRead: true, createdAt: new Date('2025-02-19T09:00:00'),
+    },
+    {
+      id: 'msg_009', senderId: teacher1.id, receiverId: s05.id, groupId: group2.id,
+      subject: 'Point d\'étape Groupe Beta — Semaine 10',
+      content: 'Bonjour Hugo, je fais un point de suivi. Votre avancement montre un retard de 3 semaines sur le planning initial (PCB reçu fin janvier au lieu de mi-décembre). Votre driver SPI est encore en cours de débogage. Je recommande FORTEMENT de :\n1. Résoudre le bug SPI d\'ici vendredi 28/02\n2. Faire un point de rattrapage le 03/03 avec Mme Marchand\n3. Prioriser le firmware sur la rédaction du rapport\nSi le retard se confirme, nous devrons revoir le périmètre fonctionnel. Cordialement.',
+      isRead: true, createdAt: new Date('2025-02-24T08:00:00'),
+    },
+    {
+      id: 'msg_010', senderId: s05.id, receiverId: teacher1.id, groupId: group2.id,
+      subject: 'RE: Point d\'étape Groupe Beta — Semaine 10',
+      content: 'Bonjour M. Lefebvre, merci pour le point. Nous avons appliqué la correction de Mme Marchand (mode SPI 0,0). Le MCP4131 répond correctement désormais ! Nous reprenons le développement ce soir. Nous ferons tout pour rattraper le planning. Pouvons-nous avoir un créneau vendredi après-midi pour montrer nos avancées ?',
+      isRead: false, createdAt: new Date('2025-02-25T19:00:00'),
+    },
+
+    // ── Fil Gamma : alertes et retards critiques ───────────────────────────────
+    {
+      id: 'msg_011', senderId: teacher1.id, receiverId: s08.id, groupId: group3.id,
+      subject: '⚠️ ALERTE : Retard critique Groupe Gamma',
+      content: 'Maxime, je constate avec inquiétude que le Groupe Gamma accuse un retard très important sur le planning. À ce stade (semaine 15), vous devriez avoir : PCB soudé et testé ✗, driver SPI fonctionnel ✗, ADC driver démarré ✗. Je vous demande de vous présenter à mon bureau DEMAIN à 14h avec l\'état exact de votre avancement. Ce projet est en danger de non-soutenance si la situation n\'est pas redressée immédiatement.',
+      isRead: true, createdAt: new Date('2025-02-14T07:00:00'),
+    },
+    {
+      id: 'msg_012', senderId: s08.id, receiverId: teacher1.id, groupId: group3.id,
+      subject: 'RE: ALERTE Retard critique',
+      content: 'Bonjour M. Lefebvre, nous en sommes désolés. Nous avons eu des problèmes : la commande de composants a été retardée (rupture de stock), et notre code assembleur ne compile pas sous MPLAB X. Nous ne comprenons pas les erreurs de syntaxe. Axel a eu des problèmes de santé 2 semaines. Nous serons présents demain à 14h. Pouvez-vous nous aider à débloquer le compilateur ?',
+      isRead: true, createdAt: new Date('2025-02-14T09:30:00'),
+    },
+    {
+      id: 'msg_013', senderId: teacher2.id, receiverId: s08.id, groupId: group3.id,
+      subject: 'Correction code assembleur PIC18 — erreurs de base',
+      content: 'Bonjour Maxime, suite au point de hier avec M. Lefebvre. J\'ai regardé votre Code_ASM_Gamma_Tentative.asm. Vous utilisez des mnémoniques PIC16 (ex: MOVWF/MOVF sans banque) au lieu de PIC18. Pour le PIC18F25K40 :\n- Utiliser MOVLW/MOVWF/MOVFF correctement\n- Inclure #include <p18f25k40.inc>\n- Les registres SFR sont accessibles en Access Bank (a=0)\nExemple SPI_INIT correct :\n\n  MOVLW  b\'00100000\'\n  MOVWF  SSPCON1, ACCESS  ; SPI Master, Fosc/4, CKP=0\n  MOVLW  b\'01000000\'\n  MOVWF  SSPSTAT, ACCESS  ; CKE=1, SMP=0\n\nReprenez tout votre code avec ces bases et revenez-moi.',
+      isRead: true, createdAt: new Date('2025-02-15T10:00:00'),
+    },
+    {
+      id: 'msg_014', senderId: teacher1.id, receiverId: s08.id, groupId: group3.id,
+      subject: 'Plan de rattrapage Groupe Gamma',
+      content: 'Suite à notre réunion du 14/02, voici le plan de rattrapage obligatoire :\n\n📅 SEMAINE 8 (avant 21/02) : Corriger le schéma KiCad (erreurs condensateurs) + envoyer PCB en urgence\n📅 SEMAINE 10 (avant 07/03) : Driver SPI fonctionnel sur breadboard\n📅 SEMAINE 13 (avant 28/03) : ADC + intégration\n📅 SEMAINE 16 (avant 18/04) : Tests matériels + début rapport\n\nUn point de suivi hebdomadaire est instauré chaque lundi à 17h. Absence non justifiée = signalement responsable formation. Je crois encore en votre capacité à sauver ce projet.',
+      isRead: true, createdAt: new Date('2025-02-15T14:00:00'),
+    },
+    {
+      id: 'msg_015', senderId: s09.id, receiverId: teacher1.id, groupId: group3.id,
+      subject: 'Dépôt rapport partiel Gamma',
+      content: 'Bonjour M. Lefebvre, nous avons déposé notre rapport partiel (6 pages) comme demandé. Nous savons qu\'il est incomplet mais c\'est ce que nous avons pu produire. Le PCB DRC a encore 12 erreurs que nous n\'arrivons pas à résoudre. Pourrait-on avoir une session de travail en salle de TP cette semaine ?',
+      isRead: true, createdAt: new Date('2025-04-01T20:00:00'),
+    },
+    {
+      id: 'msg_016', senderId: teacher1.id, receiverId: s09.id, groupId: group3.id,
+      subject: 'RE: Dépôt rapport partiel Gamma',
+      content: 'Jade, j\'ai lu votre rapport. 6 pages ne suffisent pas — il faut au minimum 40 pages pour une soutenance acceptable. Le contenu technique est trop superficiel : la section "développement firmware" est quasi absente. Je vous accorde une session TP jeudi 10 avril 14h-17h pour débloquer le DRC avec Axel. MAIS vous devez tous les trois être présents et avoir préparé une liste précise des 12 erreurs DRC. Le rapport doit atteindre 25 pages minimum avant le 30 avril.',
+      isRead: true, createdAt: new Date('2025-04-03T08:30:00'),
+    },
+  ]});
+
+  console.log('✅ Messages créés (16 échanges répartis sur 3 fils)');
+
+  // ===========================================================================
+  // 10. ÉVALUATIONS (Jury)
+  // ===========================================================================
+  await prisma.evaluation.createMany({ data: [
+    // ── Groupe Alpha : notes complètes ──────────────────────────────────────────
+    {
+      id: 'eval_a01', groupId: group1.id, juryId: jury1.id,
+      criterionTechnical:     17.5,
+      criterionReport:        18.0,
+      criterionPresentation:  16.5,
+      criterionTeamwork:      17.0,
+      globalGrade:            17.25,
+      mention:                'TRÈS BIEN',
+      comments: 'Excellente maîtrise technique du PIC18F25K40. Le driver SPI est propre, bien commenté et correctement validé à l\'oscilloscope. L\'approche bas niveau en assembleur pur est remarquable pour des étudiants de 3ème année. Légère hésitation sur les questions de timing SPI en contre-interrogatoire, mais rapidement récupérée. Projet de niveau professionnel.',
+      evaluatedAt: new Date('2025-06-18T10:30:00'),
+    },
+    {
+      id: 'eval_a02', groupId: group1.id, juryId: jury2.id,
+      criterionTechnical:     18.0,
+      criterionReport:        17.0,
+      criterionPresentation:  18.5,
+      criterionTeamwork:      16.0,
+      globalGrade:            17.38,
+      mention:                'TRÈS BIEN',
+      comments: 'En tant que spécialiste audio, je suis impressionnée par la qualité de la chaîne de traitement. La mesure THD+N < 0.05% est un très bon résultat pour un projet étudiant. La présentation est dynamique et la démonstration live fonctionne parfaitement. Le rapport est bien structuré même si la section "tests de validation" pourrait être plus détaillée sur la méthodologie de mesure.',
+      evaluatedAt: new Date('2025-06-18T10:35:00'),
+    },
+    {
+      id: 'eval_a03', groupId: group1.id, juryId: jury3.id,
+      criterionTechnical:     16.0,
+      criterionReport:        17.5,
+      criterionPresentation:  16.0,
+      criterionTeamwork:      18.0,
+      globalGrade:            16.88,
+      mention:                'BIEN',
+      comments: 'Très bon projet global. La coordination de l\'équipe est exemplaire (4 membres avec des rôles bien définis). Quelques points à améliorer : la gestion des erreurs dans le firmware ASM est inexistante (pas de watchdog, pas de trap d\'erreur SPI), et l\'interface LCD pourrait être plus informative. Mais l\'ensemble est de grande qualité.',
+      evaluatedAt: new Date('2025-06-18T10:40:00'),
+    },
+
+    // ── Groupe Beta : pas d'évaluation complète (soutenance à venir) ────────────
+    // (Pas d'INSERT — évaluations vides volontairement)
+
+    // ── Groupe Gamma : commentaires de suivi uniquement ─────────────────────────
+    {
+      id: 'eval_g01', groupId: group3.id, juryId: jury1.id,
+      criterionTechnical:     null,
+      criterionReport:        null,
+      criterionPresentation:  null,
+      criterionTeamwork:      null,
+      globalGrade:            null,
+      mention:                'EN COURS DE RATTRAPAGE',
+      comments: '⚠️ SUIVI ÉTAPE — Soutenance reportée. Le groupe Gamma ne peut pas être évalué à ce stade : PCB non fonctionnel, firmware incomplet (driver SPI non validé), rapport insuffisant (6 pages). Points positifs observés lors des sessions de rattrapage : volonté affichée de l\'équipe, bonne compréhension des concepts théoriques. Axes d\'amélioration prioritaires : 1) Finaliser le routage PCB DRC, 2) Valider driver SPI sur breadboard, 3) Étoffer massivement le rapport. Réévaluation possible en session de rattrapage juillet 2025.',
+      evaluatedAt: new Date('2025-06-05T14:00:00'),
+    },
+  ]});
+
+  console.log('✅ Évaluations créées (3 complètes Groupe Alpha, 1 suivi Groupe Gamma)');
+
+  // ===========================================================================
+  // RÉSUMÉ FINAL
+  // ===========================================================================
+  console.log('\n🎉 ====================================================');
+  console.log('   SEED EDUFLOW TERMINÉ AVEC SUCCÈS');
+  console.log('====================================================');
+  console.log('📊 Données insérées :');
+  console.log('   - 2 enseignants, 3 jurys, 15 étudiants');
+  console.log('   - 1 promotion JUNIA ISEN 2025');
+  console.log('   - 1 sujet : Mixeur Audio PIC18F25K40');
+  console.log('   - 3 groupes : Alpha (92%), Beta (58%), Gamma (21%)');
+  console.log('   - 37 tâches Kanban (DONE/IN_PROGRESS/TODO/BLOCKED)');
+  console.log('   - 15 livrables (.pdf, .asm, .zip, .pptx)');
+  console.log('   - 16 messages encadrants ↔ étudiants');
+  console.log('   - 4 évaluations jury (3 complètes Alpha, 1 suivi Gamma)');
+  console.log('====================================================\n');
+}
+
+main()
+  .catch((e) => {
+    console.error('❌ Erreur seed :', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

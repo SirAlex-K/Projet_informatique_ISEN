@@ -35,7 +35,7 @@ export default function SupervisorEvaluation() {
       setMsg('Évaluation enregistrée avec succès.');
       setNote(''); setCommentaire('');
       const res = await api.get(`/projects/${projetId}/evaluations`);
-      setEvaluations(res.data || []);
+      setEvaluations(res.data.evaluations || []);
     } catch (err) {
       setMsg(err.response?.data?.message || "Erreur lors de l'enregistrement.");
     } finally {
