@@ -7,7 +7,7 @@ import Messages from "./pages/messages";
 import Students from "./pages/students";
 import Groups from "./pages/groups";
 import DatabaseGroups from "./pages/DatabaseGroups";
-<<<<<<< HEAD
+import Evaluation from "./pages/evaluation";
 
 // Pages professeur
 import Professor from "./pages/professor";
@@ -20,10 +20,6 @@ import Kanban from "./pages/etudiant/kanban";
 import Livrables from "./pages/etudiant/livrables";
 import Notes from "./pages/etudiant/notes";
 import Chat from "./pages/etudiant/chat";
-=======
-import Messages from "./pages/messages";
-import Evaluation from "./pages/evaluation";
->>>>>>> eaf4d0f6b49376f675104724444e7fe1627105f3
 
 export default function App() {
   return (
