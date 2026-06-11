@@ -49,31 +49,107 @@ export default function ProjectDetails() {
   return (
     <div className="min-h-screen bg-[#020817] text-white p-10">
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#0B1220] to-[#1e1b4b] border border-purple-500/20 rounded-3xl p-10 mb-12">
+      {/* HEADER */}
+      <div className="relative overflow-hidden rounded-[35px] border border-purple-500/20 bg-gradient-to-br from-[#0B1220] via-[#111827] to-[#1e1b4b] p-12 mb-14">
 
-        <h1 className="text-6xl font-bold mb-4">
-          Projet EduFlow
-        </h1>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/20 blur-[180px]" />
 
-        <p className="text-gray-300 text-xl mb-6">
-          Application de gestion éducative avec React et TypeScript
-        </p>
+        <div className="relative z-10 flex justify-between items-center">
 
-        <div className="flex gap-10 text-lg">
-          <span>👨‍🎓 24 étudiants</span>
-          <span>👥 6 groupes</span>
-          <span>📚 6 sujets</span>
+          <div>
+
+            <div className="flex items-center gap-6 mb-8">
+
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-r from-purple-600 to-fuchsia-500 flex items-center justify-center text-5xl shadow-2xl">
+                
+              </div>
+
+              <div>
+
+                <h1 className="text-7xl font-extrabold">
+                  Projet EduFlow
+                </h1>
+
+                <p className="text-gray-400 text-2xl mt-3">
+                  Plateforme de gestion éducative avec React & TypeScript
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="flex gap-6">
+
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl px-8 py-5">
+
+                <p className="text-gray-400">
+                  Étudiants
+                </p>
+
+                <h3 className="text-4xl font-bold">
+                  24
+                </h3>
+
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl px-8 py-5">
+
+                <p className="text-gray-400">
+                  Groupes
+                </p>
+
+                <h3 className="text-4xl font-bold">
+                  6
+                </h3>
+
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl px-8 py-5">
+
+                <p className="text-gray-400">
+                  Sujets
+                </p>
+
+                <h3 className="text-4xl font-bold">
+                  6
+                </h3>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="hidden lg:block text-[180px] opacity-90">
+            
+          </div>
+
         </div>
 
       </div>
 
-      {/* Titre */}
-      <h2 className="text-5xl font-bold mb-10">
-        Groupes du projet
-      </h2>
+      {/* TITRE */}
+      <div className="flex justify-between items-center mb-10">
 
-      {/* Cartes */}
+        <div>
+
+          <h2 className="text-5xl font-bold">
+            Groupes du projet
+          </h2>
+
+          <p className="text-gray-400 text-xl mt-2">
+            Sélectionnez un groupe pour voir son avancement.
+          </p>
+
+        </div>
+
+        <div className="bg-purple-500/10 border border-purple-500/20 px-6 py-4 rounded-2xl text-purple-300">
+          6 groupes actifs
+        </div>
+
+      </div>
+
+      {/* GROUPES */}
       <div className="grid grid-cols-2 gap-8">
 
         {groupes.map((groupe, i) => (
@@ -88,39 +164,36 @@ export default function ProjectDetails() {
               to-[#111827]
               border
               border-white/10
-              rounded-3xl
+              rounded-[30px]
               p-8
               hover:border-purple-500
-              hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]
-              hover:-translate-y-1
+              hover:shadow-[0_0_35px_rgba(168,85,247,0.35)]
+              hover:-translate-y-2
               transition-all
               duration-300
             "
           >
 
-            {/* Badge */}
             <div className="absolute top-6 right-6">
 
-              <div
-                className="
-                  w-14 h-14
-                  rounded-full
-                  bg-gradient-to-r
-                  from-purple-500
-                  to-purple-400
-                  flex
-                  items-center
-                  justify-center
-                  text-xl
-                  font-bold
-                "
-              >
+              <div className="
+                w-16 h-16
+                rounded-full
+                bg-gradient-to-r
+                from-purple-500
+                to-fuchsia-500
+                flex
+                items-center
+                justify-center
+                text-2xl
+                font-bold
+                shadow-xl
+              ">
                 {groupe.nom.split(" ")[1]}
               </div>
 
             </div>
 
-            {/* Nom */}
             <h3 className="text-4xl font-bold mb-2">
               {groupe.nom}
             </h3>
@@ -129,7 +202,6 @@ export default function ProjectDetails() {
               {groupe.sujet}
             </p>
 
-            {/* Infos */}
             <div className="grid grid-cols-3 gap-6 mb-8">
 
               <div>
@@ -137,7 +209,7 @@ export default function ProjectDetails() {
                   Chef
                 </p>
 
-                <p className="text-lg">
+                <p className="text-lg font-semibold">
                   {groupe.chef}
                 </p>
               </div>
@@ -147,7 +219,7 @@ export default function ProjectDetails() {
                   Membres
                 </p>
 
-                <p className="text-lg">
+                <p className="text-lg font-semibold">
                   {groupe.membres}
                 </p>
               </div>
@@ -157,14 +229,13 @@ export default function ProjectDetails() {
                   Progression
                 </p>
 
-                <p className="text-lg text-green-400">
+                <p className="text-lg font-semibold text-green-400">
                   {groupe.progression}%
                 </p>
               </div>
 
             </div>
 
-            {/* Barre */}
             <div className="mb-6">
 
               <div className="w-full bg-white/5 rounded-full h-3">
@@ -173,6 +244,7 @@ export default function ProjectDetails() {
                   className="
                     bg-gradient-to-r
                     from-purple-500
+                    via-fuchsia-500
                     to-pink-400
                     h-3
                     rounded-full
@@ -186,20 +258,18 @@ export default function ProjectDetails() {
 
             </div>
 
-            {/* Bouton */}
-            <div
-              className="
-                bg-gradient-to-r
-                from-purple-600
-                to-fuchsia-500
-                text-center
-                py-4
-                rounded-2xl
-                font-semibold
-                text-lg
-                shadow-lg
-              "
-            >
+            <div className="
+              bg-gradient-to-r
+              from-purple-600
+              via-purple-500
+              to-fuchsia-500
+              text-center
+              py-4
+              rounded-2xl
+              font-semibold
+              text-lg
+              shadow-xl
+            ">
               Consulter le groupe →
             </div>
 
