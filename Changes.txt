@@ -1,9 +1,126 @@
 Fichiers pour noter tous les changements à effectuer .
 
 -L'Admin doit enregistrer :
-les encadrants 
+les encadrants
 les étudiants (mails, nom, prénom, classe, formation, promo)
 
+<<<<<<< HEAD
+============================================================
+BASE DE DONNÉES (schema.prisma)
+============================================================
+
+-Ajouter les champs classe, formation, promo à la table users
+
+-Créer la table subjects (sujets) :
+un projet contient un ou plusieurs sujets
+(titre, description, lié au projet)
+
+-Créer la table groups (groupes) :
+les slots de groupes sont auto-générés à la création du projet
+(nom "Groupe 1, 2, 3...", capacité max, lié au projet)
+un groupe a UN seul sujet (choisi par le team leader)
+
+-Créer la table group_members :
+qui est dans quel groupe, avec rôle lead ou member
+un étudiant = un seul groupe par projet
+
+-Créer la table project_students :
+le pool d'étudiants ajoutés au projet par l'encadrant
+(avant qu'ils rejoignent un groupe)
+
+-Déplacer les tâches, livrables, messages et évaluations
+du projet vers le GROUPE (chaque groupe a son propre suivi)
+
+-Les jalons (milestones) restent au niveau du projet
+(dates communes : soutenance, rendus...)
+
+-Supprimer la table team_members (remplacée par
+project_students + group_members)
+
+============================================================
+BACKEND
+============================================================
+
+-POST /api/projects : créer le projet avec ses sujets,
+nombre de groupes et taille max
+→ auto-générer les slots de groupes vides
+
+-GET /api/students : liste paginée des étudiants
+avec filtres (promo, formation, recherche par nom)
+
+-POST /api/projects/:id/students : ajouter les étudiants
+EN MASSE (un seul appel avec un tableau d'IDs, jamais 1 par 1)
+→ envoyer une notification à chaque étudiant ajouté
+
+-POST /api/groups/:id/join : un étudiant rejoint un groupe
+→ vérifier qu'il fait partie du pool du projet
+→ vérifier qu'il n'a pas déjà un groupe dans ce projet
+→ vérifier qu'il reste de la place
+→ LE PREMIER ARRIVÉ DEVIENT TEAM LEADER
+→ utiliser une transaction (2 clics simultanés sur la
+dernière place ne doivent pas dépasser la capacité)
+
+-PUT /api/groups/:id/subject : le team leader choisit
+le sujet de son groupe (réservé au lead)
+
+-Adapter les controllers existants (dashboard, tâches,
+livrables, messages, évaluations) : filtrer par groupe
+au lieu de filtrer par projet
+
+============================================================
+FRONTEND ENCADRANT
+============================================================
+
+-Création de projet en 2 étapes :
+étape 1 : titre, description, liste des sujets (bouton
++ Ajouter un sujet), nombre de groupes, taille max
+étape 2 : sélection des étudiants en masse
+(liste paginée + recherche + filtre promo/formation
++ case "Tout sélectionner" + compteur de sélectionnés)
+
+-Adapter la page Groupes : afficher le sujet choisi par
+chaque groupe, le remplissage (3/4), et le bouton
+"Déplacer" pour les ajustements manuels
+
+============================================================
+FRONTEND ÉTUDIANT
+============================================================
+
+-Nouvelle vue "Rejoindre un groupe" :
+quand l'étudiant est dans le pool d'un projet mais sans
+groupe, afficher les groupes avec places restantes
+(3/4, COMPLET...) et bouton Rejoindre
+
+-Si l'étudiant rejoint un groupe vide → bandeau
+"Vous êtes le team leader, choisissez le sujet"
+avec la liste des sujets du projet
+
+-Une fois dans un groupe → dashboard étudiant actuel
+(kanban, livrables, messages) filtré sur SON groupe
+
+============================================================
+FRONTEND ADMIN
+============================================================
+
+-Ajouter les champs classe, formation, promo dans le
+formulaire de création/modification d'un étudiant
+(l'admin inscrit les encadrants et les étudiants
+directement via le formulaire)
+
+============================================================
+DIVERS
+============================================================
+
+-Réadapter le seed (seed-demo.js) à la nouvelle structure :
+projet → sujets → groupes → membres
+
+-Tests de bout en bout du flow complet :
+admin crée les comptes → encadrant crée le projet et
+ajoute les étudiants en masse → étudiant rejoint un
+groupe → premier = lead → lead choisit le sujet →
+groupe complet refuse le suivant → un étudiant déjà
+placé ne peut pas rejoindre un 2e groupe
+=======
 
 -la base de donnée des voeux :
 on aura besoin des mails, promo, classe, formation, choix finale
@@ -11,4 +128,3 @@ on aura besoin des mails, promo, classe, formation, choix finale
 -Etudiant :
 seul le team leader (TL) peut téléverser les fichiés et ajouter des tâches ( avec la possibilité de d'affecter des personnes a ces tâches)
 les autres étudiants ne peuvent que consulter les fichiers téléverser par le TL 
-
