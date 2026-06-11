@@ -12,6 +12,8 @@ import Evaluation from "./pages/evaluation";
 // Pages professeur
 import Professor from "./pages/professor";
 import Projects from "./pages/projects";
+import ProjectDetails from "./pages/ProjectDetails";
+import GroupDetails from "./pages/GroupDetails";
 import NewProject from "./pages/newproject";
 
 // Pages étudiant
@@ -43,6 +45,15 @@ export default function App() {
       <Route path="/evaluation" element={<Evaluation />} />
       <Route path="/groups" element={<Groups />} />
       <Route path="/database-groups" element={<DatabaseGroups />} />
+      <Route
+  path="/project-details"
+  element={<ProjectDetails />}
+/>
+
+<Route
+  path="/group-details"
+  element={<GroupDetails />}
+/>
     </Routes>
   );
 }

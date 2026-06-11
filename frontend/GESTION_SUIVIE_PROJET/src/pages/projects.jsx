@@ -167,7 +167,9 @@ export default function Projects() {
           <div className="space-y-8">
 
             {/* Card 1 */}
-            <div className="bg-white/[0.03] border border-purple-500/40 rounded-3xl p-8">
+            <Link to="/project-details">
+  <div className="bg-white/[0.03] border border-purple-500/40 rounded-3xl p-8 hover:border-purple-500 hover:scale-[1.01] transition cursor-pointer">
+         
 
               <div className="flex justify-between items-start">
 
@@ -209,9 +211,12 @@ export default function Projects() {
                 📈 Checkpoints (5)
               </div>
             </div>
+            </Link>
+            
 
             {/* Card 2 */}
-            <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8">
+           <Link to="/project-details">
+  <div className="bg-white/[0.03] border border-purple-500/40 rounded-3xl p-8 hover:border-purple-500 hover:scale-[1.01] transition cursor-pointer">
 
               <div className="flex justify-between items-start">
 
@@ -253,6 +258,7 @@ export default function Projects() {
                 📈 Checkpoints (5)
               </div>
             </div>
+            </Link>
 
           </div>
         </div>
