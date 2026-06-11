@@ -163,104 +163,92 @@ export default function Projects() {
 </Link>
           </div>
 
-          {/* Cards */}
-          <div className="space-y-8">
+          {/* MES PROJETS */}
+<div className="space-y-8">
 
-            {/* Card 1 */}
-            <Link to="/project-details">
-  <div className="bg-white/[0.03] border border-purple-500/40 rounded-3xl p-8 hover:border-purple-500 hover:scale-[1.01] transition cursor-pointer">
-         
+  <h2 className="text-4xl font-bold text-gray-300 mb-6">
+    MES PROJETS ACTIFS
+  </h2>
 
-              <div className="flex justify-between items-start">
+  <Link to="/project-details">
 
-                <div>
+    <div className="bg-[#0B1220] border border-white/10 rounded-3xl overflow-hidden hover:border-purple-500 transition">
 
-                  <div className="flex items-center gap-4 mb-5">
+      <div className="p-8 flex items-center justify-between">
 
-                    <h2 className="text-4xl font-bold">
-                      Application React - EduFlow
-                    </h2>
+        <div className="flex items-center gap-6">
 
-                    <span className="bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-xl text-lg">
-                      En cours
-                    </span>
+          <div className="w-20 h-20 rounded-3xl bg-purple-500/10 flex items-center justify-center">
+            <FolderKanban
+              size={40}
+              className="text-purple-400"
+            />
+          </div>
 
-                    <span className="bg-green-500/20 text-green-400 px-4 py-2 rounded-xl text-lg">
-                      Ouvert
-                    </span>
-                  </div>
+          <div>
 
-                  <p className="text-gray-400 text-2xl mb-6">
-                    Créer une application de gestion éducative avec React et TypeScript
-                  </p>
+            <h2 className="text-4xl font-bold mb-2">
+              Projet Traitement de Signal & Audio Mixer
+            </h2>
 
-                  <div className="flex gap-8 text-gray-400 text-xl">
-                    <span>Échéance: 15/03/2024</span>
-                    <span>9 étudiants</span>
-                    <span>3 groupes</span>
-                    <span>Encadrant: Dr. Marie Leclerc</span>
-                  </div>
-                </div>
-
-                <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center text-red-400">
-                  <Lock size={28} />
-                </div>
-              </div>
-
-              <div className="border-t border-white/10 mt-8 pt-6 text-gray-400 text-xl">
-                📈 Checkpoints (5)
-              </div>
-            </div>
-            </Link>
-            
-
-            {/* Card 2 */}
-           <Link to="/project-details">
-  <div className="bg-white/[0.03] border border-purple-500/40 rounded-3xl p-8 hover:border-purple-500 hover:scale-[1.01] transition cursor-pointer">
-
-              <div className="flex justify-between items-start">
-
-                <div>
-
-                  <div className="flex items-center gap-4 mb-5">
-
-                    <h2 className="text-4xl font-bold">
-                      Base de données - Système de gestion
-                    </h2>
-
-                    <span className="bg-green-500/20 text-green-400 px-4 py-2 rounded-xl text-lg">
-                      Validé
-                    </span>
-
-                    <span className="bg-green-500/20 text-green-400 px-4 py-2 rounded-xl text-lg">
-                      Ouvert
-                    </span>
-                  </div>
-
-                  <p className="text-gray-400 text-2xl mb-6">
-                    Concevoir et implémenter une base de données relationnelle
-                  </p>
-
-                  <div className="flex gap-8 text-gray-400 text-xl">
-                    <span>Échéance: 30/03/2024</span>
-                    <span>6 étudiants</span>
-                    <span>2 groupes</span>
-                    <span>Encadrant: Dr. Jean Dupont</span>
-                  </div>
-                </div>
-
-                <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center text-red-400">
-                  <Lock size={28} />
-                </div>
-              </div>
-
-              <div className="border-t border-white/10 mt-8 pt-6 text-gray-400 text-xl">
-                📈 Checkpoints (5)
-              </div>
-            </div>
-            </Link>
+            <p className="text-gray-400 text-2xl">
+              2 groupes configurés • 3 sujets déposés
+            </p>
 
           </div>
+
+        </div>
+
+        <div className="text-gray-500 text-5xl">
+          →
+        </div>
+
+      </div>
+
+    </div>
+
+  </Link>
+
+  <Link to="/project-details">
+
+    <div className="bg-[#0B1220] border border-white/10 rounded-3xl overflow-hidden hover:border-purple-500 transition">
+
+      <div className="p-8 flex items-center justify-between">
+
+        <div className="flex items-center gap-6">
+
+          <div className="w-20 h-20 rounded-3xl bg-purple-500/10 flex items-center justify-center">
+            <FolderKanban
+              size={40}
+              className="text-purple-400"
+            />
+          </div>
+
+          <div>
+
+            <h2 className="text-4xl font-bold mb-2">
+              Application React - EduFlow
+            </h2>
+
+            <p className="text-gray-400 text-2xl">
+              3 groupes configurés • 9 étudiants
+            </p>
+
+          </div>
+
+        </div>
+
+        <div className="text-gray-500 text-5xl">
+          →
+        </div>
+
+      </div>
+
+    </div>
+
+  </Link>
+
+</div>
         </div>
       </div>
     </div>
