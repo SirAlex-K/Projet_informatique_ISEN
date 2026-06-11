@@ -55,9 +55,9 @@ return ( <div className="min-h-screen bg-[#020817] text-white p-10">
 
     <div className="flex gap-8 mt-6 text-gray-400">
 
-      <span>👨‍🎓 24 étudiants</span>
-      <span>👥 6 groupes</span>
-      <span>📚 6 sujets</span>
+      <span> 24 étudiants</span>
+      <span> 6 groupes</span>
+      <span> 6 sujets</span>
 
     </div>
 
@@ -99,21 +99,21 @@ return ( <div className="min-h-screen bg-[#020817] text-white p-10">
         <div className="space-y-3 mb-8">
 
           <p>
-            👑 Chef de groupe :
+             Chef de groupe :
             <span className="text-gray-400">
               {" "} {item.chef}
             </span>
           </p>
 
           <p>
-            👨‍🎓 Membres :
+             Membres :
             <span className="text-gray-400">
               {" "} {item.membres}
             </span>
           </p>
 
           <p>
-            📌 Sujet :
+             Sujet :
             <span className="text-gray-400">
               {" "} {item.sujet}
             </span>
