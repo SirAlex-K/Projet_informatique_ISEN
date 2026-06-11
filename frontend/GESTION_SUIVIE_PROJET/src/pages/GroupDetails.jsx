@@ -16,15 +16,15 @@ export default function GroupDetails() {
         <div className="flex flex-wrap gap-4">
 
           <div className="bg-purple-500/20 text-purple-300 px-5 py-3 rounded-2xl">
-            👥 4 membres
+             4 membres
           </div>
 
           <div className="bg-green-500/20 text-green-300 px-5 py-3 rounded-2xl">
-            🚀 80% terminé
+             80% terminé
           </div>
 
           <div className="bg-blue-500/20 text-blue-300 px-5 py-3 rounded-2xl">
-            📌 Frontend
+             Frontend
           </div>
 
         </div>
