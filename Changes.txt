@@ -1,3 +1,5 @@
 Fichiers pour noter tous les changements à effectuer .
 
--
+-L'Admin doit enregistrer :
+les encadrants 
+les étudiants (mails, nom, prénom, classe, formation, promo)
