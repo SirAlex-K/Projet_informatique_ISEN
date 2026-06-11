@@ -184,52 +184,104 @@ export default function Messages() {
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="bg-white/[0.03] border border-white/10 rounded-3xl overflow-hidden">
+         {/* Onglets */}
+<div className="flex gap-4 mb-8">
+  <button className="bg-gradient-to-r from-purple-500 to-purple-400 px-8 py-5 rounded-2xl text-2xl font-semibold">
+    📢 Annonces
+  </button>
 
-            {messages.map((message, index) => (
+  <button className="bg-white/[0.05] px-8 py-5 rounded-2xl text-2xl text-gray-400 hover:text-white transition">
+    👥 Discussions de groupe
+  </button>
 
-              <div
-                key={index}
-                className={`p-8 flex justify-between items-start border-b border-white/10 ${
-                  message.active ? "bg-white/[0.03]" : ""
-                }`}
-              >
+  <button className="bg-white/[0.05] px-8 py-5 rounded-2xl text-2xl text-gray-400 hover:text-white transition">
+    💬 Messages privés
+  </button>
+</div>
 
-                <div className="flex gap-5">
+<div className="grid grid-cols-3 gap-8">
 
-                  <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-2xl font-bold">
-                    {message.initial}
-                  </div>
+  {/* Conversations */}
+  <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6">
 
-                  <div>
-                    <h3 className="text-3xl font-bold mb-2">
-                      {message.name}
-                    </h3>
+    <h3 className="text-3xl font-bold mb-6">
+      Conversations
+    </h3>
 
-                    <h4 className="text-2xl font-semibold mb-3">
-                      {message.title}
-                    </h4>
+    <div className="space-y-4">
 
-                    <p className="text-gray-400 text-xl">
-                      {message.text}
-                    </p>
-                  </div>
-                </div>
+      <div className="bg-purple-500/20 rounded-2xl p-4">
+        📢 Annonce générale
+      </div>
 
-                <div className="text-right">
+      <div className="bg-white/[0.03] rounded-2xl p-4">
+        👥 Groupe IA
+      </div>
 
-                  <p className="text-gray-400 text-xl mb-4">
-                    {message.time}
-                  </p>
+      <div className="bg-white/[0.03] rounded-2xl p-4">
+        👥 Groupe Web
+      </div>
 
-                  {message.active && (
-                    <div className="w-3 h-3 rounded-full bg-purple-500 ml-auto"></div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="bg-white/[0.03] rounded-2xl p-4">
+        👥 Groupe Mobile
+      </div>
+
+      <div className="bg-white/[0.03] rounded-2xl p-4">
+        👤 Jean Dupont
+      </div>
+
+    </div>
+  </div>
+
+  {/* Discussion */}
+  <div className="col-span-2 bg-white/[0.03] border border-white/10 rounded-3xl p-6">
+
+    <h3 className="text-3xl font-bold mb-6">
+      📢 Annonce générale
+    </h3>
+
+    <div className="space-y-6 mb-8">
+
+      <div className="bg-purple-500/10 rounded-2xl p-5">
+        <p className="font-semibold text-xl">
+          Prof. Dubois
+        </p>
+
+        <p className="text-gray-300 mt-3">
+          N'oubliez pas la date limite du projet :
+          vendredi 20 juin à 23h59.
+        </p>
+      </div>
+
+      <div className="bg-blue-500/10 rounded-2xl p-5 ml-20">
+        <p className="font-semibold text-xl">
+          Groupe IA
+        </p>
+
+        <p className="text-gray-300 mt-3">
+          Merci professeur, nous avons bien noté.
+        </p>
+      </div>
+
+    </div>
+
+    <div className="flex gap-4">
+
+      <input
+        type="text"
+        placeholder="Écrire un message..."
+        className="flex-1 bg-[#0B1220] border border-white/10 rounded-2xl p-4"
+      />
+
+      <button className="bg-gradient-to-r from-purple-500 to-purple-400 px-8 rounded-2xl font-semibold">
+        Envoyer
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
         </div>
       </div>
     </div>
