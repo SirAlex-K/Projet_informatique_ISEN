@@ -4,6 +4,7 @@ Fichiers pour noter tous les changements à effectuer .
 les encadrants
 les étudiants (mails, nom, prénom, classe, formation, promo)
 
+<<<<<<< HEAD
 ============================================================
 BASE DE DONNÉES (schema.prisma)
 ============================================================
@@ -119,3 +120,12 @@ ajoute les étudiants en masse → étudiant rejoint un
 groupe → premier = lead → lead choisit le sujet →
 groupe complet refuse le suivant → un étudiant déjà
 placé ne peut pas rejoindre un 2e groupe
+=======
+
+-la base de donnée des voeux :
+on aura besoin des mails, promo, classe, formation, choix finale
+
+-Etudiant :
+seul le team leader (TL) peut téléverser les fichiés et ajouter des tâches ( avec la possibilité de d'affecter des personnes a ces tâches)
+les autres étudiants ne peuvent que consulter les fichiers téléverser par le TL 
+>>>>>>> 30a5f326f908b5c7d08b8b2dbe4f4a5c744cc100
