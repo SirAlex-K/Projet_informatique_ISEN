@@ -1,256 +1,247 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  GraduationCap, CheckCircle2, Clock, Circle,
-  FileText, Flag, LogOut, Bell, LayoutDashboard,
-} from 'lucide-react';
+import { useState } from 'react';
+import { LayoutDashboard, Crown, UserCheck, Users, Info, CheckCircle2, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
+
+const INITIAL_PROJECT = {
+  id: 'p-1',
+  title: 'Projet Traitement de Signal & Audio Mixer',
+  subjects: ['Architecture Mixeur Audio Pro', 'Filtres Numériques PIC18', 'DSP et Effets Temps Réel'],
+  groups: [
+    { id: 'g-1', name: 'Groupe Alpha', capacity: 4, chosenSubject: 'Architecture Mixeur Audio Pro', members: [{ name: 'Marie Dupont', isLeader: true }] },
+    { id: 'g-2', name: 'Groupe Beta',  capacity: 4, chosenSubject: '', members: [] },
+    { id: 'g-3', name: 'Groupe Gamma', capacity: 4, chosenSubject: '', members: [{ name: 'Lucas Martin', isLeader: false }] },
+  ]
+};
 
 export default function StudentPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [project, setProject] = useState(INITIAL_PROJECT);
+  const [joinedGroupId, setJoinedGroupId] = useState(null);
+
+  const currentStudentName = user ? `${user.prenom} ${user.nom}` : 'Étudiant';
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  useEffect(() => {
-    api.get('/dashboard/student')
-      .then(res => setData(res.data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  const initials = user
-    ? `${(user.prenom || '')[0] || ''}${(user.nom || '')[0] || ''}`.toUpperCase()
-    : 'E';
-
-  const taskIcon = (statut) => {
-    if (statut === 'done')     return <CheckCircle2 size={16} className="text-green-400 shrink-0" />;
-    if (statut === 'en_cours') return <Clock        size={16} className="text-yellow-400 shrink-0" />;
-    return                            <Circle       size={16} className="text-gray-500 shrink-0" />;
+  const handleJoinGroup = (groupId) => {
+    setProject(prev => ({
+      ...prev,
+      groups: prev.groups.map(g => {
+        if (g.id !== groupId) return g;
+        const isFirst = g.members.length === 0;
+        return { ...g, members: [...g.members, { name: currentStudentName, isLeader: isFirst }] };
+      })
+    }));
+    setJoinedGroupId(groupId);
   };
 
-  const taskLabel = (statut) => {
-    if (statut === 'done')     return 'bg-green-500/20 text-green-400';
-    if (statut === 'en_cours') return 'bg-yellow-500/20 text-yellow-400';
-    return                            'bg-white/10 text-gray-400';
+  const handleSelectSubject = (groupId, subject) => {
+    setProject(prev => ({
+      ...prev,
+      groups: prev.groups.map(g => g.id === groupId ? { ...g, chosenSubject: subject } : g)
+    }));
   };
 
-  const taskText = (statut) => {
-    if (statut === 'done')     return 'Terminé';
-    if (statut === 'en_cours') return 'En cours';
-    return                            'À faire';
-  };
+  const myGroup = project.groups.find(g => g.id === joinedGroupId);
+  const isLeader = myGroup?.members.find(m => m.name === currentStudentName)?.isLeader;
 
   return (
-    <div className="min-h-screen bg-[#020817] text-white flex">
-
+    <div className="flex min-h-screen bg-[#020817] text-white">
       {/* Sidebar */}
-      <div className="w-[280px] shrink-0 border-r border-white/10 bg-[#0B1220] flex flex-col justify-between">
+      <aside className="w-[280px] shrink-0 bg-[#0B1220] border-r border-white/10 flex flex-col justify-between">
         <div>
           {/* Logo */}
           <div className="p-6 border-b border-white/10">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-                <GraduationCap size={20} />
+                <span className="font-bold text-sm">EF</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">EduFlow</h1>
+                <h1 className="text-xl font-bold">EduFlow</h1>
                 <p className="text-gray-400 text-xs">Étudiant</p>
               </div>
             </div>
           </div>
 
-          {/* User info */}
-          <div className="p-3 border-b border-white/10">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-sm font-bold text-white shrink-0">
-                {initials}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{user?.prenom} {user?.nom}</p>
-                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
-              </div>
+          {/* Nav */}
+          <div className="p-4 space-y-2">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg">
+              <LayoutDashboard size={18} />
+              Dashboard Étudiant
             </div>
           </div>
-
-          {/* Nav */}
-          <nav className="p-3 space-y-1">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg">
-              <LayoutDashboard size={18} />
-              Mon dashboard
-            </div>
-            {data && (
-              <div className="px-4 py-3 text-xs text-gray-500 uppercase tracking-wider font-semibold mt-2">
-                {data.role_in_project === 'lead' ? '⭐ Chef d\'équipe' : 'Membre de l\'équipe'}
-              </div>
-            )}
-          </nav>
         </div>
 
-        <div className="p-3">
+        <div className="p-4 border-t border-white/10">
+          <p className="text-xs text-gray-500 px-2 mb-3">Connecté : {currentStudentName}</p>
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm hover:bg-red-500/20 transition"
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             Déconnexion
           </button>
         </div>
-      </div>
+      </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="border-b border-white/10 px-8 py-5 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Mon projet</h1>
-            <p className="text-gray-400 text-sm mt-0.5">Suivi de votre avancement</p>
-          </div>
-          <div className="relative cursor-pointer">
-            <Bell size={22} className="text-gray-400" />
-          </div>
-        </div>
+      <main className="flex-1 p-6 overflow-y-auto">
+        <header className="mb-6">
+          <h1 className="text-2xl font-bold text-white">Mon Espace de Travail</h1>
+          <p className="text-gray-400 text-sm mt-0.5">Affectations de projets et gestion d'équipe en temps réel.</p>
+        </header>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          {loading ? (
-            <div className="flex items-center justify-center h-64 text-gray-400">Chargement...</div>
-          ) : !data?.project ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-              <GraduationCap size={48} className="mb-4 opacity-30" />
-              <p className="text-lg font-medium">Aucun projet assigné</p>
-              <p className="text-sm mt-1">Contactez votre encadrant.</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
+        <div className="bg-[#0B1220] border border-white/10 rounded-2xl p-5 shadow-xl relative">
+          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-500 to-purple-500 rounded-t-2xl"></div>
 
-              {/* Carte projet */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
-                <div className="flex justify-between items-start mb-4">
+          <div className="mb-5">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
+              Projet En Cours
+            </span>
+            <h2 className="text-base font-bold text-white mt-2">{project.title}</h2>
+          </div>
+
+          {joinedGroupId ? (
+            <div className="bg-[#020817] border border-emerald-500/20 rounded-xl p-4 space-y-5">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                    <CheckCircle2 size={18} />
+                  </div>
                   <div>
-                    <h2 className="text-xl font-bold">{data.project.titre}</h2>
-                    {data.project.description && (
-                      <p className="text-gray-400 text-sm mt-1">{data.project.description}</p>
-                    )}
+                    <h3 className="font-bold text-sm text-white">Votre Équipe : {myGroup.name}</h3>
+                    <p className="text-xs text-gray-500">
+                      Effectif : {myGroup.members.length} / {myGroup.capacity} places occupées
+                    </p>
                   </div>
-                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                    data.project.statut === 'en_cours' ? 'bg-yellow-500/20 text-yellow-400' :
-                    data.project.statut === 'termine'  ? 'bg-green-500/20 text-green-400' :
-                                                          'bg-blue-500/20 text-blue-400'
-                  }`}>
-                    {data.project.statut === 'en_cours' ? 'En cours' : data.project.statut === 'termine' ? 'Terminé' : data.project.statut}
+                </div>
+                {isLeader && (
+                  <span className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded-full font-semibold">
+                    <Crown size={11} /> Team Leader
                   </span>
-                </div>
-
-                {data.project.supervisor && (
-                  <p className="text-xs text-gray-500 mb-4">
-                    Encadrant : <span className="text-gray-300">{data.project.supervisor.prenom} {data.project.supervisor.nom}</span>
-                  </p>
                 )}
-
-                {/* Barre de progression globale */}
-                <div>
-                  <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-                    <span>Avancement global</span>
-                    <span>{data.avancement}%</span>
-                  </div>
-                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all"
-                      style={{ width: `${data.avancement}%` }}
-                    />
-                  </div>
-                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-
-                {/* Mes tâches */}
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
-                  <h3 className="font-semibold text-base mb-4 flex items-center gap-2">
-                    <Clock size={16} className="text-cyan-400" />
-                    Mes tâches ({data.mes_taches?.length || 0})
-                  </h3>
-                  {data.mes_taches?.length === 0 ? (
-                    <p className="text-gray-500 text-sm">Aucune tâche assignée.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {data.mes_taches?.map(t => (
-                        <div key={t.id} className="flex items-center gap-3 p-3 bg-white/[0.02] rounded-xl">
-                          {taskIcon(t.statut)}
-                          <span className="text-sm flex-1 truncate">{t.titre}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${taskLabel(t.statut)}`}>
-                            {taskText(t.statut)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Jalons */}
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
-                  <h3 className="font-semibold text-base mb-4 flex items-center gap-2">
-                    <Flag size={16} className="text-purple-400" />
-                    Jalons ({data.jalons?.length || 0})
-                  </h3>
-                  {data.jalons?.length === 0 ? (
-                    <p className="text-gray-500 text-sm">Aucun jalon.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {data.jalons?.map(j => (
-                        <div key={j.id} className="flex items-center gap-3 p-3 bg-white/[0.02] rounded-xl">
-                          <div className={`w-2 h-2 rounded-full shrink-0 ${j.atteint ? 'bg-green-400' : 'bg-gray-600'}`} />
-                          <span className="text-sm flex-1 truncate">{j.titre}</span>
-                          <span className="text-xs text-gray-500">
-                            {j.date_cible ? new Date(j.date_cible).toLocaleDateString('fr-FR') : ''}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Livrables */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
-                <h3 className="font-semibold text-base mb-4 flex items-center gap-2">
-                  <FileText size={16} className="text-orange-400" />
-                  Livrables ({data.livrables?.length || 0})
-                </h3>
-                {data.livrables?.length === 0 ? (
-                  <p className="text-gray-500 text-sm">Aucun livrable.</p>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {data.livrables?.map(l => (
-                      <div key={l.id} className="flex items-center gap-3 p-3 bg-white/[0.02] rounded-xl">
-                        <FileText size={14} className="text-orange-400 shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{l.titre}</p>
-                          <p className="text-xs text-gray-500">
-                            {l.date_limite ? `Échéance : ${new Date(l.date_limite).toLocaleDateString('fr-FR')}` : ''}
-                          </p>
-                        </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
-                          l.statut === 'valide'   ? 'bg-green-500/20 text-green-400' :
-                          l.statut === 'soumis'   ? 'bg-yellow-500/20 text-yellow-400' :
-                                                    'bg-white/10 text-gray-400'
-                        }`}>
-                          {l.statut === 'valide' ? 'Validé' : l.statut === 'soumis' ? 'Soumis' : 'En attente'}
+              <div className="grid grid-cols-2 gap-5">
+                {/* Membres */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1">
+                    <Users size={11} /> Vos Coéquipiers
+                  </h4>
+                  <div className="bg-[#0B1220] border border-white/10 rounded-xl divide-y divide-white/5 overflow-hidden">
+                    {myGroup.members.map((m, idx) => (
+                      <div key={idx} className="px-3 py-2 text-xs flex justify-between items-center">
+                        <span className={m.name === currentStudentName ? 'text-indigo-400 font-semibold' : 'text-gray-300'}>
+                          {m.name} {m.name === currentStudentName && '(Vous)'}
                         </span>
+                        {m.isLeader && (
+                          <span className="text-amber-400 flex items-center gap-0.5 text-[10px]">
+                            <Crown size={9} /> Leader
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
 
+                {/* Sujet */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1">
+                    <Info size={11} /> Sujet de Recherche
+                  </h4>
+                  {isLeader ? (
+                    <div className="space-y-2">
+                      <label className="block text-[11px] text-gray-500">
+                        Sélectionnez un sujet parmi la liste validée :
+                      </label>
+                      <select
+                        value={myGroup.chosenSubject}
+                        onChange={e => handleSelectSubject(myGroup.id, e.target.value)}
+                        className="w-full bg-[#0B1220] border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="">-- Choisir un sujet --</option>
+                        {project.subjects.map((sbj, i) => (
+                          <option key={i} value={sbj}>{sbj}</option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-amber-500/80 italic">
+                        Modifications autorisées uniquement pour le Team Leader.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-[#0B1220] border border-white/10 rounded-xl p-3 min-h-[70px] flex flex-col justify-between">
+                      <p className="text-xs text-white italic">
+                        {myGroup.chosenSubject ? `"${myGroup.chosenSubject}"` : "Le Team Leader n'a pas encore choisi de sujet."}
+                      </p>
+                      <span className="text-[10px] text-gray-500 mt-2">
+                        Lecture seule — Attente du choix de votre responsable.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                <Info size={13} className="text-indigo-400" />
+                Veuillez vous positionner dans l'un des espaces projets disponibles :
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                {project.groups.map(group => {
+                  const remains = group.capacity - group.members.length;
+                  const isFull = remains <= 0;
+                  const isEmpty = group.members.length === 0;
+
+                  return (
+                    <div key={group.id} className="bg-[#020817] border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-white/20 transition">
+                      <div>
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="font-bold text-sm text-white">{group.name}</h4>
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${isFull ? 'bg-red-500/10 text-red-400' : 'bg-indigo-500/10 text-indigo-400'}`}>
+                            {group.members.length}/{group.capacity}
+                          </span>
+                        </div>
+                        <div className="space-y-1 mb-3">
+                          <span className="text-[10px] font-bold text-gray-600 uppercase">Membres :</span>
+                          {isEmpty ? (
+                            <p className="text-gray-500 italic text-[11px]">Emplacement libre.</p>
+                          ) : (
+                            group.members.map((m, idx) => (
+                              <div key={idx} className="text-gray-400 flex items-center gap-1 text-[11px]">
+                                <span>• {m.name}</span>
+                                {m.isLeader && <Crown size={9} className="text-amber-400" />}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        disabled={isFull}
+                        onClick={() => handleJoinGroup(group.id)}
+                        className={`w-full py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1
+                          ${isFull
+                            ? 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/10'
+                            : isEmpty
+                              ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-500'
+                              : 'bg-indigo-600 text-white hover:bg-indigo-500'
+                          }`}
+                      >
+                        {isFull ? 'Complet' : isEmpty
+                          ? <><Crown size={11} /> Créer l'Équipe (Leader)</>
+                          : <><UserCheck size={11} /> Rejoindre</>
+                        }
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
