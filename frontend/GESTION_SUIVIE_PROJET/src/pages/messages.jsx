@@ -84,13 +84,6 @@ export default function Messages() {
             </Link>
             
 
-            <Link
-              to="/groups"
-              className="p-5 flex items-center gap-4 text-2xl text-gray-400 hover:text-white transition"
-            >
-              <Users size={26} />
-              Groupes
-            </Link>
 
             <Link
               to="/students"
