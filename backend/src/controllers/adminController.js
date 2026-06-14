@@ -7,13 +7,25 @@
 const prisma = require('../config/prisma');
 const bcrypt = require('bcryptjs');
 
+// Valeurs institutionnelles fixes
+const OPTIONS = {
+  formations: ['ISEN', 'HEI', 'ISA'],
+  promos: ['2026', '2027'],
+};
+
+// GET /api/admin/options — listes déroulantes formation & promo
+const getOptions = (req, res) => {
+  res.json(OPTIONS);
+};
+
 // GET /api/admin/users — liste tous les users
 const getAllUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       select: {
         id: true, nom: true, prenom: true,
-        email: true, role: true, avatar_url: true, created_at: true,
+        email: true, role: true, classe: true, formation: true, promo: true,
+        avatar_url: true, created_at: true,
         team_memberships: {
           include: { project: { select: { id: true, titre: true } } }
         }
@@ -33,7 +45,8 @@ const getUser = async (req, res) => {
       where: { id: parseInt(req.params.id) },
       select: {
         id: true, nom: true, prenom: true,
-        email: true, role: true, avatar_url: true, created_at: true,
+        email: true, role: true, classe: true, formation: true, promo: true,
+        avatar_url: true, created_at: true,
         team_memberships: {
           include: { project: { select: { id: true, titre: true, statut: true } } }
         }
@@ -49,7 +62,7 @@ const getUser = async (req, res) => {
 // POST /api/admin/users — créer un compte
 const createUser = async (req, res) => {
   try {
-    const { nom, prenom, email, password, role } = req.body;
+    const { nom, prenom, email, password, role, classe, formation, promo } = req.body;
 
     if (!nom || !prenom || !email || !password || !role) {
       return res.status(400).json({ message: 'Tous les champs sont obligatoires' });
@@ -61,8 +74,8 @@ const createUser = async (req, res) => {
     const password_hash = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { nom, prenom, email, password_hash, role },
-      select: { id: true, nom: true, prenom: true, email: true, role: true, created_at: true }
+      data: { nom, prenom, email, password_hash, role, classe, formation, promo },
+      select: { id: true, nom: true, prenom: true, email: true, role: true, classe: true, formation: true, promo: true, created_at: true }
     });
 
     res.status(201).json(user);
@@ -74,9 +87,9 @@ const createUser = async (req, res) => {
 // PUT /api/admin/users/:id — modifier un compte
 const updateUser = async (req, res) => {
   try {
-    const { nom, prenom, email, role, password } = req.body;
+    const { nom, prenom, email, role, password, classe, formation, promo } = req.body;
 
-    const data = { nom, prenom, email, role };
+    const data = { nom, prenom, email, role, classe, formation, promo };
     if (password) {
       data.password_hash = await bcrypt.hash(password, 10);
     }
@@ -84,7 +97,7 @@ const updateUser = async (req, res) => {
     const user = await prisma.user.update({
       where: { id: parseInt(req.params.id) },
       data,
-      select: { id: true, nom: true, prenom: true, email: true, role: true }
+      select: { id: true, nom: true, prenom: true, email: true, role: true, classe: true, formation: true, promo: true }
     });
     res.json(user);
   } catch (err) {
@@ -97,7 +110,6 @@ const deleteUser = async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
 
-    // Empêcher l'admin de se supprimer lui-même
     if (userId === req.user.id) {
       return res.status(400).json({ message: 'Impossible de supprimer votre propre compte' });
     }
@@ -114,7 +126,7 @@ const getUsersByRole = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       where: { role: req.params.role },
-      select: { id: true, nom: true, prenom: true, email: true, role: true, created_at: true },
+      select: { id: true, nom: true, prenom: true, email: true, role: true, classe: true, formation: true, promo: true, created_at: true },
       orderBy: { nom: 'asc' }
     });
     res.json(users);
@@ -123,4 +135,4 @@ const getUsersByRole = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, getUser, createUser, updateUser, deleteUser, getUsersByRole };
+module.exports = { getOptions, getAllUsers, getUser, createUser, updateUser, deleteUser, getUsersByRole };

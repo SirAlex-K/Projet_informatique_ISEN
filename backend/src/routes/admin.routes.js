@@ -1,9 +1,9 @@
 const router = require('express').Router();
 const auth = require('../middlewares/auth.middleware');
 const role = require('../middlewares/role.middleware');
-const { getAllUsers, getUser, createUser, updateUser, deleteUser, getUsersByRole } = require('../controllers/adminController');
+const { getOptions, getAllUsers, getUser, createUser, updateUser, deleteUser, getUsersByRole } = require('../controllers/adminController');
 
-// Toutes les routes admin sont protégées
+router.get('/options',            auth, role('admin'), getOptions);
 router.get('/users',              auth, role('admin'), getAllUsers);
 router.post('/users',             auth, role('admin'), createUser);
 router.get('/users/by-role/:role',auth, role('admin'), getUsersByRole);
