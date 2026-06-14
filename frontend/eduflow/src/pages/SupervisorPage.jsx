@@ -1,32 +1,113 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
-  GraduationCap, Users, FolderKanban, MessageSquare,
-  Bell, ArrowRight, ClipboardCheck,
-} from 'lucide-react';
-import SupervisorSidebar from '../components/SupervisorSidebar';
-import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
+  GraduationCap,
+  Users,
+  FolderKanban,
+  MessageSquare,
+  LayoutDashboard,
+  Bell,
+  LogOut,
+  ArrowRight,
+  ClipboardCheck,
+} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import api from "../services/api";
 
 export default function SupervisorPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/dashboard/supervisor')
+    api.get("/dashboard/supervisor")
       .then(res => setStats(res.data))
       .catch(() => setStats(null))
       .finally(() => setLoading(false));
   }, []);
 
-  const totalStudents = stats?.projets?.reduce((sum, p) => sum + p.nb_membres, 0) ?? 0;
-  const projetsActifs = stats?.projets?.filter(p => p.statut === 'en_cours').length ?? 0;
+  const handleLogout = () => { logout(); navigate("/"); };
+
+  const totalStudents = stats
+    ? stats.projets.reduce((sum, p) => sum + p.nb_membres, 0)
+    : 0;
+
+  const projetsActifs = stats
+    ? stats.projets.filter(p => p.statut === "en_cours").length
+    : 0;
 
   return (
     <div className="min-h-screen bg-[#020817] text-white flex">
-      <SupervisorSidebar />
+      {/* Sidebar */}
+      <div className="w-[280px] border-r border-white/10 bg-[#0B1220] flex flex-col justify-between">
+        <div>
+          {/* Logo */}
+          <div className="p-5 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
+                <GraduationCap size={20} />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">EduFlow</h1>
+                <p className="text-gray-400 text-xs">Professeur</p>
+              </div>
+            </div>
+          </div>
 
+          {/* Menu */}
+          <div className="p-3 space-y-1">
+            <div className="bg-gradient-to-r from-purple-500 to-purple-400 rounded-xl p-3 flex items-center gap-3 text-sm font-semibold shadow-lg">
+              <LayoutDashboard size={18} />
+              Tableau de bord
+            </div>
+            <Link
+              to="/supervisor/evaluation"
+              className="p-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white transition"
+            >
+              <ClipboardCheck size={18} />
+              Évaluation
+            </Link>
+            <Link
+              to="/supervisor/projects"
+              className="p-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white transition cursor-pointer"
+            >
+              <FolderKanban size={18} />
+              Projets
+            </Link>
+            <Link
+              to="/supervisor/students"
+              className="p-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white transition cursor-pointer"
+            >
+              <GraduationCap size={18} />
+              Étudiants
+            </Link>
+            <Link
+              to="/supervisor/messages"
+              className="p-3 flex items-center justify-between text-sm text-gray-400 hover:text-white transition"
+            >
+              <div className="flex items-center gap-3">
+                <MessageSquare size={18} />
+                Messages
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Bottom */}
+        <div className="p-3 border-t border-white/10">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm hover:bg-red-500/20 transition"
+          >
+            <LogOut size={18} />
+            Déconnexion
+          </button>
+        </div>
+      </div>
+
+      {/* Main */}
       <div className="flex-1">
         {/* Header */}
         <div className="border-b border-white/10 px-8 py-4 flex justify-between items-center">
@@ -38,10 +119,10 @@ export default function SupervisorPage() {
             </div>
             <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-bold">
-                {user?.prenom?.[0] || 'P'}
+                {user?.prenom?.[0] || "P"}
               </div>
               <div>
-                <p className="text-sm font-semibold">{user?.prenom} {user?.nom}</p>
+                <h2 className="text-sm font-semibold">{user?.prenom} {user?.nom}</h2>
                 <p className="text-gray-400 text-xs">Professeur</p>
               </div>
             </div>
@@ -63,15 +144,15 @@ export default function SupervisorPage() {
                   <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center mb-4">
                     <FolderKanban size={20} />
                   </div>
-                  <p className="text-2xl font-bold">{stats?.total_projets ?? 0}</p>
+                  <h1 className="text-2xl font-bold">{stats?.total_projets ?? 0}</h1>
                   <p className="text-gray-400 text-xs mt-1">Projets total</p>
                 </div>
 
                 <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
                   <div className="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center mb-4">
-                    <ClipboardCheck size={20} />
+                    <FolderKanban size={20} />
                   </div>
-                  <p className="text-2xl font-bold">{projetsActifs}</p>
+                  <h1 className="text-2xl font-bold">{projetsActifs}</h1>
                   <p className="text-gray-400 text-xs mt-1">Projets actifs</p>
                 </div>
 
@@ -79,7 +160,7 @@ export default function SupervisorPage() {
                   <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mb-4">
                     <Users size={20} />
                   </div>
-                  <p className="text-2xl font-bold">{totalStudents}</p>
+                  <h1 className="text-2xl font-bold">{totalStudents}</h1>
                   <p className="text-gray-400 text-xs mt-1">Étudiants</p>
                 </div>
 
@@ -87,7 +168,7 @@ export default function SupervisorPage() {
                   <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center mb-4">
                     <MessageSquare size={20} />
                   </div>
-                  <p className="text-2xl font-bold">—</p>
+                  <h1 className="text-2xl font-bold">—</h1>
                   <p className="text-gray-400 text-xs mt-1">Messages</p>
                 </div>
               </div>
@@ -102,22 +183,22 @@ export default function SupervisorPage() {
                     {stats.projets.slice(0, 5).map(p => (
                       <Link
                         key={p.id}
-                        to={`/project-details?id=${p.id}`}
+                        to={`/supervisor/projects`}
                         className="bg-white/[0.02] rounded-xl p-4 flex justify-between items-center hover:bg-white/[0.05] transition"
                       >
                         <div>
-                          <p className="text-sm font-semibold">{p.titre}</p>
+                          <h3 className="text-sm font-semibold">{p.titre}</h3>
                           <p className="text-gray-400 text-xs mt-0.5">
-                            {p.nb_membres} étudiant(s) · {p.avancement}% avancement ·{' '}
+                            {p.nb_membres} étudiant(s) · {p.avancement}% avancement ·{" "}
                             <span className={
-                              p.statut === 'en_cours' ? 'text-green-400' :
-                              p.statut === 'termine'  ? 'text-gray-400' : 'text-yellow-400'
+                              p.statut === "en_cours" ? "text-green-400" :
+                              p.statut === "termine"  ? "text-gray-400" : "text-yellow-400"
                             }>
-                              {p.statut === 'en_cours' ? 'En cours' : p.statut === 'termine' ? 'Terminé' : p.statut}
+                              {p.statut === "en_cours" ? "En cours" : p.statut === "termine" ? "Terminé" : p.statut}
                             </span>
                           </p>
                         </div>
-                        <ArrowRight size={16} className="text-gray-500" />
+                        <ArrowRight size={14} />
                       </Link>
                     ))}
                   </div>
