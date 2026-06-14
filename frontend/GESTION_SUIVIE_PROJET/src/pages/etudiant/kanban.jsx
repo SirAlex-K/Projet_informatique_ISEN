@@ -15,6 +15,7 @@ import {
   GripVertical,
   Circle,
   Plus,
+  Trash2,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -177,15 +178,160 @@ function AssignModal({ task, onClose, onSave }) {
   );
 }
 
-// ─── Carte tâche (draggable) ─────────────────────────────────────────
-function TaskCard({ task, colDot, onAssignClick, onDragStart, onDragEnd, isDragging }) {
+// ─── Modal ajout de tâche (leader uniquement) ─────────────────────────
+function AddTaskModal({ colId, colLabel, onClose, onAdd }) {
+  const [title, setTitle] = useState("");
+  const [desc, setDesc]   = useState("");
+  const [selected, setSelected] = useState(new Set());
+
+  const toggle = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handleSubmit = () => {
+    if (!title.trim()) return;
+    onAdd(colId, { title: title.trim(), desc: desc.trim(), assignees: [...selected] });
+    onClose();
+  };
+
   return (
     <div
-      draggable
-      onDragStart={(e) => onDragStart(e, task)}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-[#0d1526] border border-white/[0.08] rounded-2xl w-full max-w-sm mx-4 shadow-2xl shadow-black/60">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-white/[0.06] flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">
+              Nouvelle tâche · {colLabel}
+            </p>
+            <h2 className="text-base font-bold text-white">Ajouter une carte</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-white/[0.06] text-gray-500 hover:text-white transition-colors flex-shrink-0 mt-0.5"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-4 space-y-4">
+          {/* Titre */}
+          <div>
+            <label className="block text-xs text-gray-500 mb-1.5">
+              Titre <span className="text-red-400">*</span>
+            </label>
+            <input
+              autoFocus
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder="ex. Maquette UI"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-blue-500/[0.04] transition-all"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-xs text-gray-500 mb-1.5">Description</label>
+            <textarea
+              rows={3}
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              placeholder="Détails de la tâche…"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-blue-500/[0.04] transition-all resize-none"
+            />
+          </div>
+
+          {/* Assignation rapide */}
+          <div>
+            <label className="block text-xs text-gray-500 mb-2">
+              Assigner (optionnel)
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {MEMBERS.map((m) => {
+                const active = selected.has(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => toggle(m.id)}
+                    title={m.name}
+                    className={`flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
+                      active
+                        ? "bg-blue-600/20 border-blue-500/50 text-white"
+                        : "bg-white/[0.02] border-white/[0.06] text-gray-400 hover:border-white/15 hover:text-white"
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${m.color} flex items-center justify-center text-[10px] font-bold text-white`}>
+                      {m.id}
+                    </div>
+                    {m.name.split(" ")[0]}
+                    {active && <Check size={11} className="text-blue-400" strokeWidth={3} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 pb-4 flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-gray-400 hover:text-white text-sm font-medium hover:bg-white/[0.04] transition-all"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!title.trim()}
+            className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
+          >
+            Créer la tâche
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Carte tâche (draggable) ─────────────────────────────────────────
+function TaskCard({ task, colDot, onAssignClick, onDelete, isLeader, onDragStart, onDragEnd, isDragging }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    if (confirmDelete) {
+      onDelete(task.id);
+    } else {
+      setConfirmDelete(true);
+    }
+  };
+
+  const handleCancelDelete = (e) => {
+    e.stopPropagation();
+    setConfirmDelete(false);
+  };
+
+  return (
+    <div
+      draggable={!confirmDelete}
+      onDragStart={(e) => !confirmDelete && onDragStart(e, task)}
       onDragEnd={onDragEnd}
-      className={`bg-[#0d1526] border border-white/[0.06] rounded-xl p-4 cursor-grab active:cursor-grabbing hover:border-white/[0.12] hover:shadow-lg hover:shadow-black/30 transition-all duration-200 group ${
+      onMouseLeave={() => setConfirmDelete(false)}
+      className={`bg-[#0d1526] border rounded-xl p-4 cursor-grab active:cursor-grabbing hover:shadow-lg hover:shadow-black/30 transition-all duration-200 group ${
         isDragging ? "opacity-40 scale-95" : "opacity-100"
+      } ${
+        confirmDelete
+          ? "border-red-500/40 bg-red-500/[0.04]"
+          : "border-white/[0.06] hover:border-white/[0.12]"
       }`}
     >
       <div className="flex items-start justify-between gap-2 mb-3">
@@ -193,8 +339,40 @@ function TaskCard({ task, colDot, onAssignClick, onDragStart, onDragEnd, isDragg
           <Circle size={7} className={`flex-shrink-0 fill-current ${colDot.replace("bg-", "text-")}`} />
           <h3 className="text-sm font-semibold text-white truncate">{task.title}</h3>
         </div>
-        <GripVertical size={14} className="text-gray-700 flex-shrink-0 mt-0.5" />
+
+        {/* Bouton suppression (leader uniquement) */}
+        {isLeader && (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {confirmDelete ? (
+              <>
+                <button
+                  onClick={handleCancelDelete}
+                  className="text-xs text-gray-500 hover:text-white px-2 py-1 rounded-lg hover:bg-white/[0.05] transition-all"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  className="text-xs text-red-400 hover:text-red-300 font-semibold px-2 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-all"
+                >
+                  Confirmer
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleDeleteClick}
+                title="Supprimer la tâche"
+                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150"
+              >
+                <Trash2 size={13} />
+              </button>
+            )}
+          </div>
+        )}
+
+        {!isLeader && <GripVertical size={14} className="text-gray-700 flex-shrink-0 mt-0.5" />}
       </div>
+
       <p className="text-gray-500 text-xs mb-4 leading-relaxed">{task.desc}</p>
 
       <div className="flex items-center justify-between">
@@ -212,20 +390,22 @@ function TaskCard({ task, colDot, onAssignClick, onDragStart, onDragEnd, isDragg
         </div>
 
         {/* Bouton assigner */}
-        <button
-          onClick={() => onAssignClick(task)}
-          className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-400 bg-white/[0.03] hover:bg-blue-500/10 border border-white/[0.06] hover:border-blue-500/30 px-2.5 py-1.5 rounded-lg transition-all duration-150"
-        >
-          <UserPlus size={13} />
-          Assigner
-        </button>
+        {!confirmDelete && (
+          <button
+            onClick={() => onAssignClick(task)}
+            className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-400 bg-white/[0.03] hover:bg-blue-500/10 border border-white/[0.06] hover:border-blue-500/30 px-2.5 py-1.5 rounded-lg transition-all duration-150"
+          >
+            <UserPlus size={13} />
+            Assigner
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
 // ─── Colonne (zone de dépôt) ─────────────────────────────────────────
-function Column({ col, onAssignClick, onDragStart, onDragEnd, onDragOver, onDrop, isDragOver, draggedTaskId }) {
+function Column({ col, onAssignClick, onAddClick, onDeleteTask, isLeader, onDragStart, onDragEnd, onDragOver, onDrop, isDragOver, draggedTaskId }) {
   return (
     <div className="flex-1 min-w-[220px] max-w-[300px] flex flex-col">
       <div className={`border-t-2 ${col.color} pt-3 mb-4`}>
@@ -234,9 +414,20 @@ function Column({ col, onAssignClick, onDragStart, onDragEnd, onDragOver, onDrop
             <span className={`w-2 h-2 rounded-full ${col.dot}`} />
             <span className="text-sm font-semibold text-white">{col.label}</span>
           </div>
-          <span className="w-5 h-5 rounded-full bg-white/[0.06] text-gray-400 text-xs flex items-center justify-center font-medium">
-            {col.tasks.length}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-white/[0.06] text-gray-400 text-xs flex items-center justify-center font-medium">
+              {col.tasks.length}
+            </span>
+            {isLeader && (
+              <button
+                onClick={() => onAddClick(col)}
+                title="Ajouter une tâche"
+                className="w-6 h-6 rounded-lg bg-white/[0.04] hover:bg-blue-500/20 text-gray-500 hover:text-blue-400 flex items-center justify-center transition-all border border-white/[0.06] hover:border-blue-500/30"
+              >
+                <Plus size={13} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -253,6 +444,8 @@ function Column({ col, onAssignClick, onDragStart, onDragEnd, onDragOver, onDrop
             task={task}
             colDot={col.dot}
             onAssignClick={onAssignClick}
+            onDelete={onDeleteTask}
+            isLeader={isLeader}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
             isDragging={draggedTaskId === task.id}
@@ -274,9 +467,13 @@ function Column({ col, onAssignClick, onDragStart, onDragEnd, onDragOver, onDrop
 export default function Kanban() {
   const [columns, setColumns] = useState(INITIAL_COLUMNS);
   const [activeTask, setActiveTask] = useState(null);
+  const [addTaskTarget, setAddTaskTarget] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Vrai si l'utilisateur connecté est chef de groupe
+  const isLeader = MEMBERS.find((m) => m.id === "AD")?.isLeader ?? false;
 
   // ─── Assignation ───────────────────────────────────────────────
   const handleSave = (taskId, newAssignees) => {
@@ -286,6 +483,27 @@ export default function Kanban() {
         tasks: col.tasks.map((t) =>
           t.id === taskId ? { ...t, assignees: newAssignees } : t
         ),
+      }))
+    );
+  };
+
+  // ─── Ajout de tâche ────────────────────────────────────────────
+  const handleAddTask = (colId, newTask) => {
+    setColumns((prev) =>
+      prev.map((col) =>
+        col.id === colId
+          ? { ...col, tasks: [...col.tasks, { ...newTask, id: Date.now() }] }
+          : col
+      )
+    );
+  };
+
+  // ─── Suppression de tâche ──────────────────────────────────────
+  const handleDeleteTask = (taskId) => {
+    setColumns((prev) =>
+      prev.map((col) => ({
+        ...col,
+        tasks: col.tasks.filter((t) => t.id !== taskId),
       }))
     );
   };
@@ -399,7 +617,6 @@ export default function Kanban() {
         {/* Topbar */}
         <div className="border-b border-white/[0.06] px-8 py-4 flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-3">
-            {/* Bouton masquer / afficher le menu */}
             <button
               onClick={() => setSidebarOpen((v) => !v)}
               title={sidebarOpen ? "Masquer le menu" : "Afficher le menu"}
@@ -446,7 +663,10 @@ export default function Kanban() {
               <Column
                 key={col.id}
                 col={col}
+                isLeader={isLeader}
+                onAddClick={(col) => setAddTaskTarget(col)}
                 onAssignClick={setActiveTask}
+                onDeleteTask={handleDeleteTask}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
                 onDragOver={handleDragOver}
@@ -459,12 +679,22 @@ export default function Kanban() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal assignation */}
       {activeTask && (
         <AssignModal
           task={activeTask}
           onClose={() => setActiveTask(null)}
           onSave={handleSave}
+        />
+      )}
+
+      {/* Modal ajout de tâche */}
+      {addTaskTarget && (
+        <AddTaskModal
+          colId={addTaskTarget.id}
+          colLabel={addTaskTarget.label}
+          onClose={() => setAddTaskTarget(null)}
+          onAdd={handleAddTask}
         />
       )}
     </div>
