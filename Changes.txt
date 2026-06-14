@@ -13,3 +13,15 @@ rendre responsive toutes les pages du coté prof
 enlevé la page groupe du début
 la page étudiant doit permettre d'afficher les infos des étudiants qui font des projets du projet et doit afficher leur nom prenom mail sujet et groupe
  (avec la possibilité de les faire changer de groupe)
+
+Difficultés : 
+-la logique de choix des étudiants pour chaque projet que ce soit plus précis sans avoir à les ajouter un à un 
+-la logique de choix de groupe et de sujet et de team leader
+-la logique de création de compte 
+
+Solutions : 
+-Faire un filtre lors de la creation qui permet de renseingner que les étudiants concernés grâce a un base de donnée obtenue grâce au formulaire de voeux
+déjà renseigner avec la descision des projets
+-Faire une page de choix de groupe qui s'affiche qu'une seule fois et le premier qui intègre le groupe est le team leader 
+qui devra choisir le sujet 
+-Faire une page admin qui crée les comptes 
