@@ -28,14 +28,17 @@ export default function SupervisorPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleLogout = () => { logout(); navigate("/"); };
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const totalStudents = stats
     ? stats.projets.reduce((sum, p) => sum + p.nb_membres, 0)
     : 0;
 
   const projetsActifs = stats
-    ? stats.projets.filter(p => p.statut === "en_cours").length
+    ? stats.projets.filter((p) => p.statut === "en_cours").length
     : 0;
 
   return (
@@ -122,7 +125,9 @@ export default function SupervisorPage() {
                 {user?.prenom?.[0] || "P"}
               </div>
               <div>
-                <h2 className="text-sm font-semibold">{user?.prenom} {user?.nom}</h2>
+                <h2 className="text-sm font-semibold">
+                  {user?.prenom} {user?.nom}
+                </h2>
                 <p className="text-gray-400 text-xs">Professeur</p>
               </div>
             </div>
@@ -131,14 +136,15 @@ export default function SupervisorPage() {
 
         {/* Content */}
         <div className="p-6">
-          <h2 className="text-2xl font-bold mb-1">Tableau de bord</h2>
-          <p className="text-gray-400 text-sm mb-6">Vue d'ensemble de vos cours et étudiants</p>
+          <h2 className="text-2xl font-bold mb-2">Tableau de bord</h2>
+          <p className="text-gray-400 text-sm mb-6">
+            Vue d'ensemble de vos cours et étudiants
+          </p>
 
           {loading ? (
             <p className="text-gray-400 text-sm">Chargement...</p>
           ) : (
             <>
-              {/* Stats */}
               <div className="grid grid-cols-4 gap-4 mb-6">
                 <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
                   <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center mb-4">
@@ -180,7 +186,7 @@ export default function SupervisorPage() {
                   <p className="text-gray-400 text-sm">Aucun projet pour l'instant.</p>
                 ) : (
                   <div className="space-y-3">
-                    {stats.projets.slice(0, 5).map(p => (
+                    {stats.projets.slice(0, 5).map((p) => (
                       <Link
                         key={p.id}
                         to={`/supervisor/projects`}
