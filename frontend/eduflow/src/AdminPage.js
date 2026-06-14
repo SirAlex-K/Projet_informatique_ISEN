@@ -19,7 +19,6 @@ const ROLE_COLORS = {
   student: { bg: colors.amberDim, color: "#fbbf24", border: "rgba(245,158,11,0.4)" },
 };
 
-const CLASSE_OPTIONS = ["ISEN1A", "ISEN1B", "ISEN2A", "ISEN2B", "ISEN3A", "ISEN3B", "ISEN3C", "ISEN4A", "ISEN4B", "ISEN5A", "ISEN5B"];
 
 const selectStyle = {
   width: "100%", boxSizing: "border-box", background: colors.bg,
@@ -42,6 +41,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [formationOptions, setFormationOptions] = useState([]);
   const [promoOptions, setPromoOptions] = useState([]);
+  const [classesByFormation, setClassesByFormation] = useState({});
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(null);
@@ -60,9 +60,11 @@ export default function AdminPage() {
       const res = await api.get('/admin/options');
       setFormationOptions(res.data.formations || []);
       setPromoOptions(res.data.promos || []);
+      setClassesByFormation(res.data.classesByFormation || {});
     } catch {
       setFormationOptions(['ISEN', 'HEI', 'ISA']);
       setPromoOptions(['2026', '2027']);
+      setClassesByFormation({ ISEN: ['CIR 1','CIR 2','CIR 3','CSI 1','CSI 2','CSI 3'], HEI: ['HEI 1','HEI 2','HEI 3'], ISA: ['ISA 1','ISA 2','ISA 3'] });
     }
   };
 
@@ -282,12 +284,12 @@ export default function AdminPage() {
                   <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Classe</label>
                   <select value={form.classe} onChange={e => setForm({ ...form, classe: e.target.value })} style={selectStyle}>
                     <option value="">Sélectionner...</option>
-                    {CLASSE_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    {(classesByFormation[form.formation] || []).map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div style={{ marginBottom: "1rem" }}>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Formation</label>
-                  <select value={form.formation} onChange={e => setForm({ ...form, formation: e.target.value })} style={selectStyle}>
+                  <select value={form.formation} onChange={e => setForm({ ...form, formation: e.target.value, classe: '' })} style={selectStyle}>
                     <option value="">Sélectionner...</option>
                     {formationOptions.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
