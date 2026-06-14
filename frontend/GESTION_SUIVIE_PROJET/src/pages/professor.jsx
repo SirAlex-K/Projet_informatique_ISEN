@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
 import { 
-  LayoutDashboard, FolderPlus, Users, ChevronDown, ChevronRight, 
-  Filter, CheckSquare, Square, Send, Eye, Plus, X, ArrowLeft, BookOpen, Crown
+  LayoutDashboard, 
+  FolderPlus, 
+  Users, 
+  ChevronRight, 
+  Filter, 
+  CheckSquare, 
+  Square, 
+  Send, 
+  Eye 
 } from 'lucide-react';
 
+// Données fictives pour la simulation
 const MOCK_STUDENTS = [
   { id: '1', name: 'Assane Diakite', promo: '2027', specialite: 'Systèmes Embarqués' },
   { id: '2', name: 'Abdoul Kader Kebe', promo: '2027', specialite: 'Cybersécurité' },
@@ -13,54 +21,29 @@ const MOCK_STUDENTS = [
 ];
 
 export default function SupervisorDashboard() {
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  // États Formulaire
   const [title, setTitle] = useState('');
   const [groupCount, setGroupCount] = useState(3);
   const [maxCapacity, setMaxCapacity] = useState(5);
-  
-  // Gestion des sujets multiples par projet
-  const [subjectInput, setSubjectInput] = useState('');
-  const [projectSubjects, setProjectSubjects] = useState([]);
 
+  // États Filtres & Sélection Étudiants
   const [promoFilter, setPromoFilter] = useState('All');
   const [specFilter, setSpecFilter] = useState('All');
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
 
-  // Projets avec "Effet Poupée Russe" intégré
-  const [createdProjects, setCreatedProjects] = useState([
-    {
-      id: 'p-1',
-      title: 'Projet Traitement de Signal & Audio Mixer',
-      assignedStudentIds: ['1', '2', '3'],
-      subjects: ['Architecture Mixeur Audio Pro', 'Filtres Numériques PIC18', 'DSP et Effets Temps Réel'],
-      groups: [
-        { id: 'g-101', name: 'Groupe 1', capacity: 4, chosenSubject: 'Architecture Mixeur Audio Pro', members: [{ name: 'Assane Diakite', isLeader: true }, { name: 'Abdoul Kader Kebe', isLeader: false }] },
-        { id: 'g-102', name: 'Groupe 2', capacity: 4, chosenSubject: '', members: [] }
-      ]
-    }
-  ]);
+  // État des projets créés (Simulation API)
+  const [createdProjects, setCreatedProjects] = useState([]);
+  const [activeProjectView, setActiveProjectView] = useState(null);
+  const [activeGroupView, setActiveGroupView] = useState(null);
 
-  // États d'expansion (Poupées russes)
-  const [expandedProjectId, setExpandedProjectId] = useState(null);
-  const [expandedGroupId, setExpandedGroupId] = useState(null);
-
-  const addSubject = () => {
-    if (subjectInput.trim()) {
-      setProjectSubjects([...projectSubjects, subjectInput.trim()]);
-      setSubjectInput('');
-    }
-  };
-
-  const removeSubject = (index) => {
-    setProjectSubjects(projectSubjects.filter((_, i) => i !== index));
-  };
-
+  // Filtrage des étudiants
   const filteredStudents = MOCK_STUDENTS.filter(student => {
     const matchPromo = promoFilter === 'All' || student.promo === promoFilter;
     const matchSpec = specFilter === 'All' || student.specialite === specFilter;
     return matchPromo && matchSpec;
   });
 
+  // Gestion de la sélection globale
   const handleSelectAll = () => {
     if (selectedStudentIds.length === filteredStudents.length) {
       setSelectedStudentIds([]);
@@ -70,227 +53,286 @@ export default function SupervisorDashboard() {
   };
 
   const handleSelectStudent = (id) => {
-    setSelectedStudentIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+    setSelectedStudentIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
   };
 
+  // Soumission et Publication du Projet
   const handlePublishProject = (e) => {
     e.preventDefault();
-    if (!title) return alert('Titre manquant');
-    if (projectSubjects.length === 0) return alert('Ajoutez au moins un sujet pour ce projet');
-    if (selectedStudentIds.length === 0) return alert('Assignez au moins un étudiant');
+    if (!title) return alert('Veuillez donner un titre au projet');
+    if (selectedStudentIds.length === 0) return alert('Veuillez assigner au moins un étudiant');
 
+    // Génération automatique des slots de groupes demandés
     const generatedGroups = Array.from({ length: groupCount }, (_, i) => ({
       id: `g-${Date.now()}-${i + 1}`,
       name: `Groupe ${i + 1}`,
       capacity: maxCapacity,
-      chosenSubject: '',
-      members: []
+      members: [],
+      subject: ''
     }));
 
     const newProject = {
       id: `p-${Date.now()}`,
       title,
-      assignedStudentIds: [...selectedStudentIds],
-      subjects: projectSubjects,
+      assignedStudentIds: [...selectedStudentIds], // Envoi unique de l'array d'IDs
       groups: generatedGroups
     };
 
     setCreatedProjects([newProject, ...createdProjects]);
-    setShowCreateForm(false);
-    // Reset
+    alert(`Projet publié avec succès ! ${selectedStudentIds.length} étudiants assignés en un seul appel.`);
+    
+    // Reset formulaire
     setTitle('');
-    setProjectSubjects([]);
     setSelectedStudentIds([]);
   };
 
   return (
-    <div className="flex min-h-screen bg-[#020817] text-slate-100 font-sans">
+    <div className="min-h-screen bg-[#020817] text-white flex">
       {/* Sidebar */}
       <aside className="w-64 bg-[#0B1220] border-r border-slate-800 p-6 flex flex-col gap-6">
         <div className="flex items-center gap-3 px-2">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">EF</div>
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
+            EF
+          </div>
           <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">EduFlow</span>
         </div>
         <nav className="flex flex-col gap-2 flex-1">
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600/20 to-purple-600/20 text-indigo-400 font-medium border border-indigo-500/20 w-full text-left">
-            <LayoutDashboard size={18} /> Espace Encadrant
+          <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600/20 to-purple-600/20 text-indigo-400 font-medium border border-indigo-500/20 transition-all">
+            <LayoutDashboard size={18} />
+            Espace Encadrant
           </button>
         </nav>
+        <div className="border-t border-slate-800 pt-4 px-2 text-xs text-slate-500">
+          Connecté en tant que : **Encadrant**
+        </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto max-w-5xl mx-auto w-full">
-        {!showCreateForm ? (
-          /* VUE LISTE DES PROJETS ACTIFS */
-          <>
-            <header className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-white">Tableau de Bord</h1>
-                <p className="text-slate-400 text-sm">Supervisez vos projets et déployez vos structures.</p>
-              </div>
-              <button 
-                onClick={() => setShowCreateForm(true)}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-medium transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/10"
-              >
-                <Plus size={18} /> Nouveau Projet
-              </button>
-            </header>
+      <main className="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <header className="mb-8">
+          <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">Gestion des Projets</h1>
+          <p className="text-slate-400">Créez des projets, assignez vos promotions en masse et supervisez les choix de groupes.</p>
+        </header>
 
-            <div className="space-y-4">
-              <h2 className="text-sm uppercase font-bold tracking-wider text-slate-500">Mes Projets Actifs</h2>
-              {createdProjects.map(project => {
-                const isProjectExpanded = expandedProjectId === project.id;
-                return (
-                  <div key={project.id} className="bg-[#0B1220] border border-slate-800 rounded-xl overflow-hidden shadow-md transition-all">
-                    {/* Niveau 1 : Le Projet */}
-                    <div 
-                      onClick={() => setExpandedProjectId(isProjectExpanded ? null : project.id)}
-                      className="p-5 flex items-center justify-between cursor-pointer hover:bg-slate-800/20 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-indigo-600/10 text-indigo-400 rounded-lg">
-                          <BookOpen size={20} />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-slate-100 text-base">{project.title}</h3>
-                          <p className="text-xs text-slate-400 mt-0.5">{project.groups.length} groupes configurés • {project.subjects.length} sujets déposés</p>
-                        </div>
-                      </div>
-                      {isProjectExpanded ? <ChevronDown size={20} className="text-slate-400" /> : <ChevronRight size={20} className="text-slate-400" />}
-                    </div>
-
-                    {/* Niveau 2 : Liste des Groupes (Effet poupée russe) */}
-                    {isProjectExpanded && (
-                      <div className="bg-[#050c1a] border-t border-slate-800/60 p-4 space-y-2">
-                        <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider px-2 mb-2">Groupes rattachés :</p>
-                        {project.groups.map(group => {
-                          const isGroupExpanded = expandedGroupId === group.id;
-                          return (
-                            <div key={group.id} className="bg-[#0B1220] border border-slate-800/80 rounded-lg overflow-hidden">
-                              <div 
-                                onClick={() => setExpandedGroupId(isGroupExpanded ? null : group.id)}
-                                className="p-3 flex justify-between items-center cursor-pointer hover:bg-slate-800/40 text-sm"
-                              >
-                                <span className="font-medium text-slate-200">{group.name}</span>
-                                <div className="flex items-center gap-3 text-xs text-slate-400">
-                                  <span className="bg-slate-900 px-2 py-0.5 rounded border border-slate-800">{group.members.length} / {group.capacity} étudiants</span>
-                                  {isGroupExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                </div>
-                              </div>
-
-                              {/* Niveau 3 : Détails profonds du Groupe choisi */}
-                              {isGroupExpanded && (
-                                <div className="bg-[#020817] p-4 border-t border-slate-800 text-xs space-y-3">
-                                  <div>
-                                    <span className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Sujet Choisi par le groupe :</span>
-                                    <span className={`font-medium ${group.chosenSubject ? 'text-emerald-400' : 'text-amber-500 italic'}`}>
-                                      {group.chosenSubject || "Aucun sujet sélectionné pour l'instant par l'équipe."}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Composition de la table :</span>
-                                    {group.members.length === 0 ? (
-                                      <p className="text-slate-600 italic">Groupe actuellement vide.</p>
-                                    ) : (
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-                                        {group.members.map((m, i) => (
-                                          <div key={i} className="bg-[#0B1220] border border-slate-800 px-3 py-2 rounded flex items-center justify-between">
-                                            <span className="text-slate-300">{m.name}</span>
-                                            {m.isLeader && <span className="text-amber-400 flex items-center gap-0.5 bg-amber-500/10 px-1.5 py-0.5 rounded text-[9px]"><Crown size={10}/> Leader</span>}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        ) : (
-          /* VUE CRÉATION DE PROJET (DÉPLIÉE AU CLIC) */
-          <div className="animate-fadeIn">
-            <button onClick={() => setShowCreateForm(false)} className="text-sm text-slate-400 flex items-center gap-1 hover:text-white mb-6">
-              <ArrowLeft size={16} /> Retour à la liste
-            </button>
-            <h1 className="text-2xl font-bold mb-6 text-white">Créer et Configurer un Nouveau Projet</h1>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                {/* Propriétés */}
-                <div className="bg-[#0B1220] border border-slate-800 rounded-xl p-5 space-y-4">
-                  <h3 className="text-sm font-semibold text-white flex items-center gap-2 border-b border-slate-800 pb-2"><FolderPlus size={16}/> 1. Paramètres Généraux</h3>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">Titre</label>
-                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="ex: Module de communication SPI" className="w-full bg-[#020817] border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"/>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">Nombre de Groupes</label>
-                      <input type="number" value={groupCount} onChange={(e) => setGroupCount(parseInt(e.target.value) || 0)} className="w-full bg-[#020817] border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"/>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-400 mb-1">Capacité Max / Groupe</label>
-                      <input type="number" value={maxCapacity} onChange={(e) => setMaxCapacity(parseInt(e.target.value) || 0)} className="w-full bg-[#020817] border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"/>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ajout des Sujets de l'Encadrant */}
-                <div className="bg-[#0B1220] border border-slate-800 rounded-xl p-5 space-y-4">
-                  <h3 className="text-sm font-semibold text-white flex items-center gap-2 border-b border-slate-800 pb-2"><BookOpen size={16}/> 2. Banque de Sujets Imposés</h3>
-                  <div className="flex gap-2">
-                    <input type="text" value={subjectInput} onChange={(e) => setSubjectInput(e.target.value)} placeholder="Ajouter un libellé de sujet..." className="flex-1 bg-[#020817] border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"/>
-                    <button type="button" onClick={addSubject} className="bg-purple-600 hover:bg-purple-500 px-3 rounded-lg text-xs font-medium">Ajouter</button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {projectSubjects.map((sbj, idx) => (
-                      <span key={idx} className="bg-[#020817] border border-purple-500/30 text-purple-300 text-xs px-2.5 py-1 rounded-md flex items-center gap-1.5">
-                        {sbj}
-                        <X size={12} className="cursor-pointer text-slate-500 hover:text-red-400" onClick={() => removeSubject(idx)} />
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Table d'assignation simplifiée de masse */}
-              <div className="bg-[#0B1220] border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Colonne Formulaire & Assignation */}
+          <section className="lg:col-span-2 space-y-8">
+            {/* Formulaire de Création */}
+            <div className="bg-[#0B1220] border border-slate-800 rounded-2xl p-6 shadow-xl">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <FolderPlus className="text-indigo-400" size={20} />
+                1. Configuration du Projet
+              </h2>
+              <form className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-white border-b border-slate-800 pb-2 mb-3 flex items-center justify-between">
-                    <span>3. Assignation</span>
-                    <button type="button" onClick={handleSelectAll} className="text-[10px] text-indigo-400 hover:underline">Tout Sélectionner</button>
-                  </h3>
-                  <div className="space-y-2 overflow-y-auto max-h-64 pr-1">
-                    {filteredStudents.map(s => {
-                      const isSelected = selectedStudentIds.includes(s.id);
-                      return (
-                        <div key={s.id} onClick={() => handleSelectStudent(s.id)} className="flex items-center gap-3 p-2 rounded-lg bg-[#020817] border border-slate-800/60 cursor-pointer hover:border-indigo-500/40 text-xs">
-                          {isSelected ? <CheckSquare size={14} className="text-indigo-400" /> : <Square size={14} className="text-slate-600" />}
-                          <div>
-                            <p className="font-medium text-slate-200">{s.name}</p>
-                            <p className="text-[10px] text-slate-500">{s.specialite}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Titre du Projet</label>
+                  <input 
+                    type="text" 
+                    value={title} 
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="ex: Conception Mixeur Audio de A à Z" 
+                    className="w-full bg-[#020817] border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Nombre de Groupes</label>
+                    <input 
+                      type="number" 
+                      value={groupCount} 
+                      onChange={(e) => setGroupCount(parseInt(e.target.value) || 0)}
+                      className="w-full bg-[#020817] border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">Capacité max / groupe</label>
+                    <input 
+                      type="number" 
+                      value={maxCapacity} 
+                      onChange={(e) => setMaxCapacity(parseInt(e.target.value) || 0)}
+                      className="w-full bg-[#020817] border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
                   </div>
                 </div>
+              </form>
+            </div>
 
-                <button onClick={handlePublishProject} className="w-full mt-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium py-2.5 rounded-lg text-xs transition-all shadow-lg flex items-center justify-center gap-2">
-                  <Send size={12} /> Publier le Projet
+            {/* Table d'Assignation Fluide */}
+            <div className="bg-[#0B1220] border border-slate-800 rounded-2xl p-6 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Users className="text-purple-400" size={20} />
+                  2. Assignation des Étudiants en Masse
+                </h2>
+                <button 
+                  onClick={handleSelectAll}
+                  className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg font-medium transition-colors border border-slate-700"
+                >
+                  {selectedStudentIds.length === filteredStudents.length ? 'Tout désélectionner' : 'Tout sélectionner'}
                 </button>
               </div>
+
+              {/* Filtres intelligents */}
+              <div className="flex flex-wrap gap-3 mb-4 bg-[#020817] p-3 rounded-xl border border-slate-900">
+                <div className="flex items-center gap-2 text-slate-400 text-sm">
+                  <Filter size={14} /> Filtres :
+                </div>
+                <select 
+                  value={promoFilter} 
+                  onChange={(e) => setPromoFilter(e.target.value)}
+                  className="bg-[#0B1220] border border-slate-800 rounded-lg text-xs px-2 py-1.5 text-slate-300 focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="All">Toutes les promos</option>
+                  <option value="2026">Promo 2026</option>
+                  <option value="2027">Promo 2027</option>
+                </select>
+                <select 
+                  value={specFilter} 
+                  onChange={(e) => setSpecFilter(e.target.value)}
+                  className="bg-[#0B1220] border border-slate-800 rounded-lg text-xs px-2 py-1.5 text-slate-300 focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="All">Toutes spécialités</option>
+                  <option value="Systèmes Embarqués">Systèmes Embarqués</option>
+                  <option value="Cybersécurité">Cybersécurité</option>
+                  <option value="DevOps">DevOps</option>
+                </select>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto max-h-60 rounded-xl border border-slate-800">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#020817] text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
+                      <th className="p-4 w-12">Sél.</th>
+                      <th className="p-4">Nom Complet</th>
+                      <th className="p-4">Promotion</th>
+                      <th className="p-4">Spécialité</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800 text-sm">
+                    {filteredStudents.map((student) => {
+                      const isSelected = selectedStudentIds.includes(student.id);
+                      return (
+                        <tr 
+                          key={student.id} 
+                          onClick={() => handleSelectStudent(student.id)}
+                          className={`hover:bg-slate-800/30 transition-colors cursor-pointer ${isSelected ? 'bg-indigo-600/5' : ''}`}
+                        >
+                          <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                            <button onClick={() => handleSelectStudent(student.id)} className="text-indigo-400">
+                              {isSelected ? <CheckSquare size={18} /> : <Square size={18} className="text-slate-600" />}
+                            </button>
+                          </td>
+                          <td className="p-4 font-medium text-slate-200">{student.name}</td>
+                          <td className="p-4 text-slate-400">{student.promo}</td>
+                          <td className="p-4">
+                            <span className="bg-slate-900 border border-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-xs">
+                              {student.specialite}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Bouton de Publication unique */}
+              <button 
+                onClick={handlePublishProject}
+                className="w-full mt-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+              >
+                <Send size={16} />
+                Publier le Projet ({selectedStudentIds.length} assignés)
+              </button>
             </div>
-          </div>
-        )}
+          </section>
+
+          {/* Colonne Droite : Superviseur d'États & Groupes */}
+          <section className="space-y-6">
+            <div className="bg-[#0B1220] border border-slate-800 rounded-2xl p-6 shadow-xl">
+              <h2 className="text-lg font-semibold text-white mb-4">Projets Actifs</h2>
+              {createdProjects.length === 0 ? (
+                <p className="text-slate-500 text-sm italic">Aucun projet configuré pour le moment.</p>
+              ) : (
+                <div className="space-y-3">
+                  {createdProjects.map(project => (
+                    <div key={project.id} className="border border-slate-800 rounded-xl p-4 bg-[#020817]/60">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-slate-200 text-sm">{project.title}</h3>
+                        <button 
+                          onClick={() => {
+                            setActiveProjectView(activeProjectView === project.id ? null : project.id);
+                            setActiveGroupView(null);
+                          }}
+                          className="text-xs text-indigo-400 flex items-center gap-1 hover:underline"
+                        >
+                          <Eye size={12} /> {activeProjectView === project.id ? 'Fermer' : 'Voir'}
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-400">{project.groups.length} groupes auto-générés • {project.assignedStudentIds.length} inscrits</p>
+
+                      {/* Déploiement des Groupes si sélectionné */}
+                      {activeProjectView === project.id && (
+                        <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+                          <p className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-2">Groupes générés :</p>
+                          {project.groups.map(group => (
+                            <button
+                              key={group.id}
+                              onClick={() => setActiveGroupView(activeGroupView?.id === group.id ? null : group)}
+                              className={`w-full flex justify-between items-center p-2 rounded-lg text-left text-xs border transition-colors ${activeGroupView?.id === group.id ? 'bg-purple-600/10 border-purple-500/30 text-purple-300' : 'bg-[#0B1220] border-slate-800 hover:border-slate-700 text-slate-300'}`}
+                            >
+                              <span>{group.name}</span>
+                              <div className="flex items-center gap-1 text-slate-500">
+                                <span>{group.members.length}/{group.capacity} pl.</span>
+                                <ChevronRight size={12} />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Vue Détails du Groupe Inspecté */}
+            {activeGroupView && (
+              <div className="bg-[#0B1220] border border-purple-500/20 rounded-2xl p-6 shadow-xl animate-fadeIn">
+                <h2 className="text-base font-bold text-white mb-1 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                  Inspecteur : {activeGroupView.name}
+                </h2>
+                <p className="text-xs text-slate-400 mb-4">Détails structurels en temps réel</p>
+                
+                <div className="space-y-3 text-xs">
+                  <div className="bg-[#020817] p-3 rounded-lg border border-slate-800">
+                    <span className="text-slate-500 block mb-1">Sujet choisi :</span>
+                    <span className="text-slate-200 font-medium italic">{activeGroupView.subject || 'Aucun sujet défini par le Team Leader'}</span>
+                  </div>
+                  <div className="bg-[#020817] p-3 rounded-lg border border-slate-800">
+                    <span className="text-slate-500 block mb-1">Membres de l'équipe :</span>
+                    {activeGroupView.members.length === 0 ? (
+                      <span className="text-slate-600 italic">Aucun étudiant n'a rejoint ce groupe.</span>
+                    ) : (
+                      <ul className="space-y-1 mt-1">
+                        {activeGroupView.members.map((m, index) => (
+                          <li key={index} className="text-slate-200 flex items-center justify-between">
+                            <span>• {m.name}</span>
+                            {m.isLeader && <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] px-1.5 py-0.2 rounded">Team Leader</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
       </main>
     </div>
   );
