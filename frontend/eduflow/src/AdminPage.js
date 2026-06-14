@@ -29,7 +29,8 @@ const FORMATION_SHORT = {
   "Génie Énergétique et Environnement": "Énergie",
   "Génie Civil et Construction Durable": "Civil",
 };
-const PROMO_OPTIONS = ["2025", "2026", "2027", "2028", "2029", "2030"];
+// Format année scolaire (ex: "2025-2026")
+const PROMO_OPTIONS = ["2023-2024", "2024-2025", "2025-2026", "2026-2027", "2027-2028", "2028-2029", "2029-2030"];
 
 const selectStyle = {
   width: "100%", boxSizing: "border-box", background: colors.bg,
@@ -216,17 +217,17 @@ export default function AdminPage() {
                   <span style={{ fontSize: "13px", fontWeight: 500, color: colors.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.prenom} {u.nom}</span>
                 </div>
                 <span style={{ fontSize: "12px", color: colors.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: "8px" }}>{u.email}</span>
-                <span style={{ fontSize: "12px", color: u.role === "student" && u.classe ? colors.text : colors.textMuted }}>
-                  {u.role === "student" ? (u.classe || "—") : "—"}
+                <span style={{ fontSize: "12px", color: colors.text }}>
+                  {u.role === "student" ? (u.classe || "") : ""}
                 </span>
                 <span
                   title={u.role === "student" && u.formation ? u.formation : undefined}
-                  style={{ fontSize: "12px", color: u.role === "student" && u.formation ? colors.text : colors.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: "8px" }}
+                  style={{ fontSize: "12px", color: colors.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: "8px" }}
                 >
-                  {u.role === "student" ? (FORMATION_SHORT[u.formation] || u.formation || "—") : "—"}
+                  {u.role === "student" ? (FORMATION_SHORT[u.formation] || u.formation || "") : ""}
                 </span>
-                <span style={{ fontSize: "12px", color: u.role === "student" && u.promo ? colors.text : colors.textMuted }}>
-                  {u.role === "student" ? (u.promo || "—") : "—"}
+                <span style={{ fontSize: "12px", color: colors.text }}>
+                  {u.role === "student" ? (u.promo || "") : ""}
                 </span>
                 <Badge role={u.role} />
                 <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
