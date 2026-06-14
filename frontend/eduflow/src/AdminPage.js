@@ -19,6 +19,25 @@ const ROLE_COLORS = {
   student: { bg: colors.amberDim, color: "#fbbf24", border: "rgba(245,158,11,0.4)" },
 };
 
+// Listes pour les menus déroulants — adapte ces valeurs si besoin
+const CLASSE_OPTIONS = ["ISEN1A", "ISEN1B", "ISEN2A", "ISEN2B", "ISEN3A", "ISEN3B", "ISEN3C", "ISEN4A", "ISEN4B", "ISEN5A", "ISEN5B"];
+const FORMATION_OPTIONS = ["Génie Informatique", "Génie Électronique", "Génie Industriel", "Génie Énergétique et Environnement", "Génie Civil et Construction Durable"];
+const FORMATION_SHORT = {
+  "Génie Informatique": "Info",
+  "Génie Électronique": "Électro",
+  "Génie Industriel": "Indus",
+  "Génie Énergétique et Environnement": "Énergie",
+  "Génie Civil et Construction Durable": "Civil",
+};
+const PROMO_OPTIONS = ["2025", "2026", "2027", "2028", "2029", "2030"];
+
+const selectStyle = {
+  width: "100%", boxSizing: "border-box", background: colors.bg,
+  border: `0.5px solid ${colors.border}`, borderRadius: "8px",
+  padding: "10px 12px", fontSize: "13px", color: colors.text,
+  fontFamily: "inherit", outline: "none",
+};
+
 function Badge({ role }) {
   const c = ROLE_COLORS[role] || ROLE_COLORS.student;
   return <span style={{ fontSize: "11px", fontWeight: 500, padding: "3px 10px", borderRadius: "20px", background: c.bg, color: c.color, border: `0.5px solid ${c.border}` }}>{ROLE_LABELS[role] || role}</span>;
@@ -89,6 +108,8 @@ export default function AdminPage() {
   });
 
   const stats = { total: users.length, supervisors: users.filter(u => u.role === 'supervisor').length, students: users.filter(u => u.role === 'student').length, admins: users.filter(u => u.role === 'admin').length };
+
+  const tableColumns = "1.6fr 1.6fr 0.7fr 1.1fr 0.6fr 0.9fr 80px";
 
   return (
     <div style={{ minHeight: "100vh", background: colors.bg, fontFamily: "'Inter', sans-serif", display: "flex" }}>
@@ -173,22 +194,40 @@ export default function AdminPage() {
 
           {/* Table */}
           <div style={{ background: colors.surface, border: `0.5px solid ${colors.border}`, borderRadius: "12px", overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 80px", padding: "10px 1.25rem", borderBottom: `0.5px solid ${colors.border}`, fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              <span>Utilisateur</span><span>Email</span><span>Rôle</span><span></span>
+            <div style={{ display: "grid", gridTemplateColumns: tableColumns, padding: "10px 1.25rem", borderBottom: `0.5px solid ${colors.border}`, fontSize: "11px", fontWeight: 500, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <span>Utilisateur</span>
+              <span>Email</span>
+              <span>Classe</span>
+              <span>Formation</span>
+              <span>Promo</span>
+              <span>Rôle</span>
+              <span></span>
             </div>
             {loading ? (
               <div style={{ padding: "3rem", textAlign: "center", color: colors.textMuted }}>Chargement...</div>
             ) : filtered.length === 0 ? (
               <div style={{ padding: "3rem", textAlign: "center", color: colors.textMuted }}>Aucun utilisateur trouvé</div>
             ) : filtered.map((u, i) => (
-              <div key={u.id} style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 80px", padding: "12px 1.25rem", alignItems: "center", borderBottom: i < filtered.length - 1 ? `0.5px solid ${colors.border}` : "none" }}
+              <div key={u.id} style={{ display: "grid", gridTemplateColumns: tableColumns, padding: "12px 1.25rem", alignItems: "center", borderBottom: i < filtered.length - 1 ? `0.5px solid ${colors.border}` : "none" }}
                 onMouseEnter={e => e.currentTarget.style.background = colors.surfaceHover}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden" }}>
                   <Avatar nom={u.nom} prenom={u.prenom} />
-                  <span style={{ fontSize: "13px", fontWeight: 500, color: colors.text }}>{u.prenom} {u.nom}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 500, color: colors.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.prenom} {u.nom}</span>
                 </div>
-                <span style={{ fontSize: "12px", color: colors.textMuted }}>{u.email}</span>
+                <span style={{ fontSize: "12px", color: colors.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: "8px" }}>{u.email}</span>
+                <span style={{ fontSize: "12px", color: u.role === "student" && u.classe ? colors.text : colors.textMuted }}>
+                  {u.role === "student" ? (u.classe || "—") : "—"}
+                </span>
+                <span
+                  title={u.role === "student" && u.formation ? u.formation : undefined}
+                  style={{ fontSize: "12px", color: u.role === "student" && u.formation ? colors.text : colors.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: "8px" }}
+                >
+                  {u.role === "student" ? (FORMATION_SHORT[u.formation] || u.formation || "—") : "—"}
+                </span>
+                <span style={{ fontSize: "12px", color: u.role === "student" && u.promo ? colors.text : colors.textMuted }}>
+                  {u.role === "student" ? (u.promo || "—") : "—"}
+                </span>
                 <Badge role={u.role} />
                 <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
                   <button onClick={() => openEdit(u)} style={{ width: "28px", height: "28px", borderRadius: "6px", background: "transparent", border: `0.5px solid ${colors.border}`, color: colors.textMuted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -226,24 +265,39 @@ export default function AdminPage() {
             ))}
             <div style={{ marginBottom: "1rem" }}>
               <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Rôle *</label>
-              <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} style={{ width: "100%", background: colors.bg, border: `0.5px solid ${colors.border}`, borderRadius: "8px", padding: "10px 12px", fontSize: "13px", color: colors.text, fontFamily: "inherit", outline: "none" }}>
+              <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} style={selectStyle}>
                 <option value="student">Étudiant</option>
                 <option value="supervisor">Encadrant</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
 
-            {/* Champs spécifiques aux étudiants */}
-            {form.role === "student" && [
-              { label: "Classe", key: "classe", type: "text", placeholder: "Ex: ISEN3A" },
-              { label: "Formation", key: "formation", type: "text", placeholder: "Ex: Génie Informatique" },
-              { label: "Promo", key: "promo", type: "text", placeholder: "Ex: 2026" },
-            ].map(({ label, key, type, placeholder }) => (
-              <div key={key} style={{ marginBottom: "1rem" }}>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</label>
-                <input type={type} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} style={{ width: "100%", boxSizing: "border-box", background: colors.bg, border: `0.5px solid ${colors.border}`, borderRadius: "8px", padding: "10px 12px", fontSize: "13px", color: colors.text, fontFamily: "inherit", outline: "none" }} />
-              </div>
-            ))}
+            {/* Champs spécifiques aux étudiants — menus déroulants */}
+            {form.role === "student" && (
+              <>
+                <div style={{ marginBottom: "1rem" }}>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Classe</label>
+                  <select value={form.classe} onChange={e => setForm({ ...form, classe: e.target.value })} style={selectStyle}>
+                    <option value="">Sélectionner...</option>
+                    {CLASSE_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom: "1rem" }}>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Formation</label>
+                  <select value={form.formation} onChange={e => setForm({ ...form, formation: e.target.value })} style={selectStyle}>
+                    <option value="">Sélectionner...</option>
+                    {FORMATION_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom: "1rem" }}>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Promo</label>
+                  <select value={form.promo} onChange={e => setForm({ ...form, promo: e.target.value })} style={selectStyle}>
+                    <option value="">Sélectionner...</option>
+                    {PROMO_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+              </>
+            )}
 
             <div style={{ display: "flex", gap: "10px", marginTop: "1.5rem" }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", fontSize: "13px", background: "transparent", border: `0.5px solid ${colors.border}`, color: colors.textMuted, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
