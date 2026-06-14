@@ -131,5 +131,9 @@ les autres étudiants ne peuvent que consulter les fichiers téléverser par le 
 
 -prof : 
 changer la partie de création de projet et ajouter pour promo, classe, formation 
-cette partie doit pouvoir créer un projet qui regroupe plusieurs sujets qui regroupe eux aussi plusieurs groupes
-
+cette partie doit pouvoir créer un projet qui regroupe plusieurs sujets qui regroupe eux aussi plusieurs groupes.
+rendre responsive toutes les pages du coté prof 
+enlevé la page groupe du début 
+la page étudiant doit permettre d'afficher les infos des étudiants qui font des projets du projet et doit afficher leur nom prenom mail sujet et groupe
+ (avec la possibilité de les faire changer de groupe)
+ 
