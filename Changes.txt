@@ -25,3 +25,7 @@ déjà renseigner avec la descision des projets
 -Faire une page de choix de groupe qui s'affiche qu'une seule fois et le premier qui intègre le groupe est le team leader 
 qui devra choisir le sujet 
 -Faire une page admin qui crée les comptes 
+
+
+Améliorations :
+donner un thème à chaque en encadrant soit elec, info ou robot  
