@@ -89,7 +89,7 @@ export default function SupervisorDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#020817] text-slate-100 font-sans">
+    <div className="min-h-screen bg-[#020817] text-white flex">
       {/* Sidebar */}
       <aside className="w-64 bg-[#0B1220] border-r border-slate-800 p-6 flex flex-col gap-6">
         <div className="flex items-center gap-3 px-2">
