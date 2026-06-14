@@ -16,9 +16,7 @@ import ProjectDetails from "./pages/ProjectDetails";
 import GroupDetails from "./pages/GroupDetails";
 import NewProject from "./pages/newproject";
 
-// Pages test_tast
-import TestSupervisor from "../../test_tast/page";
-import TestStudent from "../../test_tast/page2";
+
 
 // Pages étudiant
 import Student from "./pages/etudiant/etudiant";
