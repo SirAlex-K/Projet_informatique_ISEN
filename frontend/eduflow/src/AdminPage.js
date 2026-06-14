@@ -281,17 +281,17 @@ export default function AdminPage() {
             {form.role === "student" && (
               <>
                 <div style={{ marginBottom: "1rem" }}>
-                  <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Classe</label>
-                  <select value={form.classe} onChange={e => setForm({ ...form, classe: e.target.value })} style={selectStyle}>
-                    <option value="">Sélectionner...</option>
-                    {(classesByFormation[form.formation] || []).map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div style={{ marginBottom: "1rem" }}>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Formation</label>
                   <select value={form.formation} onChange={e => setForm({ ...form, formation: e.target.value, classe: '' })} style={selectStyle}>
                     <option value="">Sélectionner...</option>
                     {formationOptions.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom: "1rem" }}>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Classe</label>
+                  <select value={form.classe} onChange={e => setForm({ ...form, classe: e.target.value })} style={selectStyle} disabled={!form.formation}>
+                    <option value="">{form.formation ? 'Sélectionner...' : 'Choisir une formation d\'abord'}</option>
+                    {(classesByFormation[form.formation] || []).map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div style={{ marginBottom: "1rem" }}>
