@@ -19,18 +19,7 @@ const ROLE_COLORS = {
   student: { bg: colors.amberDim, color: "#fbbf24", border: "rgba(245,158,11,0.4)" },
 };
 
-// Listes pour les menus déroulants — adapte ces valeurs si besoin
 const CLASSE_OPTIONS = ["ISEN1A", "ISEN1B", "ISEN2A", "ISEN2B", "ISEN3A", "ISEN3B", "ISEN3C", "ISEN4A", "ISEN4B", "ISEN5A", "ISEN5B"];
-const FORMATION_OPTIONS = ["Génie Informatique", "Génie Électronique", "Génie Industriel", "Génie Énergétique et Environnement", "Génie Civil et Construction Durable"];
-const FORMATION_SHORT = {
-  "Génie Informatique": "Info",
-  "Génie Électronique": "Électro",
-  "Génie Industriel": "Indus",
-  "Génie Énergétique et Environnement": "Énergie",
-  "Génie Civil et Construction Durable": "Civil",
-};
-// Format année scolaire (ex: "2025-2026")
-const PROMO_OPTIONS = ["2023-2024", "2024-2025", "2025-2026", "2026-2027", "2027-2028", "2028-2029", "2029-2030"];
 
 const selectStyle = {
   width: "100%", boxSizing: "border-box", background: colors.bg,
@@ -51,6 +40,8 @@ function Avatar({ nom, prenom }) {
 
 export default function AdminPage() {
   const [users, setUsers] = useState([]);
+  const [formationOptions, setFormationOptions] = useState([]);
+  const [promoOptions, setPromoOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(null);
@@ -62,7 +53,18 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { fetchUsers(); fetchOptions(); }, []);
+
+  const fetchOptions = async () => {
+    try {
+      const res = await api.get('/admin/options');
+      setFormationOptions(res.data.formations || []);
+      setPromoOptions(res.data.promos || []);
+    } catch {
+      setFormationOptions(['ISEN', 'HEI', 'ISA']);
+      setPromoOptions(['2026', '2027']);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -224,7 +226,7 @@ export default function AdminPage() {
                   title={u.role === "student" && u.formation ? u.formation : undefined}
                   style={{ fontSize: "12px", color: colors.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: "8px" }}
                 >
-                  {u.role === "student" ? (FORMATION_SHORT[u.formation] || u.formation || "") : ""}
+                  {u.role === "student" ? (u.formation || "—") : "—"}
                 </span>
                 <span style={{ fontSize: "12px", color: colors.text }}>
                   {u.role === "student" ? (u.promo || "") : ""}
@@ -287,14 +289,14 @@ export default function AdminPage() {
                   <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Formation</label>
                   <select value={form.formation} onChange={e => setForm({ ...form, formation: e.target.value })} style={selectStyle}>
                     <option value="">Sélectionner...</option>
-                    {FORMATION_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
+                    {formationOptions.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
                 <div style={{ marginBottom: "1rem" }}>
                   <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>Promo</label>
                   <select value={form.promo} onChange={e => setForm({ ...form, promo: e.target.value })} style={selectStyle}>
                     <option value="">Sélectionner...</option>
-                    {PROMO_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                    {promoOptions.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
               </>
