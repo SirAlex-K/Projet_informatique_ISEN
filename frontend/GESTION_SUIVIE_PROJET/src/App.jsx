@@ -16,6 +16,10 @@ import ProjectDetails from "./pages/ProjectDetails";
 import GroupDetails from "./pages/GroupDetails";
 import NewProject from "./pages/newproject";
 
+// Pages test_tast
+import TestSupervisor from "../../test_tast/page";
+import TestStudent from "../../test_tast/page2";
+
 // Pages étudiant
 import Student from "./pages/etudiant/etudiant";
 import Kanban from "./pages/etudiant/kanban";
@@ -26,6 +30,9 @@ import Chat from "./pages/etudiant/chat";
 export default function App() {
   return (
     <Routes>
+      <Route path="/test-supervisor" element={<TestSupervisor />} />
+      <Route path="/test-student" element={<TestStudent />} />
+
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<Home />} />
 
