@@ -37,7 +37,7 @@ export default function AdminPage() {
   const [editUser, setEditUser] = useState(null);
   const [filterRole, setFilterRole] = useState("tous");
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ nom: "", prenom: "", email: "", password: "", role: "student" });
+  const [form, setForm] = useState({ nom: "", prenom: "", email: "", password: "", role: "student", classe: "", formation: "", promo: "" });
   const [formError, setFormError] = useState("");
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -55,14 +55,14 @@ export default function AdminPage() {
     }
   };
 
-  const openAdd = () => { setEditUser(null); setForm({ nom: "", prenom: "", email: "", password: "", role: "student" }); setFormError(""); setShowModal(true); };
-  const openEdit = (u) => { setEditUser(u); setForm({ nom: u.nom, prenom: u.prenom, email: u.email, password: "", role: u.role }); setFormError(""); setShowModal(true); };
+  const openAdd = () => { setEditUser(null); setForm({ nom: "", prenom: "", email: "", password: "", role: "student", classe: "", formation: "", promo: "" }); setFormError(""); setShowModal(true); };
+  const openEdit = (u) => { setEditUser(u); setForm({ nom: u.nom, prenom: u.prenom, email: u.email, password: "", role: u.role, classe: u.classe || "", formation: u.formation || "", promo: u.promo || "" }); setFormError(""); setShowModal(true); };
 
   const handleSave = async () => {
     if (!form.nom || !form.prenom || !form.email || (!editUser && !form.password)) { setFormError("Tous les champs obligatoires doivent être remplis"); return; }
     try {
       if (editUser) {
-        const data = { nom: form.nom, prenom: form.prenom, email: form.email, role: form.role };
+        const data = { nom: form.nom, prenom: form.prenom, email: form.email, role: form.role, classe: form.classe, formation: form.formation, promo: form.promo };
         if (form.password) data.password = form.password;
         await api.put(`/admin/users/${editUser.id}`, data);
       } else {
@@ -207,7 +207,7 @@ export default function AdminPage() {
       {/* Modal Ajout/Édition */}
       {showModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-          <div style={{ background: colors.surface, border: `0.5px solid ${colors.border}`, borderRadius: "16px", padding: "2rem", width: "100%", maxWidth: "420px" }}>
+          <div style={{ background: colors.surface, border: `0.5px solid ${colors.border}`, borderRadius: "16px", padding: "2rem", width: "100%", maxWidth: "420px", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
               <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: colors.text }}>{editUser ? "Modifier" : "Ajouter un utilisateur"}</h2>
               <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", color: colors.textMuted, cursor: "pointer", fontSize: "20px", padding: 0 }}><i className="ti ti-x" /></button>
@@ -232,6 +232,19 @@ export default function AdminPage() {
                 <option value="admin">Admin</option>
               </select>
             </div>
+
+            {/* Champs spécifiques aux étudiants */}
+            {form.role === "student" && [
+              { label: "Classe", key: "classe", type: "text", placeholder: "Ex: ISEN3A" },
+              { label: "Formation", key: "formation", type: "text", placeholder: "Ex: Génie Informatique" },
+              { label: "Promo", key: "promo", type: "text", placeholder: "Ex: 2026" },
+            ].map(({ label, key, type, placeholder }) => (
+              <div key={key} style={{ marginBottom: "1rem" }}>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 500, color: colors.textMuted, marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase" }}>{label}</label>
+                <input type={type} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} style={{ width: "100%", boxSizing: "border-box", background: colors.bg, border: `0.5px solid ${colors.border}`, borderRadius: "8px", padding: "10px 12px", fontSize: "13px", color: colors.text, fontFamily: "inherit", outline: "none" }} />
+              </div>
+            ))}
+
             <div style={{ display: "flex", gap: "10px", marginTop: "1.5rem" }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", fontSize: "13px", background: "transparent", border: `0.5px solid ${colors.border}`, color: colors.textMuted, cursor: "pointer", fontFamily: "inherit" }}>Annuler</button>
               <button onClick={handleSave} style={{ flex: 1, padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: 600, background: colors.purple, border: "none", color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>{editUser ? "Enregistrer" : "Ajouter"}</button>
