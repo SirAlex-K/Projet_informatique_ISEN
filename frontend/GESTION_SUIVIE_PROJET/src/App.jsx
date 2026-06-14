@@ -9,7 +9,6 @@ import LoginPage from "./pages/LoginPage.jsx";
 import Home from "./pages/home";
 import Messages from "./pages/messages";
 import Students from "./pages/students";
-import Groups from "./pages/groups";
 import DatabaseGroups from "./pages/DatabaseGroups";
 import Evaluation from "./pages/evaluation";
 
@@ -50,7 +49,6 @@ export default function App() {
       <Route path="/messages" element={<Messages />} />
       <Route path="/students" element={<Students />} />
       <Route path="/evaluation" element={<Evaluation />} />
-      <Route path="/groups" element={<Groups />} />
       <Route path="/database-groups" element={<DatabaseGroups />} />
       <Route
   path="/project-details"
