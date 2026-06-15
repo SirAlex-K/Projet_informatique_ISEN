@@ -9,7 +9,13 @@ import SupervisorMessages   from './pages/SupervisorMessages';
 import SupervisorEvaluation from './pages/SupervisorEvaluation';
 import SupervisorGroups      from './pages/SupervisorGroups';
 import SupervisorNewProject  from './pages/SupervisorNewProject';
+import ProjectDetails       from './pages/ProjectDetails';
+import GroupDetails         from './pages/GroupDetails';
 import StudentPage          from './pages/StudentPage';
+import StudentKanban        from './pages/StudentKanban';
+import StudentLivrables     from './pages/StudentLivrables';
+import StudentNotes         from './pages/StudentNotes';
+import StudentChat          from './pages/StudentChat';
 import Groupe from "./Groupe";
 
 function PrivateRoute({ children, roles }) {
@@ -66,10 +72,40 @@ function AppRoutes() {
           <SupervisorNewProject />
         </PrivateRoute>
       } />
+      <Route path="/supervisor/project-details" element={
+        <PrivateRoute roles={['supervisor', 'admin']}>
+          <ProjectDetails />
+        </PrivateRoute>
+      } />
+      <Route path="/supervisor/group-details" element={
+        <PrivateRoute roles={['supervisor', 'admin']}>
+          <GroupDetails />
+        </PrivateRoute>
+      } />
 
       <Route path="/student" element={
         <PrivateRoute roles={['student']}>
           <StudentPage />
+        </PrivateRoute>
+      } />
+      <Route path="/student/kanban" element={
+        <PrivateRoute roles={['student']}>
+          <StudentKanban />
+        </PrivateRoute>
+      } />
+      <Route path="/student/livrables" element={
+        <PrivateRoute roles={['student']}>
+          <StudentLivrables />
+        </PrivateRoute>
+      } />
+      <Route path="/student/notes" element={
+        <PrivateRoute roles={['student']}>
+          <StudentNotes />
+        </PrivateRoute>
+      } />
+      <Route path="/student/chat" element={
+        <PrivateRoute roles={['student']}>
+          <StudentChat />
         </PrivateRoute>
       } />
 

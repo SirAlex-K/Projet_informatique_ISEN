@@ -1,9 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 
-// Pages test_tast
-import TestSupervisor from "../../test_tast/page";
-import TestStudent from "../../test_tast/page2";
-
 // Pages générales
 import LoginPage from "./pages/LoginPage.jsx";
 import Home from "./pages/home";

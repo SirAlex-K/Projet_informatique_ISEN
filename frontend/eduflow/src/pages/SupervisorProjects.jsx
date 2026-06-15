@@ -1,125 +1,155 @@
-import { useState, useEffect } from 'react';
-import { Bell, FolderKanban, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import SupervisorSidebar from '../components/SupervisorSidebar';
-import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
+import { useState, useEffect } from "react";
+import {
+  GraduationCap,
+  FolderKanban,
+  MessageSquare,
+  LayoutDashboard,
+  Bell,
+  LogOut,
+  ClipboardCheck,
+  Plus,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import api from "../services/api";
 
 export default function SupervisorProjects() {
-  const { user } = useAuth();
-  const [projets, setProjets] = useState([]);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const handleLogout = () => { logout(); navigate("/"); };
+
   useEffect(() => {
-    api.get('/dashboard/supervisor')
-      .then(res => setProjets(res.data.projets || []))
+    api.get("/projects")
+      .then(res => setProjects(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
-  const statutLabel = (s) => {
-    const labels = { en_cours: 'En cours', termine: 'Terminé', propose: 'Proposé', valide: 'Validé', livre: 'Livré', soutenu: 'Soutenu', cloture: 'Clôturé' };
-    return labels[s] || s;
-  };
-  const statutColor = (s) => {
-    if (s === 'en_cours') return 'bg-yellow-500/20 text-yellow-400';
-    if (s === 'termine' || s === 'valide' || s === 'livre') return 'bg-green-500/20 text-green-400';
-    return 'bg-blue-500/20 text-blue-400';
-  };
-
   return (
     <div className="min-h-screen bg-[#020817] text-white flex">
-      <SupervisorSidebar />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="border-b border-white/10 px-8 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold">Projets</h1>
-            <p className="text-gray-400 text-xs mt-0.5">Vos projets encadrés</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Bell size={20} className="text-gray-400 cursor-pointer" />
-            <div className="flex items-center gap-2.5 bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2">
-              <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-bold">
-                {(user?.prenom || 'E')[0].toUpperCase()}
+      {/* Sidebar */}
+      <div className="w-[280px] border-r border-white/10 bg-[#0B1220] flex flex-col justify-between">
+        <div>
+          <div className="p-5 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
+                <GraduationCap size={20} />
               </div>
               <div>
-                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom}</p>
-                <p className="text-xs text-gray-400">Encadrant</p>
+                <h1 className="text-xl font-bold">EduFlow</h1>
+                <p className="text-gray-400 text-xs">Professeur</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3 space-y-1">
+            <Link to="/supervisor" className="p-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white transition">
+              <LayoutDashboard size={18} /> Tableau de bord
+            </Link>
+            <Link to="/supervisor/evaluation" className="p-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white transition">
+              <ClipboardCheck size={18} /> Évaluation
+            </Link>
+            <div className="bg-gradient-to-r from-purple-500 to-purple-400 rounded-xl p-3 flex items-center gap-3 text-sm font-semibold shadow-lg">
+              <FolderKanban size={18} /> Projets
+            </div>
+            <Link to="/supervisor/students" className="p-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white transition">
+              <GraduationCap size={18} /> Étudiants
+            </Link>
+            <Link to="/supervisor/messages" className="p-3 flex items-center justify-between text-sm text-gray-400 hover:text-white transition">
+              <div className="flex items-center gap-3">
+                <MessageSquare size={18} /> Messages
+              </div>
+              <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-xs text-white">1</div>
+            </Link>
+          </div>
+        </div>
+
+        <div className="p-3 border-t border-white/10">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-2.5 text-red-400 text-sm hover:bg-red-500/20 transition">
+            <LogOut size={18} /> Déconnexion
+          </button>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div className="flex-1">
+
+        {/* Header */}
+        <div className="border-b border-white/10 px-8 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold">Gestion des projets</h1>
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <Bell size={20} />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+            </div>
+            <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-bold">
+                {user?.prenom?.[0] || "P"}
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold">{user?.prenom} {user?.nom}</h2>
+                <p className="text-gray-400 text-xs">Professeur</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="flex justify-between items-center mb-5">
+        <div className="p-6">
+
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-bold">Projets</h2>
-              <p className="text-gray-400 text-sm mt-0.5">Créez et gérez vos projets étudiants</p>
+              <h2 className="text-2xl font-bold mb-1">Gestion des projets</h2>
+              <p className="text-gray-400 text-sm">Créez et gérez vos projets étudiants</p>
             </div>
             <Link
               to="/supervisor/new-project"
-              className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg transition"
+              className="bg-gradient-to-r from-purple-500 to-purple-400 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-lg flex items-center gap-2 hover:scale-105 transition"
             >
-              <Plus size={16} />
-              Nouveau projet
+              <Plus size={18} /> Nouveau projet
             </Link>
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center h-64 text-gray-400 text-sm">Chargement...</div>
-          ) : projets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-              <FolderKanban size={40} className="mb-3 opacity-30" />
-              <p className="text-sm">Aucun projet trouvé.</p>
-              <Link to="/supervisor/new-project" className="mt-4 text-purple-400 text-sm hover:underline">
-                Créer votre premier projet
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {projets.map(p => (
-                <div key={p.id} className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h2 className="text-base font-bold">{p.titre}</h2>
-                      <p className="text-gray-400 text-xs mt-0.5">
-                        {p.nb_membres} étudiant(s) · {p.nb_taches} tâche(s) · {p.nb_livrables} livrable(s)
-                      </p>
-                    </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${statutColor(p.statut)}`}>
-                      {statutLabel(p.statut)}
-                    </span>
-                  </div>
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-300 mb-4">MES PROJETS ACTIFS</h2>
 
-                  <div className="grid grid-cols-3 gap-3 mb-4 text-center">
-                    {[
-                      { label: 'Terminées', value: p.nb_done,                               color: 'text-green-400'  },
-                      { label: 'En cours',  value: p.nb_en_cours,                           color: 'text-yellow-400' },
-                      { label: 'À faire',   value: p.nb_taches - p.nb_done - p.nb_en_cours, color: 'text-gray-400'  },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} className="bg-white/[0.02] rounded-xl p-3">
-                        <p className={`text-xl font-bold ${color}`}>{value}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+            {loading && (
+              <p className="text-gray-400 text-sm">Chargement...</p>
+            )}
+
+            {!loading && projects.length === 0 && (
+              <p className="text-gray-400 text-sm">Aucun projet pour le moment.</p>
+            )}
+
+            {projects.map(project => (
+              <Link key={project.id} to={`/supervisor/project-details?id=${project.id}`}>
+                <div className="bg-[#0B1220] border border-white/10 rounded-2xl overflow-hidden hover:border-purple-500 transition">
+                  <div className="p-5 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                        <FolderKanban size={24} className="text-purple-400" />
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" style={{ width: `${p.avancement}%` }} />
+                      <div>
+                        <h2 className="text-xl font-bold mb-1">{project.titre}</h2>
+                        <p className="text-gray-400 text-sm">
+                          {project.members?.length || 0} membre{project.members?.length !== 1 ? "s" : ""} assigné{project.members?.length !== 1 ? "s" : ""}
+                          {project.statut ? ` • ${project.statut}` : ""}
+                        </p>
+                      </div>
                     </div>
-                    <span className="text-xs text-gray-400 shrink-0">{p.avancement}%</span>
+                    <div className="text-gray-500 text-2xl">→</div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </Link>
+            ))}
+          </div>
+
         </div>
       </div>
-
     </div>
   );
 }

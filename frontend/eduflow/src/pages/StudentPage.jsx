@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Crown, UserCheck, Users, Info, CheckCircle2, LogOut } from 'lucide-react';
+import { LayoutDashboard, Crown, UserCheck, Users, Info, CheckCircle2, LogOut, FolderKanban, FileText, Star, MessageSquare } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const INITIAL_PROJECT = {
   id: 'p-1',
@@ -61,6 +61,18 @@ export default function StudentPage() {
           <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600/20 to-purple-600/20 text-indigo-400 font-medium border border-indigo-500/20 w-full text-left">
             <LayoutDashboard size={18} /> Dashboard Étudiant
           </button>
+          <Link to="/student/kanban" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-sm">
+            <FolderKanban size={18} /> Mon Projet
+          </Link>
+          <Link to="/student/livrables" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-sm">
+            <FileText size={18} /> Livrables
+          </Link>
+          <Link to="/student/notes" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-sm">
+            <Star size={18} /> Notes
+          </Link>
+          <Link to="/student/chat" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-sm">
+            <MessageSquare size={18} /> Chat du groupe
+          </Link>
         </div>
         <div className="border-t border-slate-800 pt-4 px-2 space-y-3">
           <div className="text-xs text-slate-500">Connecté : <span className="font-semibold">{currentStudentName}</span></div>

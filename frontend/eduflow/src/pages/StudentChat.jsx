@@ -1,0 +1,221 @@
+import { useState, useRef, useEffect } from "react";
+import {
+  GraduationCap, FolderKanban, MessageSquare, LayoutDashboard, Bell, LogOut,
+  FileText, Star, Send, Users, PanelLeftClose, PanelLeftOpen,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import api from "../services/api";
+
+const AVATAR_COLORS = [
+  "bg-blue-500", "bg-purple-500", "bg-green-500", "bg-orange-500",
+  "bg-pink-500", "bg-teal-500", "bg-indigo-500", "bg-red-500",
+];
+
+function getColor(id) { return AVATAR_COLORS[(id || 0) % AVATAR_COLORS.length]; }
+function getInitials(u) { return ((u?.prenom?.[0] || "") + (u?.nom?.[0] || "")).toUpperCase() || "?"; }
+
+export default function StudentChat() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [project, setProject] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const projectsRes = await api.get("/projects");
+      const myProject = projectsRes.data.find(p => p.members?.some(m => m.user_id === user?.id));
+      if (!myProject) return;
+      setProject(myProject);
+      const [mRes, msgRes] = await Promise.all([
+        api.get(`/projects/${myProject.id}/members`),
+        api.get(`/projects/${myProject.id}/messages`),
+      ]);
+      setMembers(mRes.data);
+      setMessages(msgRes.data);
+    };
+    load().catch(console.error);
+  }, [user]);
+
+  useEffect(() => {
+    if (!project) return;
+    const interval = setInterval(() => {
+      api.get(`/projects/${project.id}/messages`).then(r => setMessages(r.data)).catch(() => {});
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [project]);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  const sendMessage = async () => {
+    const text = input.trim();
+    if (!text || !project) return;
+    try {
+      const res = await api.post(`/projects/${project.id}/messages`, { contenu: text });
+      setMessages(prev => [...prev, res.data]);
+      setInput("");
+    } catch (e) { console.error(e); }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#020817] text-white flex">
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? "w-72 border-r border-white/[0.06]" : "w-0"} overflow-hidden flex-shrink-0 bg-[#0B1220] transition-[width] duration-300 ease-in-out`}>
+        <div className="w-72 h-full flex flex-col justify-between">
+          <div>
+            <div className="p-6 border-b border-white/[0.06]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20"><GraduationCap size={20} /></div>
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight">ProjectHub</h1>
+                  <p className="text-gray-500 text-xs">Étudiant</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 space-y-1">
+              <Link to="/student" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200"><LayoutDashboard size={18} /> Tableau de bord</Link>
+              <Link to="/student/kanban" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200"><FolderKanban size={18} /> Mon Projet</Link>
+              <Link to="/student/livrables" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200"><FileText size={18} /> Livrables</Link>
+              <Link to="/student/notes" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200"><Star size={18} /> Notes</Link>
+              <div className="relative bg-blue-600/90 rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-semibold shadow-lg shadow-blue-500/20">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-white rounded-r-full" />
+                <MessageSquare size={18} /> Chat du groupe
+              </div>
+            </div>
+          </div>
+          <div className="p-4 border-t border-white/[0.06]">
+            <button onClick={() => { logout(); navigate("/"); }} className="flex items-center gap-3 bg-red-500/[0.07] border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm hover:bg-red-500/15 transition-all duration-200 w-full">
+              <LogOut size={16} /> Déconnexion
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main chat area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="border-b border-white/[0.06] px-8 py-4 flex justify-between items-center flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen((v) => !v)} className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors flex-shrink-0">
+              {sidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
+            </button>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-md shadow-blue-500/20">
+              <Users size={18} />
+            </div>
+            <div>
+              <h1 className="text-base font-bold">{project?.titre || "Chat du groupe"}</h1>
+              <p className="text-gray-500 text-xs">{members.length} membre{members.length !== 1 ? "s" : ""}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="relative p-2 rounded-xl hover:bg-white/[0.05] transition-colors">
+              <Bell size={20} className="text-gray-400" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[#020817]" />
+            </button>
+            <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-full ${getColor(user?.id)} flex items-center justify-center text-sm font-bold`}>{getInitials(user)}</div>
+              <div>
+                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom}</p>
+                <p className="text-gray-500 text-xs">{project?.titre || "Mon projet"}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Messages */}
+          <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {messages.length === 0 && (
+                <div className="text-center text-gray-600 py-16 text-sm">Aucun message pour le moment. Soyez le premier à écrire !</div>
+              )}
+              {messages.map((msg, idx) => {
+                const isMe = msg.sender_id === user?.id;
+                const sender = msg.sender || {};
+                const prevMsg = messages[idx - 1];
+                const showAuthor = !prevMsg || prevMsg.sender_id !== msg.sender_id;
+                const initials = getInitials(sender);
+                const color = getColor(msg.sender_id);
+                return (
+                  <div key={msg.id} className={`flex gap-3 ${isMe ? "flex-row-reverse" : ""} ${!showAuthor ? (isMe ? "pr-11" : "pl-11") : ""}`}>
+                    {showAuthor && (
+                      <div className={`w-8 h-8 rounded-full ${color} flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-md mt-0.5`}>{initials}</div>
+                    )}
+                    <div className={`max-w-md flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                      {showAuthor && (
+                        <div className="flex items-baseline gap-2 mb-1.5">
+                          {!isMe && <span className="text-sm font-semibold text-gray-300">{sender.prenom} {sender.nom}</span>}
+                          <span className="text-gray-600 text-xs">
+                            {new Date(msg.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                      )}
+                      <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${isMe ? "bg-blue-600 text-white rounded-tr-sm shadow-lg shadow-blue-500/20" : "bg-[#0d1117] border border-white/[0.07] rounded-tl-sm"}`}>
+                        {msg.contenu}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Input */}
+            <div className="border-t border-white/[0.06] p-4 flex-shrink-0">
+              <div className="flex items-center gap-3 bg-[#0d1117] border border-white/[0.08] rounded-xl px-4 py-3 focus-within:border-blue-500/30 focus-within:bg-[#0f1520] transition-all duration-200">
+                <input
+                  type="text" value={input} onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                  placeholder="Écrire un message au groupe..."
+                  className="flex-1 bg-transparent text-sm outline-none placeholder-gray-700"
+                />
+                <button onClick={sendMessage} disabled={!input.trim()}
+                  className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center hover:bg-blue-500 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-blue-500/20 flex-shrink-0">
+                  <Send size={14} />
+                </button>
+              </div>
+              <p className="text-center text-gray-700 text-xs mt-2">Appuyez sur Entrée pour envoyer</p>
+            </div>
+          </div>
+
+          {/* Members panel */}
+          <div className="w-56 border-l border-white/[0.06] p-5 flex-shrink-0 overflow-y-auto">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Users size={13} /> Membres — {members.length}
+            </h3>
+            <div className="space-y-3">
+              {members.map((m) => {
+                const isMe = m.user_id === user?.id;
+                const u = m.user || {};
+                return (
+                  <div key={m.user_id} className="flex items-center gap-3">
+                    <div className="relative flex-shrink-0">
+                      <div className={`w-8 h-8 rounded-full ${getColor(m.user_id)} flex items-center justify-center text-xs font-bold shadow-sm`}>{getInitials(u)}</div>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold truncate">{u.prenom} {u.nom}{isMe && <span className="text-blue-400 ml-1">(vous)</span>}</p>
+                      <p className="text-gray-600 text-xs truncate">{m.role_in_project === "lead" ? "Chef de projet" : "Membre"}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {project && (
+              <div className="mt-6 pt-5 border-t border-white/[0.06]">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Projet</p>
+                <div className="bg-blue-500/[0.08] border border-blue-500/20 rounded-xl p-3">
+                  <p className="text-blue-300 text-xs font-semibold leading-snug">{project.titre}</p>
+                  {project.description && <p className="text-gray-500 text-xs mt-1 truncate">{project.description}</p>}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
