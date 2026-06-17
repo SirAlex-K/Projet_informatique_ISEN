@@ -15,6 +15,8 @@ import ProjectDetails from "./pages/ProjectDetails";
 import GroupDetails from "./pages/GroupDetails";
 import NewProject from "./pages/newproject";
 
+// Page encadrant
+import Encadrant from "./pages/encadrant"; // ← adapte le chemin/nom à ton fichier réel
 
 // Pages étudiant
 import Student from "./pages/etudiant/etudiant";
@@ -26,10 +28,11 @@ import Chat from "./pages/etudiant/chat";
 export default function App() {
   return (
     <Routes>
-      
-
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<Home />} />
+
+      {/* Route encadrant */}
+      <Route path="/encadrant" element={<Encadrant />} />
 
       {/* Routes étudiant */}
       <Route path="/etudiant" element={<Student />} />
@@ -46,15 +49,8 @@ export default function App() {
       <Route path="/students" element={<Students />} />
       <Route path="/evaluation" element={<Evaluation />} />
       <Route path="/database-groups" element={<DatabaseGroups />} />
-      <Route
-  path="/project-details"
-  element={<ProjectDetails />}
-/>
-
-<Route
-  path="/group-details"
-  element={<GroupDetails />}
-/>
+      <Route path="/project-details" element={<ProjectDetails />} />
+      <Route path="/group-details" element={<GroupDetails />} />
     </Routes>
   );
 }

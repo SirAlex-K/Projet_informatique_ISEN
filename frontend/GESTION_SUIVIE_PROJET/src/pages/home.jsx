@@ -37,7 +37,7 @@ export default function Home() {
       color: "from-green-500 to-emerald-500",
       text: "text-green-400",
       icon: <ClipboardList size={28} />,
-      link: "/",
+      link: "/encadrant",   // ← modifié
     },
 
     {
