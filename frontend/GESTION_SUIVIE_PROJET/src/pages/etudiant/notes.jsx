@@ -14,47 +14,27 @@ import {
   ChevronUp,
   PanelLeftClose,
   PanelLeftOpen,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+// Chaque projet a UNE note finale globale (grade), pas une note par checkpoint.
+// Les checkpoints ne servent ici qu'à visualiser la progression (status uniquement).
 const NOTES_DATA = [
   {
     id: 1,
     project: "Application React – EduFlow",
     professor: "Prof. Dubois",
+    grade: null, // null = pas encore noté ; mettre un nombre (ex: 16) une fois la note donnée
+    max: 20,
+    gradedDate: null,
+    comment: null,
     checkpoints: [
-      {
-        name: "Checkpoint 1 – Cahier des charges",
-        date: "01/03/2024",
-        note: 16,
-        max: 20,
-        coeff: 1,
-        comment: "Très bon travail, structure claire et bien détaillée. Très bonne analyse du besoin.",
-      },
-      {
-        name: "Checkpoint 2 – Maquettes UI/UX",
-        date: "15/03/2024",
-        note: 17,
-        max: 20,
-        coeff: 1,
-        comment: "Maquettes professionnelles avec un bon sens de l'expérience utilisateur.",
-      },
-      {
-        name: "Checkpoint 3 – MVP",
-        date: "30/03/2024",
-        note: null,
-        max: 20,
-        coeff: 2,
-        comment: null,
-      },
-      {
-        name: "Checkpoint 4 – Rendu final",
-        date: "15/04/2024",
-        note: null,
-        max: 20,
-        coeff: 3,
-        comment: null,
-      },
+      { name: "Checkpoint 1 – Cahier des charges", date: "01/03/2024", status: "done" },
+      { name: "Checkpoint 2 – Maquettes UI/UX", date: "15/03/2024", status: "done" },
+      { name: "Checkpoint 3 – MVP", date: "30/03/2024", status: "current" },
+      { name: "Checkpoint 4 – Rendu final", date: "15/04/2024", status: "upcoming" },
     ],
   },
 ];
@@ -78,12 +58,12 @@ export default function Notes() {
   const [expanded, setExpanded] = useState({ 1: true });
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const allGraded = NOTES_DATA.flatMap((p) => p.checkpoints).filter((c) => c.note !== null);
-  const totalWeighted = allGraded.reduce((acc, c) => acc + c.note * c.coeff, 0);
-  const totalCoeff = allGraded.reduce((acc, c) => acc + c.coeff, 0);
-  const moyenne = totalCoeff > 0 ? totalWeighted / totalCoeff : null;
+  const gradedProjects = NOTES_DATA.filter((p) => p.grade !== null);
+  const moyenne = gradedProjects.length > 0
+    ? gradedProjects.reduce((acc, p) => acc + p.grade, 0) / gradedProjects.length
+    : null;
   const moyenneStr = moyenne !== null ? moyenne.toFixed(2) : "–";
-  const best = allGraded.length > 0 ? Math.max(...allGraded.map((c) => c.note)) : null;
+  const best = gradedProjects.length > 0 ? Math.max(...gradedProjects.map((p) => p.grade)) : null;
   const mention = moyenne ? getMention(moyenne) : null;
   const moyenneColors = moyenne ? getNoteColor(moyenne) : null;
 
@@ -151,7 +131,6 @@ export default function Notes() {
         {/* Topbar */}
         <div className="border-b border-white/[0.06] px-8 py-4 flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-3">
-            {/* Bouton masquer / afficher le menu */}
             <button
               onClick={() => setSidebarOpen((v) => !v)}
               title={sidebarOpen ? "Masquer le menu" : "Afficher le menu"}
@@ -162,7 +141,7 @@ export default function Notes() {
             </button>
             <div>
               <h1 className="text-2xl font-bold">Mes Notes</h1>
-              <p className="text-gray-500 text-sm mt-0.5">Suivi de vos évaluations</p>
+              <p className="text-gray-500 text-sm mt-0.5">Note finale par projet</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -214,16 +193,16 @@ export default function Notes() {
               </div>
             </div>
 
-            {/* Évaluations */}
+            {/* Projets évalués */}
             <div className="bg-orange-500/[0.07] border border-orange-500/20 rounded-2xl p-6 flex items-center gap-5">
               <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-orange-500/20">
                 <Star size={22} />
               </div>
               <div>
-                <p className="text-gray-500 text-xs mb-1">Évaluations</p>
+                <p className="text-gray-500 text-xs mb-1">Projets évalués</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">{allGraded.length}</span>
-                  <span className="text-gray-500 text-sm">/{NOTES_DATA.flatMap((p) => p.checkpoints).length}</span>
+                  <span className="text-3xl font-bold">{gradedProjects.length}</span>
+                  <span className="text-gray-500 text-sm">/{NOTES_DATA.length}</span>
                 </div>
               </div>
             </div>
@@ -232,12 +211,9 @@ export default function Notes() {
           {/* Projects */}
           <div className="space-y-4">
             {NOTES_DATA.map((project) => {
-              const graded = project.checkpoints.filter((c) => c.note !== null);
-              const wSum = graded.reduce((acc, c) => acc + c.note * c.coeff, 0);
-              const cSum = graded.reduce((acc, c) => acc + c.coeff, 0);
-              const projMoy = cSum > 0 ? (wSum / cSum).toFixed(2) : null;
-              const projColors = projMoy ? getNoteColor(parseFloat(projMoy)) : null;
+              const colors = project.grade !== null ? getNoteColor(project.grade) : null;
               const isOpen = expanded[project.id];
+              const doneCount = project.checkpoints.filter((c) => c.status === "done").length;
 
               return (
                 <div key={project.id} className="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
@@ -251,10 +227,15 @@ export default function Notes() {
                       <p className="text-gray-500 text-sm mt-0.5">{project.professor}</p>
                     </div>
                     <div className="flex items-center gap-4">
-                      {projMoy && (
-                        <div className={`text-sm font-bold px-3 py-1.5 rounded-lg border ${projColors?.badge}`}>
-                          {projMoy} / 20
+                      {project.grade !== null ? (
+                        <div className={`flex items-baseline gap-1 px-4 py-2 rounded-xl border ${colors.badge}`}>
+                          <span className="text-2xl font-bold">{project.grade}</span>
+                          <span className="text-sm opacity-70">/{project.max}</span>
                         </div>
+                      ) : (
+                        <span className="flex items-center gap-1.5 bg-white/[0.05] text-gray-500 border border-white/10 rounded-xl px-4 py-2 text-sm font-medium">
+                          <Clock size={14} /> En attente
+                        </span>
                       )}
                       {isOpen
                         ? <ChevronUp size={18} className="text-gray-500" />
@@ -263,61 +244,65 @@ export default function Notes() {
                     </div>
                   </button>
 
-                  {/* Checkpoints */}
+                  {/* Détail */}
                   {isOpen && (
-                    <div className="border-t border-white/[0.06]">
-                      {/* Table header */}
-                      <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1.5fr_2fr] gap-4 px-6 py-3 border-b border-white/[0.04]">
-                        {["Évaluation", "Date", "Coeff.", "Note", "Progression", "Commentaire"].map((h) => (
-                          <span key={h} className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{h}</span>
-                        ))}
-                      </div>
+                    <div className="border-t border-white/[0.06] px-6 py-6">
+                      {/* Commentaire du professeur, si la note a été donnée */}
+                      {project.grade !== null && project.comment && (
+                        <div className="mb-6 bg-blue-500/[0.06] border border-blue-500/15 rounded-xl px-4 py-3 text-blue-300 text-sm flex items-start gap-2">
+                          <span>💬</span>
+                          <span className="italic">{project.comment}</span>
+                          {project.gradedDate && (
+                            <span className="ml-auto text-gray-600 text-xs flex-shrink-0 not-italic">{project.gradedDate}</span>
+                          )}
+                        </div>
+                      )}
 
-                      {/* Rows */}
-                      {project.checkpoints.map((cp, ci) => {
-                        const colors = cp.note !== null ? getNoteColor(cp.note) : null;
-                        const percent = cp.note !== null ? (cp.note / cp.max) * 100 : 0;
-                        return (
-                          <div
-                            key={ci}
-                            className="grid grid-cols-[2fr_1fr_1fr_1fr_1.5fr_2fr] gap-4 px-6 py-4 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors items-center last:border-0"
-                          >
-                            {/* Name */}
-                            <span className="text-sm font-medium">{cp.name}</span>
-
-                            {/* Date */}
-                            <span className="text-gray-500 text-xs">{cp.date}</span>
-
-                            {/* Coeff */}
-                            <span className="bg-white/[0.06] text-gray-400 rounded-lg px-2.5 py-1 text-xs font-medium w-fit">×{cp.coeff}</span>
-
-                            {/* Note */}
-                            {cp.note !== null ? (
-                              <div className="flex items-baseline gap-1">
-                                <span className={`text-base font-bold ${colors.text}`}>{cp.note}</span>
-                                <span className="text-gray-600 text-xs">/{cp.max}</span>
+                      {/* Progression des checkpoints (sans note individuelle) */}
+                      <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-4">
+                        Progression du projet · {doneCount}/{project.checkpoints.length} checkpoints validés
+                      </p>
+                      <div className="relative">
+                        <div className="absolute left-[15px] top-0 bottom-0 w-px bg-white/[0.06]" />
+                        <div className="space-y-4">
+                          {project.checkpoints.map((cp, ci) => (
+                            <div key={ci} className="flex items-center gap-4 relative">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 ${
+                                cp.status === "done"
+                                  ? "bg-green-500/20 border-green-500 text-green-400"
+                                  : cp.status === "current"
+                                  ? "bg-blue-500/20 border-blue-500 text-blue-400"
+                                  : "bg-white/[0.03] border-white/10 text-gray-600"
+                              }`}>
+                                {cp.status === "done" ? (
+                                  <CheckCircle size={14} />
+                                ) : cp.status === "current" ? (
+                                  <Clock size={14} />
+                                ) : (
+                                  <span className="text-xs font-bold">{ci + 1}</span>
+                                )}
                               </div>
-                            ) : (
-                              <span className="text-gray-700 text-sm">–</span>
-                            )}
-
-                            {/* Progress bar */}
-                            <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
-                              {cp.note !== null && (
-                                <div
-                                  className={`${colors.bar} h-full rounded-full transition-all duration-500`}
-                                  style={{ width: `${percent}%` }}
-                                />
+                              <div className="flex-1">
+                                <p className={`text-sm font-medium ${cp.status === "upcoming" ? "text-gray-600" : "text-white"}`}>
+                                  {cp.name}
+                                </p>
+                                <p className="text-gray-600 text-xs mt-0.5">{cp.date}</p>
+                              </div>
+                              {cp.status === "current" && (
+                                <span className="text-xs bg-blue-500/15 text-blue-400 border border-blue-500/25 rounded-full px-2.5 py-1">
+                                  En cours
+                                </span>
                               )}
                             </div>
+                          ))}
+                        </div>
+                      </div>
 
-                            {/* Comment */}
-                            <span className="text-gray-500 text-xs italic leading-relaxed truncate">
-                              {cp.comment ?? <span className="text-gray-700 not-italic">–</span>}
-                            </span>
-                          </div>
-                        );
-                      })}
+                      {project.grade === null && (
+                        <p className="text-gray-600 text-xs mt-6">
+                          La note finale sera attribuée par {project.professor} à l'issue du dernier checkpoint.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
