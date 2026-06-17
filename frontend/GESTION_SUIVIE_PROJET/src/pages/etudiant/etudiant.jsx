@@ -1,196 +1,286 @@
-import React, { useState } from 'react';
-import { LayoutDashboard, Crown, UserCheck, Users, Info, CheckCircle2 } from 'lucide-react';
+import {
+  GraduationCap,
+  FolderKanban,
+  MessageSquare,
+  LayoutDashboard,
+  Bell,
+  LogOut,
+  FileText,
+  Star,
+  CheckCircle,
+  Clock,
+  Users,
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
-const INITIAL_PROJECT = {
-  id: 'p-1',
-  title: 'Projet Traitement de Signal & Audio Mixer',
-  // Liste des sujets injectés par l'encadrant
-  subjects: ['Architecture Mixeur Audio Pro', 'Filtres Numériques PIC18', 'DSP et Effets Temps Réel'],
-  groups: [
-    { id: 'g-1', name: 'Groupe Alpha', capacity: 4, chosenSubject: 'Architecture Mixeur Audio Pro', members: [{ name: 'Marie Dupont', isLeader: true }] },
-    { id: 'g-2', name: 'Groupe Beta', capacity: 4, chosenSubject: '', members: [] },
-    { id: 'g-3', name: 'Groupe Gamma', capacity: 4, chosenSubject: '', members: [{ name: 'Lucas Martin', isLeader: false }] },
-  ]
-};
+const checkpoints = [
+  { name: "Checkpoint 1 – Cahier des charges", status: "done", date: "01/03/2024" },
+  { name: "Checkpoint 2 – Maquettes UI/UX", status: "done", date: "15/03/2024" },
+  { name: "Checkpoint 3 – MVP", status: "current", date: "30/03/2024" },
+  { name: "Checkpoint 4 – Rendu final", status: "upcoming", date: "15/04/2024" },
+];
 
-export default function StudentDashboard() {
-  const [project, setProject] = useState(INITIAL_PROJECT);
-  const [joinedGroupId, setJoinedGroupId] = useState(null); // ID du groupe rejoint par l'étudiant
+const groupMembers = [
+  { name: "Aziz Diop", role: "Chef de projet", color: "bg-blue-500", initial: "A", isMe: true },
+  { name: "Léa Martin", role: "Développeuse", color: "bg-purple-500", initial: "L" },
+  { name: "Tom Bernard", role: "Designer", color: "bg-green-500", initial: "T" },
+  { name: "Camille Roy", role: "Développeuse", color: "bg-orange-500", initial: "C" },
+];
 
-  const currentStudentName = "Assane Diakite";
+const stats = [
+  {
+    icon: <FolderKanban size={22} />,
+    value: "1",
+    label: "Projet actif",
+    bg: "bg-blue-500/10",
+    iconBg: "bg-blue-600",
+    border: "border-blue-500/20",
+    glow: "shadow-blue-500/10",
+  },
+  {
+    icon: <Users size={22} />,
+    value: "4",
+    label: "Membres du groupe",
+    bg: "bg-purple-500/10",
+    iconBg: "bg-purple-600",
+    border: "border-purple-500/20",
+    glow: "shadow-purple-500/10",
+  },
+  {
+    icon: <FileText size={22} />,
+    value: "2",
+    label: "Livrables à rendre",
+    bg: "bg-orange-500/10",
+    iconBg: "bg-orange-500",
+    border: "border-orange-500/20",
+    glow: "shadow-orange-500/10",
+  },
+  {
+    icon: <TrendingUp size={22} />,
+    value: "50%",
+    label: "Progression",
+    bg: "bg-green-500/10",
+    iconBg: "bg-green-600",
+    border: "border-green-500/20",
+    glow: "shadow-green-500/10",
+  },
+];
 
-  const handleJoinGroup = (groupId) => {
-    setProject(prev => ({
-      ...prev,
-      groups: prev.groups.map(g => {
-        if (g.id !== groupId) return g;
-        const isFirst = g.members.length === 0;
-        return {
-          ...g,
-          members: [...g.members, { name: currentStudentName, isLeader: isFirst }]
-        };
-      })
-    }));
-    setJoinedGroupId(groupId);
-  };
-
-  const handleSelectSubject = (groupId, subject) => {
-    setProject(prev => ({
-      ...prev,
-      groups: prev.groups.map(g => (g.id === groupId ? { ...g, chosenSubject: subject } : g))
-    }));
-  };
-
-  // Identification dynamique du groupe de l'étudiant
-  const myGroup = project.groups.find(g => g.id === joinedGroupId);
-  const isLeader = myGroup?.members.find(m => m.name === currentStudentName)?.isLeader;
-
+export default function Student() {
   return (
-    <div className="flex min-h-screen bg-[#020817] text-slate-100 font-sans">
+    <div className="min-h-screen bg-[#020817] text-white flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#0B1220] border-r border-slate-800 p-6 flex flex-col justify-between">
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 px-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">EF</div>
-            <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">EduFlow</span>
-          </div>
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600/20 to-purple-600/20 text-indigo-400 font-medium border border-indigo-500/20 w-full text-left">
-            <LayoutDashboard size={18} /> Dashboard Étudiant
-          </button>
-        </div>
-        <div className="text-xs text-slate-500 border-t border-slate-800 pt-4 px-2">Connecté : **{currentStudentName}**</div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto max-w-5xl mx-auto w-full">
-        <header className="mb-8">
-          <h1 className="text-3xl font-extrabold text-white">Mon Espace de Travail</h1>
-          <p className="text-slate-400 text-sm">Affectations de projets et gestion d'équipe en temps réel.</p>
-        </header>
-
-        <div className="bg-[#0B1220] border border-slate-800 rounded-2xl p-6 shadow-xl relative">
-          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-          
-          <div className="mb-6">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">Projet En Cours</span>
-            <h2 className="text-xl font-bold text-white mt-2">{project.title}</h2>
-          </div>
-
-          {joinedGroupId ? (
-            /* CONTEXTE UNIQUE : L'ÉTUDIANT A REJOINT SON GROUPE (VUE RESTREINTE) */
-            <div className="bg-[#020817] border border-emerald-500/20 rounded-xl p-5 space-y-6 animate-fadeIn">
-              <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><CheckCircle2 size={22} /></div>
-                  <div>
-                    <h3 className="font-bold text-slate-200 text-base">Votre Équipe : {myGroup.name}</h3>
-                    <p className="text-xs text-slate-500">Effectif : {myGroup.members.length} / {myGroup.capacity} places occupées</p>
-                  </div>
-                </div>
-                {isLeader && (
-                  <span className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs px-3 py-1 rounded-full font-semibold">
-                    <Crown size={12} /> Team Leader
-                  </span>
-                )}
+      <div className="w-72 border-r border-white/[0.06] bg-[#0B1220] flex flex-col justify-between flex-shrink-0">
+        <div>
+          {/* Logo */}
+          <div className="p-6 border-b border-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <GraduationCap size={20} />
               </div>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight">EduFlow</h1>
+                <p className="text-gray-500 text-xs">Étudiant</p>
+              </div>
+            </div>
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Membres */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1"><Users size={12}/> Vos Coéquipiers</h4>
-                  <div className="bg-[#0B1220] border border-slate-800 rounded-xl divide-y divide-slate-800/60 overflow-hidden">
-                    {myGroup.members.map((m, idx) => (
-                      <div key={idx} className="px-4 py-2.5 text-xs flex justify-between items-center">
-                        <span className={m.name === currentStudentName ? "text-indigo-400 font-semibold" : "text-slate-300"}>
-                          {m.name} {m.name === currentStudentName && "(Vous)"}
+          {/* Nav */}
+          <div className="p-4 space-y-1">
+            <Link
+              to="/etudiant"
+              className="relative bg-blue-600/90 rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-semibold shadow-lg shadow-blue-500/20"
+            >
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-white rounded-r-full" />
+              <LayoutDashboard size={18} />
+              Tableau de bord
+            </Link>
+            <Link to="/kanban" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+              <FolderKanban size={18} />
+              Mon Projet
+            </Link>
+            <Link to="/livrables" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+              <FileText size={18} />
+              Livrables
+            </Link>
+            <Link to="/notes" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+              <Star size={18} />
+              Notes
+            </Link>
+            <Link to="/chat" className="px-4 py-3 flex items-center justify-between text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+              <div className="flex items-center gap-3">
+                <MessageSquare size={18} />
+                Chat du groupe
+              </div>
+              <span className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-xs text-white font-bold">3</span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-white/[0.06]">
+          <Link to="/login" className="flex items-center gap-3 bg-red-500/[0.07] border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm hover:bg-red-500/15 transition-all duration-200">
+            <LogOut size={16} />
+            Déconnexion
+          </Link>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Topbar */}
+        <div className="border-b border-white/[0.06] px-8 py-4 flex justify-between items-center flex-shrink-0">
+          <div>
+            <h1 className="text-2xl font-bold">Tableau de bord</h1>
+            <p className="text-gray-500 text-sm mt-0.5">Vue d'ensemble de votre projet</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="relative p-2 rounded-xl hover:bg-white/[0.05] transition-colors">
+              <Bell size={20} className="text-gray-400" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[#020817]" />
+            </button>
+            <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-sm font-bold">A</div>
+              <div>
+                <p className="text-sm font-semibold leading-tight">Aziz Diop</p>
+                <p className="text-gray-500 text-xs">Groupe 3</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-8">
+          {/* Welcome */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold mb-1">Bonjour, Aziz 👋</h2>
+            <p className="text-gray-500 text-sm">Voici l'état de votre projet · Checkpoint 3 en cours</p>
+          </div>
+
+          {/* Progress bar */}
+          <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 mb-8">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-medium text-gray-300">Progression globale</span>
+              <span className="text-sm font-bold text-blue-400">50%</span>
+            </div>
+            <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+              <div className="h-full w-1/2 bg-gradient-to-r from-blue-600 to-blue-400 rounded-full shadow-lg shadow-blue-500/30" />
+            </div>
+            <div className="flex justify-between mt-2">
+              <span className="text-xs text-gray-600">2 checkpoints validés</span>
+              <span className="text-xs text-gray-600">2 restants</span>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            {stats.map((s, i) => (
+              <div
+                key={i}
+                className={`${s.bg} border ${s.border} rounded-2xl p-5 shadow-lg ${s.glow} hover:scale-[1.02] transition-transform duration-200`}
+              >
+                <div className={`w-9 h-9 rounded-xl ${s.iconBg} flex items-center justify-center mb-4 shadow-md`}>
+                  {s.icon}
+                </div>
+                <p className="text-3xl font-bold mb-1">{s.value}</p>
+                <p className="text-gray-400 text-sm">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom grid */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Progression */}
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+              <h2 className="text-base font-bold mb-6 flex items-center gap-2">
+                <CheckCircle size={16} className="text-green-400" />
+                Checkpoints
+              </h2>
+
+              {/* Timeline */}
+              <div className="relative">
+                <div className="absolute left-[18px] top-0 bottom-0 w-px bg-white/[0.06]" />
+                <div className="space-y-5">
+                  {checkpoints.map((cp, i) => (
+                    <div key={i} className="flex items-start gap-4 relative">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 ${
+                        cp.status === "done"
+                          ? "bg-green-500/20 border-green-500 text-green-400"
+                          : cp.status === "current"
+                          ? "bg-blue-500/20 border-blue-500 text-blue-400"
+                          : "bg-white/[0.03] border-white/10 text-gray-600"
+                      }`}>
+                        {cp.status === "done" ? (
+                          <CheckCircle size={16} />
+                        ) : cp.status === "current" ? (
+                          <Clock size={16} />
+                        ) : (
+                          <span className="text-xs font-bold">{i + 1}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <p className={`text-sm font-medium leading-tight ${
+                          cp.status === "upcoming" ? "text-gray-600" : "text-white"
+                        }`}>{cp.name}</p>
+                        <p className="text-gray-600 text-xs mt-1">{cp.date}</p>
+                      </div>
+                      {cp.status === "current" && (
+                        <span className="text-xs bg-blue-500/15 text-blue-400 border border-blue-500/25 rounded-full px-2.5 py-1 mt-0.5">
+                          En cours
                         </span>
-                        {m.isLeader && <span className="text-amber-400 flex items-center gap-0.5 text-[10px]"><Crown size={10}/> Leader</span>}
-                      </div>
-                    ))}
+                      )}
+                      {cp.status === "done" && (
+                        <span className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 rounded-full px-2.5 py-1 mt-0.5">
+                          Validé
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Groupe */}
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-base font-bold flex items-center gap-2">
+                  <Users size={16} className="text-purple-400" />
+                  Mon groupe · Groupe 3
+                </h2>
+                <Link to="/chat" className="text-blue-400 hover:text-blue-300 transition-colors p-1.5 rounded-lg hover:bg-blue-500/10">
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {groupMembers.map((m, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.04] hover:border-white/[0.08] rounded-xl p-3 transition-all duration-200">
+                    <div className={`w-9 h-9 rounded-full ${m.color} flex items-center justify-center text-sm font-bold shadow-md flex-shrink-0`}>
+                      {m.initial}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{m.name}</p>
+                      <p className="text-gray-500 text-xs">{m.role}</p>
+                    </div>
+                    {m.isMe && (
+                      <span className="text-xs bg-blue-500/15 text-blue-400 border border-blue-500/25 rounded-full px-2.5 py-1">
+                        Vous
+                      </span>
+                    )}
                   </div>
-                </div>
-
-                {/* Gestion du Sujet Imposé par l'encadrant */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1"><Info size={12}/> Sujet de Recherche</h4>
-                  {isLeader ? (
-                    <div className="space-y-2">
-                      <label className="block text-[11px] text-slate-500">Sélectionnez un sujet parmi la liste validée par votre encadrant :</label>
-                      <select
-                        value={myGroup.chosenSubject}
-                        onChange={(e) => handleSelectSubject(myGroup.id, e.target.value)}
-                        className="w-full bg-[#0B1220] border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-                      >
-                        <option value="">-- Choisir un sujet officiel --</option>
-                        {project.subjects.map((sbj, i) => (
-                          <option key={i} value={sbj}>{sbj}</option>
-                        ))}
-                      </select>
-                      <p className="text-[10px] text-amber-500/80 italic">Modifications autorisées uniquement pour le Team Leader.</p>
-                    </div>
-                  ) : (
-                    <div className="bg-[#0B1220] border border-slate-800 rounded-xl p-4 min-h-[80px] flex flex-col justify-between">
-                      <p className="text-xs text-slate-200 font-medium italic">
-                        {myGroup.chosenSubject ? `"${myGroup.chosenSubject}"` : "Le Team Leader n'a pas encore choisi de sujet."}
-                      </p>
-                      <span className="text-[10px] text-slate-500 block mt-2">Lecture seule — Attente du choix de votre responsable de groupe.</span>
-                    </div>
-                  )}
-                </div>
+                ))}
               </div>
-            </div>
-          ) : (
-            /* VUE INITIALE : L'ÉTUDIANT CHERCHE UN GROUPE (AFFICHE TOUTE LA GRILLE) */
-            <div className="space-y-4">
-              <p className="text-xs text-slate-400 flex items-center gap-1.5"><Info size={14} className="text-indigo-400"/> Veuillez vous positionner dans l'un des espaces projets disponibles :</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {project.groups.map(group => {
-                  const remains = group.capacity - group.members.length;
-                  const isFull = remains <= 0;
-                  const isEmpty = group.members.length === 0;
 
-                  return (
-                    <div key={group.id} className="bg-[#020817] border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700/60 transition-all">
-                      <div>
-                        <div className="flex justify-between items-start mb-4">
-                          <h4 className="font-bold text-sm text-slate-200">{group.name}</h4>
-                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${isFull ? 'bg-red-500/10 text-red-400' : 'bg-indigo-500/10 text-indigo-400'}`}>
-                            Places : {group.members.length}/{group.capacity}
-                          </span>
-                        </div>
-                        <div className="space-y-1 mb-4 text-xs">
-                          <span className="text-[10px] font-bold text-slate-600 uppercase">Membres :</span>
-                          {isEmpty ? (
-                            <p className="text-slate-500 italic text-[11px]">Emplacement libre.</p>
-                          ) : (
-                            group.members.map((m, idx) => (
-                              <div key={idx} className="text-slate-400 flex items-center gap-1 text-[11px]">
-                                <span>• {m.name}</span>
-                                {m.isLeader && <Crown size={10} className="text-amber-400"/>}
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-
-                      <button
-                        disabled={isFull}
-                        onClick={() => handleJoinGroup(group.id)}
-                        className={`w-full py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1
-                          ${isFull ? 'bg-slate-900 text-slate-600 cursor-not-allowed border border-slate-800' : 
-                            isEmpty ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-500' : 'bg-indigo-600 text-white hover:bg-indigo-500'
-                          }`}
-                      >
-                        {isFull ? 'Complet' : isEmpty ? <><Crown size={12}/> Créer l\'Équipe (Leader)</> : <><UserCheck size={12}/> Rejoindre</>}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
+              <Link
+                to="/chat"
+                className="mt-4 w-full flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-white border border-white/[0.06] hover:border-white/15 rounded-xl py-2.5 transition-all duration-200 hover:bg-white/[0.03]"
+              >
+                <MessageSquare size={15} />
+                Ouvrir le chat du groupe
+              </Link>
             </div>
-          )}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
