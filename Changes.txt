@@ -29,3 +29,8 @@ qui devra choisir le sujet
 
 Améliorations :
 donner un thème à chaque en encadrant soit elec, info ou robot  
+
+(pas besoin de faire trop compliqué coté sujets 
+et logo pas obligatoire 
+le prof crée le projet qu'il souhaite 
+)
