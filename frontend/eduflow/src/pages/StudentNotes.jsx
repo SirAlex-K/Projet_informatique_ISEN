@@ -37,12 +37,21 @@ export default function StudentNotes() {
       const { data } = await api.get("/auth/me/project");
       if (!data.project) return;
       setProject(data.project);
+      const myGroupId = data.membership?.group_id ?? null;
       const [evalRes, msRes] = await Promise.all([
         api.get(`/projects/${data.project.id}/evaluations`),
         api.get(`/projects/${data.project.id}/milestones`),
       ]);
-      setEvaluations(evalRes.data.evaluations || []);
-      setMoyenne(evalRes.data.moyenne ?? null);
+      const allEvals = evalRes.data.evaluations || [];
+      // Show only the evaluation for the student's own group
+      const filtered = myGroupId
+        ? allEvals.filter(e => e.group_id === myGroupId)
+        : allEvals;
+      setEvaluations(filtered);
+      const avg = filtered.length
+        ? filtered.reduce((s, e) => s + e.note, 0) / filtered.length
+        : null;
+      setMoyenne(avg);
       setMilestones(msRes.data || []);
     };
     load().catch(console.error);
@@ -171,9 +180,9 @@ export default function StudentNotes() {
                   return (
                     <div key={ev.id ?? i} className="grid grid-cols-[2fr_1fr_1fr_1.5fr_2fr] gap-4 px-6 py-4 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors items-center last:border-0">
                       <span className="text-sm font-medium">
-                        {ev.evaluateur ? `${ev.evaluateur.prenom} ${ev.evaluateur.nom?.toUpperCase()}` : `Évaluation #${i + 1}`}
+                        {ev.group ? `Groupe ${ev.group.numero}` : `Évaluation #${i + 1}`}
                       </span>
-                      <span className="text-gray-500 text-xs">{new Date(ev.created_at).toLocaleDateString("fr-FR")}</span>
+                      <span className="text-gray-500 text-xs">{new Date(ev.evaluated_at).toLocaleDateString("fr-FR")}</span>
                       <div className="flex items-baseline gap-1">
                         <span className={`text-base font-bold ${colors.text}`}>{ev.note}</span>
                         <span className="text-gray-600 text-xs">/20</span>
