@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   GraduationCap, FolderKanban, MessageSquare, LayoutDashboard, Bell, LogOut,
   FileText, Star, UserPlus, X, Check, Crown, GripVertical, Circle, Plus, Trash2,
@@ -206,27 +206,24 @@ export default function StudentKanban() {
   const [dragOverCol, setDragOverCol] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const [isLeader, setIsLeader] = useState(false);
+
   useEffect(() => {
     const load = async () => {
       try {
-        const projectsRes = await api.get("/projects");
-        const myProject = projectsRes.data.find(p => p.members?.some(m => m.user_id === user?.id));
-        if (!myProject) { setLoading(false); return; }
-        setProject(myProject);
-        const [tasksRes, membersRes] = await Promise.all([
-          api.get(`/projects/${myProject.id}/tasks`),
-          api.get(`/projects/${myProject.id}/members`),
-        ]);
+        const { data } = await api.get("/auth/me/project");
+        if (!data.project) { setLoading(false); return; }
+        setProject(data.project);
+        setIsLeader(data.membership?.role_in_project === "lead");
+        const groupMembers = (data.group?.members || []).map(m => m.user).filter(Boolean);
+        setMembers(groupMembers);
+        const tasksRes = await api.get(`/projects/${data.project.id}/tasks`);
         setTasks(tasksRes.data);
-        setMembers(membersRes.data.map(m => m.user).filter(Boolean));
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     };
     load();
   }, [user]);
-
-  const myMembership = project?.members?.find(m => m.user_id === user?.id);
-  const isLeader = myMembership?.role_in_project === "lead";
 
   const handleAddTask = async (colId, titre, description) => {
     if (!project) return;
@@ -276,7 +273,7 @@ export default function StudentKanban() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20"><GraduationCap size={20} /></div>
                 <div>
-                  <h1 className="text-xl font-bold tracking-tight">EduFlow</h1>
+                  <h1 className="text-xl font-bold tracking-tight">ProjectHub</h1>
                   <p className="text-gray-500 text-xs">Étudiant</p>
                 </div>
               </div>

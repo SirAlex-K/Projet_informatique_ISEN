@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "./services/api";
 
@@ -125,7 +125,7 @@ export default function AdminPage() {
           <div style={{ width: "32px", height: "32px", background: colors.purple, borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <i className="ti ti-school" style={{ color: "#fff", fontSize: "17px" }} aria-hidden="true" />
           </div>
-          <span style={{ fontSize: "17px", fontWeight: 600, color: colors.text }}>EduFlow</span>
+          <span style={{ fontSize: "17px", fontWeight: 600, color: colors.text }}>ProjectHub</span>
         </div>
         <div style={{ margin: "0 1rem 1.5rem", background: colors.purpleDim, border: `0.5px solid ${colors.purpleBorder}`, borderRadius: "8px", padding: "8px 12px", display: "flex", alignItems: "center", gap: "8px" }}>
           <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: colors.purple, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", color: "#fff", fontWeight: 600 }}>

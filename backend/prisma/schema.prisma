@@ -136,6 +136,8 @@ model Project {
   // Relations
   supervisor          User               @relation("SupervisorProjects", fields: [supervisor_id], references: [id], onDelete: Cascade)
   members             TeamMember[]
+  groups              ProjectGroup[]
+  subjects            ProjectSubject[]
   tasks               Task[]
   deliverables        Deliverable[]
   messages            Message[]
@@ -149,19 +151,59 @@ model Project {
 
 
 // ============================================
+// MODEL : project_groups
+// Groupes au sein d'un projet (CDC §3)
+// ============================================
+model ProjectGroup {
+  id           Int             @id @default(autoincrement())
+  project_id   Int
+  numero       Int
+  capacite_max Int             @default(5)
+  sujet_id     Int?            @unique
+  created_at   DateTime        @default(now())
+
+  project      Project         @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  sujet        ProjectSubject? @relation(fields: [sujet_id], references: [id], onDelete: SetNull)
+  members      TeamMember[]
+  messages     Message[]
+
+  @@unique([project_id, numero])
+  @@map("project_groups")
+}
+
+
+// ============================================
+// MODEL : project_subjects
+// Banque de sujets imposés par l'encadrant
+// ============================================
+model ProjectSubject {
+  id         Int           @id @default(autoincrement())
+  project_id Int
+  libelle    String
+
+  project    Project       @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  chosen_by  ProjectGroup?
+
+  @@map("project_subjects")
+}
+
+
+// ============================================
 // MODEL : team_members
 // Table pivot N:N — un étudiant appartient
-// à un seul projet, avec un rôle
+// à un seul projet, avec un rôle et un groupe
 // ============================================
 model TeamMember {
   project_id      Int
   user_id         Int
+  group_id        Int?
   role_in_project RoleInProject @default(member)
   joined_at       DateTime      @default(now())
 
   // Relations
   project         Project       @relation(fields: [project_id], references: [id], onDelete: Cascade)
   user            User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  group           ProjectGroup? @relation(fields: [group_id], references: [id], onDelete: SetNull)
 
   // Un user ne peut être qu'une fois dans un projet
   @@id([project_id, user_id])
@@ -226,16 +268,17 @@ model Deliverable {
 // Chat par projet — un canal par projet
 // ============================================
 model Message {
-  id         Int      @id @default(autoincrement())
+  id         Int           @id @default(autoincrement())
   project_id Int
+  group_id   Int?
   sender_id  Int
   contenu    String
-  is_read    Boolean  @default(false)
-  created_at DateTime @default(now())
+  is_read    Boolean       @default(false)
+  created_at DateTime      @default(now())
 
-  // Relations
-  project    Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
-  sender     User     @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+  project    Project       @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  group      ProjectGroup? @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  sender     User          @relation(fields: [sender_id], references: [id], onDelete: Cascade)
 
   @@map("messages")
 }

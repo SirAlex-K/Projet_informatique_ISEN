@@ -12,12 +12,11 @@ import SupervisorNewProject  from './pages/SupervisorNewProject';
 import ProjectDetails       from './pages/ProjectDetails';
 import GroupDetails         from './pages/GroupDetails';
 import StudentPage          from './pages/StudentPage';
+import StudentGroupSelect   from './pages/StudentGroupSelect';
 import StudentKanban        from './pages/StudentKanban';
 import StudentLivrables     from './pages/StudentLivrables';
 import StudentNotes         from './pages/StudentNotes';
 import StudentChat          from './pages/StudentChat';
-import Groupe from "./Groupe";
-
 function PrivateRoute({ children, roles }) {
   const { token, user } = useAuth();
   if (!token) return <Navigate to="/" replace />;
@@ -28,7 +27,6 @@ function PrivateRoute({ children, roles }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/groupe" element={<Groupe />} /> 
       <Route path="/" element={<LoginPage />} />
 
       <Route path="/admin" element={
@@ -86,6 +84,11 @@ function AppRoutes() {
       <Route path="/student" element={
         <PrivateRoute roles={['student']}>
           <StudentPage />
+        </PrivateRoute>
+      } />
+      <Route path="/student/group-select" element={
+        <PrivateRoute roles={['student']}>
+          <StudentGroupSelect />
         </PrivateRoute>
       } />
       <Route path="/student/kanban" element={

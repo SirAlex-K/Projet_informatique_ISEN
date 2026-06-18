@@ -25,11 +25,10 @@ export default function StudentLivrables() {
 
   useEffect(() => {
     const load = async () => {
-      const projectsRes = await api.get("/projects");
-      const myProject = projectsRes.data.find(p => p.members?.some(m => m.user_id === user?.id));
-      if (!myProject) return;
-      setProject(myProject);
-      const livRes = await api.get(`/projects/${myProject.id}/deliverables`);
+      const { data } = await api.get("/auth/me/project");
+      if (!data.project) return;
+      setProject(data.project);
+      const livRes = await api.get(`/projects/${data.project.id}/deliverables`);
       setLivrables(livRes.data);
     };
     load().catch(console.error);

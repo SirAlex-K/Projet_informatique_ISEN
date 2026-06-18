@@ -34,13 +34,12 @@ export default function StudentNotes() {
 
   useEffect(() => {
     const load = async () => {
-      const projectsRes = await api.get("/projects");
-      const myProject = projectsRes.data.find(p => p.members?.some(m => m.user_id === user?.id));
-      if (!myProject) return;
-      setProject(myProject);
+      const { data } = await api.get("/auth/me/project");
+      if (!data.project) return;
+      setProject(data.project);
       const [evalRes, msRes] = await Promise.all([
-        api.get(`/projects/${myProject.id}/evaluations`),
-        api.get(`/projects/${myProject.id}/milestones`),
+        api.get(`/projects/${data.project.id}/evaluations`),
+        api.get(`/projects/${data.project.id}/milestones`),
       ]);
       setEvaluations(evalRes.data.evaluations || []);
       setMoyenne(evalRes.data.moyenne ?? null);

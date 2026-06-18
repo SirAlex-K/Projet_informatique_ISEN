@@ -1,15 +1,13 @@
-// ============================================
-// Message Controller — chat par projet
-// Polling côté frontend toutes les 5s
-// ============================================
-
 const prisma = require('../config/prisma');
 
-// GET /api/projects/:id/messages
+// GET /api/projects/:id/messages?group_id=X
 const getMessages = async (req, res) => {
   try {
+    const project_id = parseInt(req.params.id);
+    const group_id   = req.query.group_id ? parseInt(req.query.group_id) : undefined;
+
     const messages = await prisma.message.findMany({
-      where: { project_id: parseInt(req.params.id) },
+      where: { project_id, group_id: group_id ?? undefined },
       include: { sender: { select: { id: true, nom: true, prenom: true, avatar_url: true } } },
       orderBy: { created_at: 'asc' }
     });
@@ -22,9 +20,14 @@ const getMessages = async (req, res) => {
 // POST /api/projects/:id/messages
 const sendMessage = async (req, res) => {
   try {
-    const { contenu } = req.body;
+    const { contenu, group_id } = req.body;
     const message = await prisma.message.create({
-      data: { project_id: parseInt(req.params.id), sender_id: req.user.id, contenu },
+      data: {
+        project_id: parseInt(req.params.id),
+        group_id:   group_id ? parseInt(group_id) : null,
+        sender_id:  req.user.id,
+        contenu,
+      },
       include: { sender: { select: { id: true, nom: true, prenom: true, avatar_url: true } } }
     });
     res.status(201).json(message);
@@ -33,7 +36,6 @@ const sendMessage = async (req, res) => {
   }
 };
 
-// PUT /api/messages/:id/read
 const markRead = async (req, res) => {
   try {
     const message = await prisma.message.update({

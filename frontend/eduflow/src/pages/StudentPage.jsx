@@ -1,219 +1,328 @@
-import React, { useState } from 'react';
-import { LayoutDashboard, Crown, UserCheck, Users, Info, CheckCircle2, LogOut, FolderKanban, FileText, Star, MessageSquare } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+﻿import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  GraduationCap, FolderKanban, MessageSquare, LayoutDashboard,
+  Bell, LogOut, FileText, Star, CheckCircle, Clock, Users,
+  ArrowRight, TrendingUp, Crown,
+} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import api from "../services/api";
 
-const INITIAL_PROJECT = {
-  id: 'p-1',
-  title: 'Projet Traitement de Signal & Audio Mixer',
-  subjects: ['Architecture Mixeur Audio Pro', 'Filtres Numériques PIC18', 'DSP et Effets Temps Réel'],
-  groups: [
-    { id: 'g-1', name: 'Groupe Alpha', capacity: 4, chosenSubject: 'Architecture Mixeur Audio Pro', members: [{ name: 'Marie Dupont', isLeader: true }] },
-    { id: 'g-2', name: 'Groupe Beta',  capacity: 4, chosenSubject: '', members: [] },
-    { id: 'g-3', name: 'Groupe Gamma', capacity: 4, chosenSubject: '', members: [{ name: 'Lucas Martin', isLeader: false }] },
-  ]
-};
+const AVATAR_COLORS = [
+  "bg-blue-600", "bg-purple-600", "bg-emerald-600",
+  "bg-orange-500", "bg-rose-600", "bg-cyan-600", "bg-indigo-600",
+];
 
 export default function StudentPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [project, setProject] = useState(INITIAL_PROJECT);
-  const [joinedGroupId, setJoinedGroupId] = useState(null);
 
-  const currentStudentName = user ? `${user.prenom} ${user.nom}` : 'Étudiant';
+  const [project,    setProject]    = useState(null);
+  const [group,      setGroup]      = useState(null);
+  const [membership, setMembership] = useState(null);
+  const [loading,    setLoading]    = useState(true);
 
-  const handleLogout = () => { logout(); navigate('/'); };
+  useEffect(() => {
+    api.get("/auth/me/project").then(({ data }) => {
+      if (!data.project) {
+        // Pas de projet du tout — attente
+        setLoading(false);
+        return;
+      }
+      if (!data.membership?.group_id) {
+        // Projet assigné mais pas de groupe → page de sélection
+        navigate("/student/group-select", { replace: true });
+        return;
+      }
+      setProject(data.project);
+      setGroup(data.group);
+      setMembership(data.membership);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [navigate]);
 
-  const handleJoinGroup = (groupId) => {
-    setProject(prev => ({
-      ...prev,
-      groups: prev.groups.map(g => {
-        if (g.id !== groupId) return g;
-        const isFirst = g.members.length === 0;
-        return {
-          ...g,
-          members: [...g.members, { name: currentStudentName, isLeader: isFirst }]
-        };
-      })
-    }));
-    setJoinedGroupId(groupId);
-  };
+  const handleLogout = () => { logout(); navigate("/"); };
 
-  const handleSelectSubject = (groupId, subject) => {
-    setProject(prev => ({
-      ...prev,
-      groups: prev.groups.map(g => (g.id === groupId ? { ...g, chosenSubject: subject } : g))
-    }));
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#020817] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-  const myGroup = project.groups.find(g => g.id === joinedGroupId);
-  const isLeader = myGroup?.members.find(m => m.name === currentStudentName)?.isLeader;
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-[#020817] text-white flex items-center justify-center">
+        <div className="text-center">
+          <GraduationCap size={48} className="mx-auto mb-4 text-gray-600" />
+          <h2 className="text-xl font-bold mb-2">Aucun projet assigné</h2>
+          <p className="text-gray-500 text-sm">Votre encadrant ne vous a pas encore assigné à un projet.</p>
+          <button onClick={handleLogout} className="mt-6 text-red-400 text-sm hover:text-red-300 flex items-center gap-2 mx-auto">
+            <LogOut size={14} /> Se déconnecter
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const milestones   = project.milestones || [];
+  const nbAtteints   = milestones.filter(m => m.atteint).length;
+  const progression  = milestones.length > 0 ? Math.round((nbAtteints / milestones.length) * 100) : 0;
+  const groupMembers = group?.members || [];
+  const isLeader     = membership?.role_in_project === "lead";
+  const currentMilestone = milestones.find(m => !m.atteint);
 
   return (
-    <div className="flex min-h-screen bg-[#020817] text-slate-100 font-sans">
+    <div className="min-h-screen bg-[#020817] text-white flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#0B1220] border-r border-slate-800 p-6 flex flex-col justify-between">
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 px-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">EF</div>
-            <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">EduFlow</span>
-          </div>
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600/20 to-purple-600/20 text-indigo-400 font-medium border border-indigo-500/20 w-full text-left">
-            <LayoutDashboard size={18} /> Dashboard Étudiant
-          </button>
-          <Link to="/student/kanban" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-sm">
-            <FolderKanban size={18} /> Mon Projet
-          </Link>
-          <Link to="/student/livrables" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-sm">
-            <FileText size={18} /> Livrables
-          </Link>
-          <Link to="/student/notes" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-sm">
-            <Star size={18} /> Notes
-          </Link>
-          <Link to="/student/chat" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.04] transition-all text-sm">
-            <MessageSquare size={18} /> Chat du groupe
-          </Link>
-        </div>
-        <div className="border-t border-slate-800 pt-4 px-2 space-y-3">
-          <div className="text-xs text-slate-500">Connecté : <span className="font-semibold">{currentStudentName}</span></div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm hover:bg-red-500/20 transition"
-          >
-            <LogOut size={16} />
-            Déconnexion
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto max-w-5xl mx-auto w-full">
-        <header className="mb-8">
-          <h1 className="text-3xl font-extrabold text-white">Mon Espace de Travail</h1>
-          <p className="text-slate-400 text-sm">Affectations de projets et gestion d'équipe en temps réel.</p>
-        </header>
-
-        <div className="bg-[#0B1220] border border-slate-800 rounded-2xl p-6 shadow-xl relative">
-          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-
-          <div className="mb-6">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">Projet En Cours</span>
-            <h2 className="text-xl font-bold text-white mt-2">{project.title}</h2>
-          </div>
-
-          {joinedGroupId ? (
-            <div className="bg-[#020817] border border-emerald-500/20 rounded-xl p-5 space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg"><CheckCircle2 size={22} /></div>
-                  <div>
-                    <h3 className="font-bold text-slate-200 text-base">Votre Équipe : {myGroup.name}</h3>
-                    <p className="text-xs text-slate-500">Effectif : {myGroup.members.length} / {myGroup.capacity} places occupées</p>
-                  </div>
-                </div>
-                {isLeader && (
-                  <span className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs px-3 py-1 rounded-full font-semibold">
-                    <Crown size={12} /> Team Leader
-                  </span>
-                )}
+      <div className="w-72 border-r border-white/[0.06] bg-[#0B1220] flex flex-col justify-between flex-shrink-0">
+        <div>
+          {/* Logo */}
+          <div className="p-6 border-b border-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <GraduationCap size={20} />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Membres */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1"><Users size={12}/> Vos Coéquipiers</h4>
-                  <div className="bg-[#0B1220] border border-slate-800 rounded-xl divide-y divide-slate-800/60 overflow-hidden">
-                    {myGroup.members.map((m, idx) => (
-                      <div key={idx} className="px-4 py-2.5 text-xs flex justify-between items-center">
-                        <span className={m.name === currentStudentName ? "text-indigo-400 font-semibold" : "text-slate-300"}>
-                          {m.name} {m.name === currentStudentName && "(Vous)"}
-                        </span>
-                        {m.isLeader && <span className="text-amber-400 flex items-center gap-0.5 text-[10px]"><Crown size={10}/> Leader</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sujet */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1"><Info size={12}/> Sujet de Recherche</h4>
-                  {isLeader ? (
-                    <div className="space-y-2">
-                      <label className="block text-[11px] text-slate-500">Sélectionnez un sujet parmi la liste validée par votre encadrant :</label>
-                      <select
-                        value={myGroup.chosenSubject}
-                        onChange={(e) => handleSelectSubject(myGroup.id, e.target.value)}
-                        className="w-full bg-[#0B1220] border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-                      >
-                        <option value="">-- Choisir un sujet officiel --</option>
-                        {project.subjects.map((sbj, i) => (
-                          <option key={i} value={sbj}>{sbj}</option>
-                        ))}
-                      </select>
-                      <p className="text-[10px] text-amber-500/80 italic">Modifications autorisées uniquement pour le Team Leader.</p>
-                    </div>
-                  ) : (
-                    <div className="bg-[#0B1220] border border-slate-800 rounded-xl p-4 min-h-[80px] flex flex-col justify-between">
-                      <p className="text-xs text-slate-200 font-medium italic">
-                        {myGroup.chosenSubject ? `"${myGroup.chosenSubject}"` : "Le Team Leader n'a pas encore choisi de sujet."}
-                      </p>
-                      <span className="text-[10px] text-slate-500 block mt-2">Lecture seule — Attente du choix de votre responsable de groupe.</span>
-                    </div>
-                  )}
-                </div>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight">ProjectHub</h1>
+                <p className="text-gray-500 text-xs">Étudiant</p>
               </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-xs text-slate-400 flex items-center gap-1.5"><Info size={14} className="text-indigo-400"/> Veuillez vous positionner dans l'un des espaces projets disponibles :</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {project.groups.map(group => {
-                  const remains = group.capacity - group.members.length;
-                  const isFull = remains <= 0;
-                  const isEmpty = group.members.length === 0;
+          </div>
 
-                  return (
-                    <div key={group.id} className="bg-[#020817] border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700/60 transition-all">
-                      <div>
-                        <div className="flex justify-between items-start mb-4">
-                          <h4 className="font-bold text-sm text-slate-200">{group.name}</h4>
-                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${isFull ? 'bg-red-500/10 text-red-400' : 'bg-indigo-500/10 text-indigo-400'}`}>
-                            Places : {group.members.length}/{group.capacity}
-                          </span>
-                        </div>
-                        <div className="space-y-1 mb-4 text-xs">
-                          <span className="text-[10px] font-bold text-slate-600 uppercase">Membres :</span>
-                          {isEmpty ? (
-                            <p className="text-slate-500 italic text-[11px]">Emplacement libre.</p>
-                          ) : (
-                            group.members.map((m, idx) => (
-                              <div key={idx} className="text-slate-400 flex items-center gap-1 text-[11px]">
-                                <span>• {m.name}</span>
-                                {m.isLeader && <Crown size={10} className="text-amber-400"/>}
-                              </div>
-                            ))
+          {/* Nav */}
+          <div className="p-4 space-y-1">
+            <div className="relative bg-blue-600/90 rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-semibold shadow-lg shadow-blue-500/20">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-white rounded-r-full" />
+              <LayoutDashboard size={18} />
+              Tableau de bord
+            </div>
+            <Link to="/student/kanban" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+              <FolderKanban size={18} /> Mon Projet
+            </Link>
+            <Link to="/student/livrables" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+              <FileText size={18} /> Livrables
+            </Link>
+            <Link to="/student/notes" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+              <Star size={18} /> Notes
+            </Link>
+            <Link to="/student/chat" className="px-4 py-3 flex items-center gap-3 text-sm text-gray-400 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200">
+              <MessageSquare size={18} /> Chat du groupe
+            </Link>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-white/[0.06]">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 bg-red-500/[0.07] border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm hover:bg-red-500/15 transition-all duration-200 w-full"
+          >
+            <LogOut size={16} /> Déconnexion
+          </button>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Topbar */}
+        <div className="border-b border-white/[0.06] px-8 py-4 flex justify-between items-center flex-shrink-0">
+          <div>
+            <h1 className="text-2xl font-bold">Tableau de bord</h1>
+            <p className="text-gray-500 text-sm mt-0.5">Vue d'ensemble de votre projet</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="relative p-2 rounded-xl hover:bg-white/[0.05] transition-colors">
+              <Bell size={20} className="text-gray-400" />
+            </button>
+            <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-full ${AVATAR_COLORS[(user?.id || 0) % AVATAR_COLORS.length]} flex items-center justify-center text-sm font-bold`}>
+                {user?.prenom?.[0]}{user?.nom?.[0]}
+              </div>
+              <div>
+                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom}</p>
+                <p className="text-gray-500 text-xs">
+                  {group ? `Groupe ${group.numero}` : "Sans groupe"}
+                  {isLeader && " · Leader"}
+                </p>
+              </div>
+              {isLeader && <Crown size={14} className="text-amber-400 ml-1" />}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-8">
+          {/* Welcome */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold mb-1">Bonjour, {user?.prenom} 👋</h2>
+            <p className="text-gray-500 text-sm">
+              {project.titre}
+              {currentMilestone && ` · ${currentMilestone.titre} en cours`}
+            </p>
+          </div>
+
+          {/* Sujet du groupe */}
+          {group?.sujet && (
+            <div className="bg-purple-500/[0.06] border border-purple-500/20 rounded-2xl px-5 py-3.5 mb-6 flex items-center gap-3">
+              <Star size={16} className="text-purple-400 shrink-0" />
+              <div>
+                <span className="text-xs text-purple-400 font-medium">Sujet du groupe</span>
+                <p className="text-sm text-white font-semibold">{group.sujet.libelle}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Progress bar */}
+          <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-5 mb-8">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-medium text-gray-300">Progression globale</span>
+              <span className="text-sm font-bold text-blue-400">{progression}%</span>
+            </div>
+            <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full shadow-lg shadow-blue-500/30 transition-all duration-500"
+                style={{ width: `${progression}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-2">
+              <span className="text-xs text-gray-600">{nbAtteints} jalon{nbAtteints > 1 ? "s" : ""} validé{nbAtteints > 1 ? "s" : ""}</span>
+              <span className="text-xs text-gray-600">{milestones.length - nbAtteints} restant{milestones.length - nbAtteints > 1 ? "s" : ""}</span>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5 shadow-lg shadow-blue-500/10 hover:scale-[1.02] transition-transform duration-200">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center mb-4 shadow-md">
+                <FolderKanban size={18} />
+              </div>
+              <p className="text-3xl font-bold mb-1">1</p>
+              <p className="text-gray-400 text-sm">Projet actif</p>
+            </div>
+            <div className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-5 shadow-lg shadow-purple-500/10 hover:scale-[1.02] transition-transform duration-200">
+              <div className="w-9 h-9 rounded-xl bg-purple-600 flex items-center justify-center mb-4 shadow-md">
+                <Users size={18} />
+              </div>
+              <p className="text-3xl font-bold mb-1">{groupMembers.length}</p>
+              <p className="text-gray-400 text-sm">Membres du groupe</p>
+            </div>
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-5 shadow-lg shadow-orange-500/10 hover:scale-[1.02] transition-transform duration-200">
+              <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center mb-4 shadow-md">
+                <FileText size={18} />
+              </div>
+              <p className="text-3xl font-bold mb-1">{milestones.length - nbAtteints}</p>
+              <p className="text-gray-400 text-sm">Jalons restants</p>
+            </div>
+            <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-5 shadow-lg shadow-green-500/10 hover:scale-[1.02] transition-transform duration-200">
+              <div className="w-9 h-9 rounded-xl bg-green-600 flex items-center justify-center mb-4 shadow-md">
+                <TrendingUp size={18} />
+              </div>
+              <p className="text-3xl font-bold mb-1">{progression}%</p>
+              <p className="text-gray-400 text-sm">Progression</p>
+            </div>
+          </div>
+
+          {/* Bottom grid */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* Jalons */}
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+              <h2 className="text-base font-bold mb-6 flex items-center gap-2">
+                <CheckCircle size={16} className="text-green-400" />
+                Jalons
+              </h2>
+              {milestones.length === 0 ? (
+                <p className="text-gray-600 text-sm italic">Aucun jalon défini.</p>
+              ) : (
+                <div className="relative">
+                  <div className="absolute left-[18px] top-0 bottom-0 w-px bg-white/[0.06]" />
+                  <div className="space-y-5">
+                    {milestones.map((cp, i) => {
+                      const status = cp.atteint ? "done" : cp === currentMilestone ? "current" : "upcoming";
+                      return (
+                        <div key={cp.id} className="flex items-start gap-4 relative">
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2 ${
+                            status === "done"    ? "bg-green-500/20 border-green-500 text-green-400"
+                            : status === "current" ? "bg-blue-500/20 border-blue-500 text-blue-400"
+                            : "bg-white/[0.03] border-white/10 text-gray-600"
+                          }`}>
+                            {status === "done" ? <CheckCircle size={16} />
+                              : status === "current" ? <Clock size={16} />
+                              : <span className="text-xs font-bold">{i + 1}</span>}
+                          </div>
+                          <div className="flex-1 pt-1">
+                            <p className={`text-sm font-medium leading-tight ${status === "upcoming" ? "text-gray-600" : "text-white"}`}>
+                              {cp.titre}
+                            </p>
+                            <p className="text-gray-600 text-xs mt-1">
+                              {new Date(cp.date_cible).toLocaleDateString("fr-FR")}
+                            </p>
+                          </div>
+                          {status === "current" && (
+                            <span className="text-xs bg-blue-500/15 text-blue-400 border border-blue-500/25 rounded-full px-2.5 py-1 mt-0.5">
+                              En cours
+                            </span>
+                          )}
+                          {status === "done" && (
+                            <span className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 rounded-full px-2.5 py-1 mt-0.5">
+                              Validé
+                            </span>
                           )}
                         </div>
-                      </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
 
-                      <button
-                        disabled={isFull}
-                        onClick={() => handleJoinGroup(group.id)}
-                        className={`w-full py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1
-                          ${isFull ? 'bg-slate-900 text-slate-600 cursor-not-allowed border border-slate-800' :
-                            isEmpty ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-500' : 'bg-indigo-600 text-white hover:bg-indigo-500'
-                          }`}
-                      >
-                        {isFull ? 'Complet' : isEmpty ? <><Crown size={12}/> Créer l'Équipe (Leader)</> : <><UserCheck size={12}/> Rejoindre</>}
-                      </button>
+            {/* Groupe */}
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-base font-bold flex items-center gap-2">
+                  <Users size={16} className="text-purple-400" />
+                  Mon groupe · Groupe {group?.numero}
+                </h2>
+                <Link to="/student/chat" className="text-blue-400 hover:text-blue-300 transition-colors p-1.5 rounded-lg hover:bg-blue-500/10">
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {groupMembers.map(m => {
+                  const isMe = m.user_id === user?.id;
+                  return (
+                    <div key={m.user_id} className="flex items-center gap-3 bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.04] hover:border-white/[0.08] rounded-xl p-3 transition-all duration-200">
+                      <div className={`w-9 h-9 rounded-full ${AVATAR_COLORS[m.user_id % AVATAR_COLORS.length]} flex items-center justify-center text-sm font-bold shadow-md flex-shrink-0`}>
+                        {m.user.prenom[0]}{m.user.nom[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{m.user.prenom} {m.user.nom}</p>
+                        <p className="text-gray-500 text-xs">
+                          {m.role_in_project === "lead" ? "Chef de projet" : "Membre"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {m.role_in_project === "lead" && <Crown size={12} className="text-amber-400" />}
+                        {isMe && (
+                          <span className="text-xs bg-blue-500/15 text-blue-400 border border-blue-500/25 rounded-full px-2.5 py-1">
+                            Vous
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
+
+              <Link
+                to="/student/chat"
+                className="mt-4 w-full flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-white border border-white/[0.06] hover:border-white/15 rounded-xl py-2.5 transition-all duration-200 hover:bg-white/[0.03]"
+              >
+                <MessageSquare size={15} /> Ouvrir le chat du groupe
+              </Link>
             </div>
-          )}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

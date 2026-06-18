@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   GraduationCap,
   FolderKanban,
@@ -40,7 +40,7 @@ export default function SupervisorProjects() {
                 <GraduationCap size={20} />
               </div>
               <div>
-                <h1 className="text-xl font-bold">EduFlow</h1>
+                <h1 className="text-xl font-bold">ProjectHub</h1>
                 <p className="text-gray-400 text-xs">Professeur</p>
               </div>
             </div>

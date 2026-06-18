@@ -61,4 +61,46 @@ const me = async (req, res) => {
   }
 };
 
-module.exports = { register, login, me };
+// GET /api/auth/me/project — statut projet de l'étudiant connecté
+const myProject = async (req, res) => {
+  try {
+    const membership = await prisma.teamMember.findFirst({
+      where: { user_id: req.user.id },
+      include: {
+        project: {
+          include: {
+            supervisor: { select: { id: true, nom: true, prenom: true } },
+            subjects: true,
+            milestones: { orderBy: { date_cible: 'asc' } }
+          }
+        },
+        group: {
+          include: {
+            sujet: true,
+            members: {
+              include: {
+                user: { select: { id: true, nom: true, prenom: true } }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!membership) return res.json({ project: null, membership: null, group: null });
+
+    res.json({
+      project:    membership.project,
+      membership: {
+        group_id:        membership.group_id,
+        role_in_project: membership.role_in_project,
+        joined_at:       membership.joined_at
+      },
+      group: membership.group
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', error: err.message });
+  }
+};
+
+module.exports = { register, login, me, myProject };

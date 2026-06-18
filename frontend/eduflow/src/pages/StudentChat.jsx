@@ -25,37 +25,38 @@ export default function StudentChat() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const bottomRef = useRef(null);
 
+  const [groupId, setGroupId] = useState(null);
+
   useEffect(() => {
     const load = async () => {
-      const projectsRes = await api.get("/projects");
-      const myProject = projectsRes.data.find(p => p.members?.some(m => m.user_id === user?.id));
-      if (!myProject) return;
-      setProject(myProject);
-      const [mRes, msgRes] = await Promise.all([
-        api.get(`/projects/${myProject.id}/members`),
-        api.get(`/projects/${myProject.id}/messages`),
-      ]);
-      setMembers(mRes.data);
-      setMessages(msgRes.data);
+      const { data } = await api.get("/auth/me/project");
+      if (!data.project) return;
+      setProject(data.project);
+      setMembers(data.group?.members || []);
+      setGroupId(data.membership?.group_id || null);
+      if (data.membership?.group_id) {
+        const msgRes = await api.get(`/projects/${data.project.id}/messages?group_id=${data.membership.group_id}`);
+        setMessages(msgRes.data);
+      }
     };
     load().catch(console.error);
   }, [user]);
 
   useEffect(() => {
-    if (!project) return;
+    if (!project || !groupId) return;
     const interval = setInterval(() => {
-      api.get(`/projects/${project.id}/messages`).then(r => setMessages(r.data)).catch(() => {});
+      api.get(`/projects/${project.id}/messages?group_id=${groupId}`).then(r => setMessages(r.data)).catch(() => {});
     }, 5000);
     return () => clearInterval(interval);
-  }, [project]);
+  }, [project, groupId]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const sendMessage = async () => {
     const text = input.trim();
-    if (!text || !project) return;
+    if (!text || !project || !groupId) return;
     try {
-      const res = await api.post(`/projects/${project.id}/messages`, { contenu: text });
+      const res = await api.post(`/projects/${project.id}/messages`, { contenu: text, group_id: groupId });
       setMessages(prev => [...prev, res.data]);
       setInput("");
     } catch (e) { console.error(e); }

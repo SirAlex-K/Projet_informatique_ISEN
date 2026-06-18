@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+﻿import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   GraduationCap, FolderKanban, MessageSquare,
   LayoutDashboard, LogOut, ClipboardCheck,
@@ -30,7 +30,7 @@ export default function SupervisorSidebar() {
               <GraduationCap size={20} />
             </div>
             <div>
-              <h1 className="text-xl font-bold">EduFlow</h1>
+              <h1 className="text-xl font-bold">ProjectHub</h1>
               <p className="text-gray-400 text-xs">Professeur</p>
             </div>
           </div>

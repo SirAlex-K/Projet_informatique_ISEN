@@ -6,6 +6,7 @@ const upload = require('../middlewares/upload.middleware');
 
 const { getAll, getOne, create, update, remove }   = require('../controllers/projectController');
 const { getMembers, addMember, removeMember }       = require('../controllers/teamController');
+const { getGroups, getGroup, joinGroup, chooseSubject } = require('../controllers/groupController');
 const { getTasks, createTask }                      = require('../controllers/taskController');
 const { getMilestones, createMilestone }            = require('../controllers/milestoneController');
 const { getDeliverables, uploadDeliverable }        = require('../controllers/deliverableController');
@@ -13,39 +14,45 @@ const { getMessages, sendMessage }                  = require('../controllers/me
 const { getProjectComments, createComment }         = require('../controllers/commentController');
 const { getEvaluations, createEvaluation }          = require('../controllers/evaluationController');
 
-// ── Projets ──────────────────────────────────────────
+// Projets
 router.get('/',       auth, getAll);
 router.post('/',      auth, role('admin', 'supervisor'), create);
 router.get('/:id',    auth, getOne);
 router.put('/:id',    auth, role('admin', 'supervisor'), update);
 router.delete('/:id', auth, role('admin', 'supervisor'), remove);
 
-// ── Membres ──────────────────────────────────────────
+// Membres
 router.get('/:id/members',         auth, getMembers);
 router.post('/:id/members',        auth, role('admin', 'supervisor'), addMember);
 router.delete('/:id/members/:uid', auth, role('admin', 'supervisor'), removeMember);
 
-// ── Tâches ───────────────────────────────────────────
+// Groupes
+router.get('/:id/groups',            auth, getGroups);
+router.get('/:id/groups/:gid',       auth, getGroup);
+router.post('/:id/groups/:gid/join', auth, joinGroup);
+router.put('/:id/groups/:gid/sujet', auth, chooseSubject);
+
+// Taches
 router.get('/:id/tasks',  auth, getTasks);
 router.post('/:id/tasks', auth, isLeaderOrSupervisor, createTask);
 
-// ── Jalons ───────────────────────────────────────────
+// Jalons
 router.get('/:id/milestones',  auth, getMilestones);
 router.post('/:id/milestones', auth, isLeaderOrSupervisor, createMilestone);
 
-// ── Livrables ────────────────────────────────────────
+// Livrables
 router.get('/:id/deliverables',  auth, getDeliverables);
 router.post('/:id/deliverables', auth, upload.single('file'), uploadDeliverable);
 
-// ── Messages ─────────────────────────────────────────
+// Messages
 router.get('/:id/messages',  auth, getMessages);
 router.post('/:id/messages', auth, sendMessage);
 
-// ── Commentaires ─────────────────────────────────────
+// Commentaires
 router.get('/:id/comments',  auth, getProjectComments);
 router.post('/:id/comments', auth, createComment);
 
-// ── Évaluations ──────────────────────────────────────
+// Evaluations
 router.get('/:id/evaluations',  auth, getEvaluations);
 router.post('/:id/evaluations', auth, role('admin', 'supervisor'), createEvaluation);
 

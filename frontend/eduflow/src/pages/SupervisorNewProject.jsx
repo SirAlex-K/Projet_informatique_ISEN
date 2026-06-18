@@ -9,6 +9,8 @@ export default function SupervisorNewProject() {
   // Formulaire
   const [titre, setTitre] = useState("");
   const [description, setDescription] = useState("");
+  const [nbGroupes, setNbGroupes] = useState(3);
+  const [capaciteMax, setCapaciteMax] = useState(5);
   const [subjects, setSubjects] = useState([]);
   const [subjectInput, setSubjectInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -71,10 +73,18 @@ export default function SupervisorNewProject() {
 
   const handleSubmit = async () => {
     if (!titre.trim()) { setError("Le titre est obligatoire."); return; }
+    if (nbGroupes < 1) { setError("Il faut au moins 1 groupe."); return; }
     setLoading(true);
     setError("");
     try {
-      await api.post("/projects", { titre: titre.trim(), description: description.trim() || undefined });
+      await api.post("/projects", {
+        titre:        titre.trim(),
+        description:  description.trim() || undefined,
+        nb_groupes:   nbGroupes,
+        capacite_max: capaciteMax,
+        sujets:       subjects,
+        student_ids:  [...selected]
+      });
       navigate("/supervisor/projects");
     } catch (e) {
       setError(e.response?.data?.message || "Erreur lors de la création du projet.");
@@ -129,11 +139,19 @@ export default function SupervisorNewProject() {
             <div className="grid grid-cols-2 gap-5">
               <div>
                 <label className="block mb-2 text-sm text-gray-300">Nombre de Groupes</label>
-                <input type="number" defaultValue="3" className="w-full bg-[#020817] border border-white/10 rounded-xl p-3.5 text-sm outline-none" />
+                <input
+                  type="number" min="1" value={nbGroupes}
+                  onChange={e => setNbGroupes(parseInt(e.target.value) || 1)}
+                  className="w-full bg-[#020817] border border-white/10 rounded-xl p-3.5 text-sm outline-none focus:border-purple-500/50"
+                />
               </div>
               <div>
                 <label className="block mb-2 text-sm text-gray-300">Capacité Max / Groupe</label>
-                <input type="number" defaultValue="5" className="w-full bg-[#020817] border border-white/10 rounded-xl p-3.5 text-sm outline-none" />
+                <input
+                  type="number" min="1" value={capaciteMax}
+                  onChange={e => setCapaciteMax(parseInt(e.target.value) || 1)}
+                  className="w-full bg-[#020817] border border-white/10 rounded-xl p-3.5 text-sm outline-none focus:border-purple-500/50"
+                />
               </div>
             </div>
           </div>

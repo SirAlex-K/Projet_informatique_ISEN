@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import {
   GraduationCap,
   FolderKanban,
@@ -18,10 +18,12 @@ export default function SupervisorMessages() {
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate("/"); };
 
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects]           = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+  const [groups, setGroups]               = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [messages, setMessages]           = useState([]);
+  const [input, setInput]                 = useState("");
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -33,21 +35,30 @@ export default function SupervisorMessages() {
 
   useEffect(() => {
     if (!selectedProject) return;
-    const load = () => api.get(`/projects/${selectedProject.id}/messages`)
+    setSelectedGroup(null);
+    setMessages([]);
+    api.get(`/projects/${selectedProject.id}/groups`)
+      .then(res => setGroups(res.data))
+      .catch(console.error);
+  }, [selectedProject]);
+
+  useEffect(() => {
+    if (!selectedProject || !selectedGroup) return;
+    const load = () => api.get(`/projects/${selectedProject.id}/messages?group_id=${selectedGroup.id}`)
       .then(res => setMessages(res.data))
       .catch(console.error);
     load();
     const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
-  }, [selectedProject]);
+  }, [selectedProject, selectedGroup]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || !selectedProject) return;
+    if (!text || !selectedProject || !selectedGroup) return;
     try {
-      const res = await api.post(`/projects/${selectedProject.id}/messages`, { contenu: text });
+      const res = await api.post(`/projects/${selectedProject.id}/messages`, { contenu: text, group_id: selectedGroup.id });
       setMessages(prev => [...prev, res.data]);
       setInput("");
     } catch (e) { console.error(e); }
@@ -65,7 +76,7 @@ export default function SupervisorMessages() {
                 <GraduationCap size={20} />
               </div>
               <div>
-                <h1 className="text-xl font-bold">EduFlow</h1>
+                <h1 className="text-xl font-bold">ProjectHub</h1>
                 <p className="text-gray-400 text-xs">Professeur</p>
               </div>
             </div>
@@ -135,25 +146,44 @@ export default function SupervisorMessages() {
           <div className="grid grid-cols-3 gap-6">
 
             {/* Conversations */}
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5">
-              <h3 className="text-lg font-bold mb-4">Projets</h3>
-              <div className="space-y-2">
-                {projects.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedProject(p)}
-                    className={`w-full text-left rounded-xl p-3 text-sm transition ${selectedProject?.id === p.id ? "bg-purple-500/20 text-white" : "bg-white/[0.03] text-gray-400 hover:text-white"}`}
-                  >
-                    📁 {p.titre}
-                  </button>
-                ))}
+            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 space-y-5">
+              <div>
+                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Projets</h3>
+                <div className="space-y-1.5">
+                  {projects.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedProject(p)}
+                      className={`w-full text-left rounded-xl p-3 text-sm transition ${selectedProject?.id === p.id ? "bg-purple-500/20 text-white" : "bg-white/[0.03] text-gray-400 hover:text-white"}`}
+                    >
+                      📁 {p.titre}
+                    </button>
+                  ))}
+                </div>
               </div>
+              {groups.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Groupes</h3>
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                    {groups.map(g => (
+                      <button
+                        key={g.id}
+                        onClick={() => setSelectedGroup(g)}
+                        className={`w-full text-left rounded-xl p-3 text-sm transition ${selectedGroup?.id === g.id ? "bg-blue-500/20 text-white" : "bg-white/[0.03] text-gray-400 hover:text-white"}`}
+                      >
+                        👥 Groupe {g.numero}
+                        <span className="ml-2 text-xs text-gray-600">{g.members.length}/{g.capacite_max}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Discussion */}
             <div className="col-span-2 bg-white/[0.03] border border-white/10 rounded-2xl p-5 flex flex-col">
               <h3 className="text-lg font-bold mb-4">
-                {selectedProject ? `📢 ${selectedProject.titre}` : "Sélectionnez un projet"}
+                {selectedGroup ? `💬 Groupe ${selectedGroup.numero} — ${selectedProject?.titre}` : "Sélectionnez un groupe"}
               </h3>
 
               <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-80">
@@ -174,11 +204,11 @@ export default function SupervisorMessages() {
                 <div ref={bottomRef} />
               </div>
 
-              {selectedProject && (
+              {selectedGroup && (
                 <div className="flex gap-3">
                   <input
                     type="text"
-                    placeholder="Écrire un message..."
+                    placeholder={`Écrire au groupe ${selectedGroup.numero}...`}
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleSend()}
