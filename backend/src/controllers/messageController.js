@@ -4,10 +4,16 @@ const prisma = require('../config/prisma');
 const getMessages = async (req, res) => {
   try {
     const project_id = parseInt(req.params.id);
-    const group_id   = req.query.group_id ? parseInt(req.query.group_id) : undefined;
+    const rawGroupId = req.query.group_id;
+    // group_id=none → messages broadcast (group_id IS NULL)
+    // group_id=X    → messages du groupe X
+    // (absent)      → tous les messages
+    const groupFilter = rawGroupId === 'none'
+      ? null
+      : rawGroupId ? parseInt(rawGroupId) : undefined;
 
     const messages = await prisma.message.findMany({
-      where: { project_id, group_id: group_id ?? undefined },
+      where: { project_id, ...(groupFilter !== undefined ? { group_id: groupFilter } : {}) },
       include: { sender: { select: { id: true, nom: true, prenom: true, avatar_url: true } } },
       orderBy: { created_at: 'asc' }
     });

@@ -21,6 +21,7 @@ export default function StudentLivrables() {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isLead, setIsLead] = useState(false);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export default function StudentLivrables() {
       const { data } = await api.get("/auth/me/project");
       if (!data.project) return;
       setProject(data.project);
+      setIsLead(data.membership?.role_in_project === "lead");
       const livRes = await api.get(`/projects/${data.project.id}/deliverables`);
       setLivrables(livRes.data);
     };
@@ -155,8 +157,8 @@ export default function StudentLivrables() {
             </div>
           </div>
 
-          {/* Upload zone */}
-          {project && (
+          {/* Upload zone — team leader uniquement */}
+          {project && isLead && (
             <div
               className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 mb-8 ${dragOver ? "border-blue-500/60 bg-blue-500/[0.08]" : "border-white/[0.08] hover:border-white/20 hover:bg-white/[0.02]"}`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -174,6 +176,12 @@ export default function StudentLivrables() {
                 </>
               )}
               <input ref={fileRef} type="file" className="hidden" onChange={(e) => e.target.files[0] && handleUpload(e.target.files[0])} />
+            </div>
+          )}
+          {project && !isLead && (
+            <div className="border border-white/[0.06] rounded-2xl p-5 mb-8 flex items-center gap-3 bg-white/[0.01]">
+              <AlertCircle size={16} className="text-gray-600 flex-shrink-0" />
+              <p className="text-gray-600 text-sm">Seul le chef de projet peut déposer des fichiers.</p>
             </div>
           )}
 
@@ -198,9 +206,11 @@ export default function StudentLivrables() {
                     <button onClick={() => handleDownload(livrable)} className="flex items-center gap-1.5 text-gray-400 hover:text-blue-300 text-xs font-medium bg-white/[0.04] hover:bg-blue-500/15 border border-white/[0.08] hover:border-blue-500/30 px-2.5 py-1.5 rounded-lg transition-all duration-150">
                       <Download size={14} /> Télécharger
                     </button>
-                    <button onClick={() => handleDelete(livrable.id)} className="text-gray-600 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10">
-                      <X size={15} />
-                    </button>
+                    {isLead && (
+                      <button onClick={() => handleDelete(livrable.id)} className="text-gray-600 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10">
+                        <X size={15} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
