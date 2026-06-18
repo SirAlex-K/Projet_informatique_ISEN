@@ -47,7 +47,7 @@ export default function SupervisorStudents() {
   }, []);
 
   const filtered = students.filter(s =>
-    `${s.prenom} ${s.nom} ${s.email}`.toLowerCase().includes(search.toLowerCase())
+    `${s.prenom} ${s.nom?.toUpperCase()} ${s.email}`.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -113,7 +113,7 @@ export default function SupervisorStudents() {
                 {user?.prenom?.[0] || "P"}
               </div>
               <div>
-                <h2 className="text-sm font-semibold">{user?.prenom} {user?.nom}</h2>
+                <h2 className="text-sm font-semibold">{user?.prenom} {user?.nom?.toUpperCase()}</h2>
                 <p className="text-gray-400 text-xs">Professeur</p>
               </div>
             </div>
@@ -163,7 +163,7 @@ export default function SupervisorStudents() {
                   <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold">
                     {student.prenom?.[0] || "?"}
                   </div>
-                  <span className="text-sm font-semibold">{student.prenom} {student.nom}</span>
+                  <span className="text-sm font-semibold">{student.prenom} {student.nom?.toUpperCase()}</span>
                 </div>
                 <div className="text-gray-400 text-sm">{student.email}</div>
                 <div>

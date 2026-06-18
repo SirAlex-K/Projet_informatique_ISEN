@@ -126,7 +126,7 @@ export default function SupervisorPage() {
               </div>
               <div>
                 <h2 className="text-sm font-semibold">
-                  {user?.prenom} {user?.nom}
+                  {user?.prenom} {user?.nom?.toUpperCase()}
                 </h2>
                 <p className="text-gray-400 text-xs">Professeur</p>
               </div>

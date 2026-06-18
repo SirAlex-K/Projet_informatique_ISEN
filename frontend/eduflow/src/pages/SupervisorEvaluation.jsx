@@ -128,7 +128,7 @@ export default function SupervisorEvaluation() {
                 {user?.prenom?.[0] || "P"}
               </div>
               <div>
-                <h2 className="text-sm font-semibold">{user?.prenom} {user?.nom}</h2>
+                <h2 className="text-sm font-semibold">{user?.prenom} {user?.nom?.toUpperCase()}</h2>
                 <p className="text-gray-400 text-xs">Professeur</p>
               </div>
             </div>

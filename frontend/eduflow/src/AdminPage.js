@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users, UserCheck, UserCircle, ShieldAlert,
@@ -124,7 +124,7 @@ export default function AdminPage() {
 
   const filtered = users.filter(u => {
     const matchRole   = filterRole === "tous" || u.role === filterRole;
-    const matchSearch = `${u.nom} ${u.prenom}`.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = `${u.nom?.toUpperCase()} ${u.prenom}`.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
     return matchRole && matchSearch;
   });
 
@@ -174,7 +174,7 @@ export default function AdminPage() {
               {(user.prenom || "A")[0].toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold truncate">{user.prenom} {user.nom}</p>
+              <p className="text-xs font-semibold truncate">{user.prenom} {user.nom?.toUpperCase()}</p>
               <p className="text-gray-600 text-[10px] truncate">{user.email}</p>
             </div>
           </div>
@@ -285,8 +285,8 @@ export default function AdminPage() {
                       style={{ gridTemplateColumns: grid }}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <Avatar nom={u.nom} prenom={u.prenom} id={u.id} />
-                        <span className="text-sm font-semibold truncate">{u.prenom} {u.nom}</span>
+                        <Avatar nom={u.nom?.toUpperCase()} prenom={u.prenom} id={u.id} />
+                        <span className="text-sm font-semibold truncate">{u.prenom} {u.nom?.toUpperCase()}</span>
                       </div>
                       <span className="text-xs text-gray-500 truncate pr-2">{u.email}</span>
                       {showStudentCols && <span className="text-xs text-gray-400">{u.classe || "—"}</span>}
@@ -430,7 +430,7 @@ export default function AdminPage() {
             <h2 className="text-base font-bold mb-1.5">Supprimer l'utilisateur</h2>
             <p className="text-gray-500 text-sm mb-6">
               Voulez-vous vraiment supprimer{" "}
-              <span className="text-white font-semibold">{showDeleteModal.prenom} {showDeleteModal.nom}</span> ?
+              <span className="text-white font-semibold">{showDeleteModal.prenom} {showDeleteModal.nom?.toUpperCase()}</span> ?
               <br />Cette action est irréversible.
             </p>
             <div className="flex gap-3">

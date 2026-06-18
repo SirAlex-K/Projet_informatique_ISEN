@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import {
   GraduationCap, FolderKanban, MessageSquare, LayoutDashboard, Bell, LogOut,
   FileText, Star, Send, Users, PanelLeftClose, PanelLeftOpen,
@@ -120,7 +120,7 @@ export default function StudentChat() {
             <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 flex items-center gap-3">
               <div className={`w-8 h-8 rounded-full ${getColor(user?.id)} flex items-center justify-center text-sm font-bold`}>{getInitials(user)}</div>
               <div>
-                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom}</p>
+                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom?.toUpperCase()}</p>
                 <p className="text-gray-500 text-xs">{project?.titre || "Mon projet"}</p>
               </div>
             </div>
@@ -149,7 +149,7 @@ export default function StudentChat() {
                     <div className={`max-w-md flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                       {showAuthor && (
                         <div className="flex items-baseline gap-2 mb-1.5">
-                          {!isMe && <span className="text-sm font-semibold text-gray-300">{sender.prenom} {sender.nom}</span>}
+                          {!isMe && <span className="text-sm font-semibold text-gray-300">{sender.prenom} {sender.nom?.toUpperCase()}</span>}
                           <span className="text-gray-600 text-xs">
                             {new Date(msg.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                           </span>
@@ -198,7 +198,7 @@ export default function StudentChat() {
                       <div className={`w-8 h-8 rounded-full ${getColor(m.user_id)} flex items-center justify-center text-xs font-bold shadow-sm`}>{getInitials(u)}</div>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold truncate">{u.prenom} {u.nom}{isMe && <span className="text-blue-400 ml-1">(vous)</span>}</p>
+                      <p className="text-xs font-semibold truncate">{u.prenom} {u.nom?.toUpperCase()}{isMe && <span className="text-blue-400 ml-1">(vous)</span>}</p>
                       <p className="text-gray-600 text-xs truncate">{m.role_in_project === "lead" ? "Chef de projet" : "Membre"}</p>
                     </div>
                   </div>

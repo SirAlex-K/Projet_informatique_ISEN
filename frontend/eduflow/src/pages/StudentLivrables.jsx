@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import {
   GraduationCap, FolderKanban, MessageSquare, LayoutDashboard, Bell, LogOut,
   FileText, Star, Upload, CheckCircle, Clock, AlertCircle, X, File, Download,
@@ -129,7 +129,7 @@ export default function StudentLivrables() {
                 {user?.prenom?.[0] || "A"}
               </div>
               <div>
-                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom}</p>
+                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom?.toUpperCase()}</p>
                 <p className="text-gray-500 text-xs">{project?.titre || "Mon projet"}</p>
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function StudentLivrables() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{livrable.nom_fichier}</p>
                     <p className="text-gray-500 text-xs mt-0.5">
-                      {livrable.uploader ? `${livrable.uploader.prenom} ${livrable.uploader.nom}` : "—"} · {new Date(livrable.uploaded_at).toLocaleDateString("fr-FR")} · {Math.round((livrable.taille || 0) / 1024)} Ko
+                      {livrable.uploader ? `${livrable.uploader.prenom} ${livrable.uploader.nom?.toUpperCase()}` : "—"} · {new Date(livrable.uploaded_at).toLocaleDateString("fr-FR")} · {Math.round((livrable.taille || 0) / 1024)} Ko
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   GraduationCap, FolderKanban, MessageSquare, LayoutDashboard, Bell, LogOut,
   FileText, Star, TrendingUp, Award, CheckCircle, Clock,
@@ -108,7 +108,7 @@ export default function StudentNotes() {
             <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-sm font-bold">{user?.prenom?.[0] || "A"}</div>
               <div>
-                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom}</p>
+                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom?.toUpperCase()}</p>
                 <p className="text-gray-500 text-xs">{project?.titre || "Mon projet"}</p>
               </div>
             </div>
@@ -171,7 +171,7 @@ export default function StudentNotes() {
                   return (
                     <div key={ev.id ?? i} className="grid grid-cols-[2fr_1fr_1fr_1.5fr_2fr] gap-4 px-6 py-4 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors items-center last:border-0">
                       <span className="text-sm font-medium">
-                        {ev.evaluateur ? `${ev.evaluateur.prenom} ${ev.evaluateur.nom}` : `Évaluation #${i + 1}`}
+                        {ev.evaluateur ? `${ev.evaluateur.prenom} ${ev.evaluateur.nom?.toUpperCase()}` : `Évaluation #${i + 1}`}
                       </span>
                       <span className="text-gray-500 text-xs">{new Date(ev.created_at).toLocaleDateString("fr-FR")}</span>
                       <div className="flex items-baseline gap-1">

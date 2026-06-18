@@ -176,7 +176,7 @@ export default function StudentGroupSelect() {
         </div>
         <div className="border-t border-slate-800 pt-4 px-2 space-y-2">
           <div className="text-xs text-slate-500">
-            Connecté : <span className="font-semibold text-slate-400">{user?.prenom} {user?.nom}</span>
+            Connecté : <span className="font-semibold text-slate-400">{user?.prenom} {user?.nom?.toUpperCase()}</span>
           </div>
           <button
             onClick={handleLogout}
@@ -194,7 +194,7 @@ export default function StudentGroupSelect() {
           <p className="text-slate-400 text-sm mt-1">
             Projet : <span className="text-white font-medium">{project.titre}</span>
             {project.supervisor && (
-              <> · Encadrant : {project.supervisor.prenom} {project.supervisor.nom}</>
+              <> · Encadrant : {project.supervisor.prenom} {project.supervisor.nom?.toUpperCase()}</>
             )}
           </p>
         </header>
@@ -244,7 +244,7 @@ export default function StudentGroupSelect() {
                           <div className={`w-6 h-6 rounded-full ${AVATAR_COLORS[m.user_id % AVATAR_COLORS.length]} flex items-center justify-center text-[10px] font-bold flex-shrink-0`}>
                             {m.user.prenom[0]}{m.user.nom[0]}
                           </div>
-                          <span>{m.user.prenom} {m.user.nom}</span>
+                          <span>{m.user.prenom} {m.user.nom?.toUpperCase()}</span>
                           {m.role_in_project === "lead" && (
                             <Crown size={10} className="text-amber-400 ml-auto" />
                           )}

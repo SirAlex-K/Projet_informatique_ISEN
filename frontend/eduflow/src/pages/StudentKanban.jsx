@@ -29,7 +29,7 @@ function Avatar({ member, size = "sm", showTooltip = false }) {
       </div>
       {showTooltip && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1a2235] border border-white/10 text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap opacity-0 group-hover/avatar:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl">
-          {member.prenom} {member.nom}
+          {member.prenom} {member.nom?.toUpperCase()}
         </div>
       )}
     </div>
@@ -56,7 +56,7 @@ function AssignModal({ task, members, onClose, onSave }) {
             return (
               <button key={m.id} onClick={() => toggle(m.id)} className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border transition-all duration-150 text-left ${active ? "bg-blue-600/15 border-blue-500/40 text-white" : "bg-white/[0.02] border-white/[0.06] text-gray-400 hover:bg-white/[0.05] hover:text-white hover:border-white/10"}`}>
                 <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${getMemberColor(m.id)} flex items-center justify-center text-sm font-bold text-white flex-shrink-0`}>{getInitials(m)}</div>
-                <span className="text-sm font-medium">{m.prenom} {m.nom}</span>
+                <span className="text-sm font-medium">{m.prenom} {m.nom?.toUpperCase()}</span>
                 <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${active ? "bg-blue-500 border-blue-500" : "border-white/20"}`}>
                   {active && <Check size={11} className="text-white" strokeWidth={3} />}
                 </div>
@@ -294,7 +294,7 @@ export default function StudentKanban() {
             {members.map(m => (
               <div key={m.id} className="flex items-center gap-3 px-1">
                 <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${getMemberColor(m.id)} flex items-center justify-center text-xs font-bold text-white flex-shrink-0`}>{getInitials(m)}</div>
-                <p className="text-xs text-gray-300 truncate font-medium">{m.prenom} {m.nom}</p>
+                <p className="text-xs text-gray-300 truncate font-medium">{m.prenom} {m.nom?.toUpperCase()}</p>
               </div>
             ))}
             <button onClick={() => { logout(); navigate("/"); }} className="mt-2 flex items-center gap-3 bg-red-500/[0.07] border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm hover:bg-red-500/15 transition-all duration-200 w-full">
@@ -329,7 +329,7 @@ export default function StudentKanban() {
                 {isLeader && <Crown size={10} className="absolute -top-1 -right-1 text-yellow-400" />}
               </div>
               <div>
-                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom}</p>
+                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom?.toUpperCase()}</p>
                 <p className="text-gray-500 text-xs">{isLeader ? "Chef de groupe" : "Membre"}</p>
               </div>
             </div>

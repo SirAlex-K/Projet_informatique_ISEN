@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Crown, Users, CheckCircle, Clock, Send } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
@@ -147,7 +147,7 @@ export default function GroupDetails() {
                         {m.user?.prenom?.[0]}{m.user?.nom?.[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{m.user?.prenom} {m.user?.nom}</p>
+                        <p className="text-sm font-semibold truncate">{m.user?.prenom} {m.user?.nom?.toUpperCase()}</p>
                         <p className="text-xs text-gray-500 truncate">{m.user?.email}</p>
                       </div>
                       {m.role_in_project === "lead" && (
@@ -223,7 +223,7 @@ export default function GroupDetails() {
                         {msg.sender?.prenom?.[0]}{msg.sender?.nom?.[0]}
                       </div>
                       <div className={`max-w-[70%] rounded-2xl px-3.5 py-2.5 text-sm ${isMe ? "bg-purple-600 rounded-tr-sm" : "bg-white/[0.05] border border-white/[0.07] rounded-tl-sm"}`}>
-                        {!isMe && <p className="text-xs text-gray-400 mb-1">{msg.sender?.prenom} {msg.sender?.nom}</p>}
+                        {!isMe && <p className="text-xs text-gray-400 mb-1">{msg.sender?.prenom} {msg.sender?.nom?.toUpperCase()}</p>}
                         <p>{msg.contenu}</p>
                       </div>
                     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { X, Plus, BookOpen, Send, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -250,7 +250,7 @@ export default function SupervisorNewProject() {
                     className="w-4 h-4 accent-purple-500"
                   />
                   <div className="flex-1">
-                    <h3 className="text-sm font-semibold">{student.prenom} {student.nom}</h3>
+                    <h3 className="text-sm font-semibold">{student.prenom} {student.nom?.toUpperCase()}</h3>
                     <p className="text-gray-400 text-xs">{student.formation} · {student.classe} · Promo {student.promo}</p>
                   </div>
                   <span className="text-gray-600 text-xs">{student.email}</span>

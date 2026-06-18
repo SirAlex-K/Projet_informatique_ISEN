@@ -106,7 +106,7 @@ export default function SupervisorGroups() {
                 {user?.prenom?.[0]}
               </div>
               <div>
-                <p className="text-sm font-semibold">{user?.prenom} {user?.nom}</p>
+                <p className="text-sm font-semibold">{user?.prenom} {user?.nom?.toUpperCase()}</p>
                 <p className="text-gray-400 text-xs">Encadrant</p>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function SupervisorGroups() {
                                   {m.user?.prenom?.[0]}{m.user?.nom?.[0]}
                                 </div>
                                 <div className="flex-1">
-                                  <p className="text-sm font-semibold">{m.user?.prenom} {m.user?.nom}</p>
+                                  <p className="text-sm font-semibold">{m.user?.prenom} {m.user?.nom?.toUpperCase()}</p>
                                   <p className="text-xs text-gray-500">{m.user?.email}</p>
                                 </div>
                                 {m.role_in_project === "lead" && (

@@ -140,7 +140,7 @@ export default function StudentPage() {
                 {user?.prenom?.[0]}{user?.nom?.[0]}
               </div>
               <div>
-                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom}</p>
+                <p className="text-sm font-semibold leading-tight">{user?.prenom} {user?.nom?.toUpperCase()}</p>
                 <p className="text-gray-500 text-xs">
                   {group ? `Groupe ${group.numero}` : "Sans groupe"}
                   {isLeader && " · Leader"}
@@ -295,7 +295,7 @@ export default function StudentPage() {
                         {m.user.prenom[0]}{m.user.nom[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{m.user.prenom} {m.user.nom}</p>
+                        <p className="text-sm font-semibold truncate">{m.user.prenom} {m.user.nom?.toUpperCase()}</p>
                         <p className="text-gray-500 text-xs">
                           {m.role_in_project === "lead" ? "Chef de projet" : "Membre"}
                         </p>
