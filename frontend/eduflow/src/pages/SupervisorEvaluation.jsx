@@ -278,28 +278,64 @@ export default function SupervisorEvaluation() {
             {evaluations.length === 0 ? (
               <div className="py-12 text-center text-gray-600 text-sm">Aucune évaluation pour ce projet.</div>
             ) : (
-              <>
-                <div className="grid gap-4 px-6 py-3 border-b border-white/[0.04] text-[10px] font-bold text-gray-600 uppercase tracking-widest"
-                  style={{ gridTemplateColumns: "1fr 2fr 1fr 1fr 2fr" }}>
-                  <span>Groupe</span><span>Sujet</span><span>Note</span><span>Date</span><span>Commentaire</span>
-                </div>
-                {evaluations.map((ev, i) => (
-                  <div key={ev.id ?? i}
-                    className={`grid gap-4 px-6 py-4 items-center hover:bg-white/[0.02] transition ${i < evaluations.length - 1 ? "border-b border-white/[0.04]" : ""}`}
-                    style={{ gridTemplateColumns: "1fr 2fr 1fr 1fr 2fr" }}>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-7 h-7 rounded-full ${AVATAR_COLORS[(ev.group?.id || 0) % AVATAR_COLORS.length]} flex items-center justify-center text-xs font-bold flex-shrink-0`}>
-                        {ev.group?.numero ?? "?"}
+              <div className="divide-y divide-white/[0.04]">
+                {evaluations.map((ev, i) => {
+                  // Cherche le groupe dans l'état local (contient les membres) ou dans ev.group
+                  const groupId = ev.group?.id || ev.group_id;
+                  const fullGroup = groups.find(g => g.id === groupId) || null;
+                  const groupNumero = fullGroup?.numero ?? ev.group?.numero ?? null;
+                  const groupSujet = fullGroup?.sujet?.libelle ?? ev.group?.sujet?.libelle ?? null;
+                  const members = fullGroup?.members || [];
+
+                  return (
+                    <div key={ev.id ?? i} className="px-6 py-4 hover:bg-white/[0.02] transition">
+                      <div className="flex items-start gap-4">
+                        {/* Groupe + membres */}
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className={`w-9 h-9 rounded-full ${AVATAR_COLORS[(groupId || 0) % AVATAR_COLORS.length]} flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5`}>
+                            {groupNumero ?? "?"}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold">
+                              {groupNumero != null ? `Groupe ${groupNumero}` : "Groupe inconnu"}
+                            </p>
+                            {groupSujet && (
+                              <p className="text-xs text-purple-400 truncate mt-0.5">{groupSujet}</p>
+                            )}
+                            {members.length > 0 ? (
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {members.map(m => (
+                                  <span key={m.user_id} className="text-[11px] bg-white/[0.04] border border-white/[0.06] rounded-full px-2 py-0.5 text-gray-400">
+                                    {m.user?.prenom} {m.user?.nom?.toUpperCase()}
+                                    {m.role_in_project === "lead" && <span className="text-amber-400 ml-1">★</span>}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-700 mt-1 italic">Membres non disponibles</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Note */}
+                        <div className="text-right flex-shrink-0">
+                          <span className={`text-2xl font-extrabold ${getNoteColor(ev.note)}`}>{ev.note}</span>
+                          <span className="text-gray-600 text-xs">/20</span>
+                          <p className="text-gray-600 text-[11px] mt-0.5">
+                            {new Date(ev.evaluated_at).toLocaleDateString("fr-FR")}
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-sm font-semibold">Groupe {ev.group?.numero ?? "—"}</span>
+
+                      {ev.commentaire && (
+                        <p className="mt-2.5 ml-12 text-xs text-gray-500 italic bg-white/[0.02] rounded-lg px-3 py-2 border border-white/[0.04]">
+                          "{ev.commentaire}"
+                        </p>
+                      )}
                     </div>
-                    <span className="text-xs text-gray-500 truncate">{ev.group?.sujet?.libelle || "—"}</span>
-                    <span className={`text-base font-extrabold ${getNoteColor(ev.note)}`}>{ev.note}<span className="text-gray-600 text-xs font-normal">/20</span></span>
-                    <span className="text-xs text-gray-500">{new Date(ev.evaluated_at).toLocaleDateString("fr-FR")}</span>
-                    <span className="text-xs text-gray-500 italic truncate">{ev.commentaire || "—"}</span>
-                  </div>
-                ))}
-              </>
+                  );
+                })}
+              </div>
             )}
           </div>
 
