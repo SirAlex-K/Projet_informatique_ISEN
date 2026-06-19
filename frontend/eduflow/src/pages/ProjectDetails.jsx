@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Crown, Users, BookOpen, CheckCircle, Clock } from "lucide-react";
+import { Crown, Users, BookOpen, CheckCircle, Clock, Flag } from "lucide-react";
 import api from "../services/api";
 
 const AVATAR_COLORS = [
@@ -18,6 +18,13 @@ export default function ProjectDetails() {
   const [milestones, setMilestones] = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [sujetFilter, setSujetFilter] = useState("tous");
+
+  const handleValidateMilestone = async (msId) => {
+    try {
+      const res = await api.put(`/milestones/${msId}/reach`);
+      setMilestones(prev => prev.map(m => m.id === msId ? res.data : m));
+    } catch (e) { console.error(e); }
+  };
 
   useEffect(() => {
     if (!projectId) { setLoading(false); return; }
@@ -255,14 +262,19 @@ export default function ProjectDetails() {
       {/* Jalons */}
       {milestones.length > 0 && (
         <div className="mt-8 bg-[#0B1220] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-base font-bold mb-5 flex items-center gap-2">
-            <CheckCircle size={16} className="text-green-400" /> Jalons
-          </h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-bold flex items-center gap-2">
+              <Flag size={16} className="text-purple-400" /> Jalons
+            </h2>
+            <span className="text-xs text-gray-500">{nbAtteints}/{milestones.length} validé{nbAtteints > 1 ? "s" : ""}</span>
+          </div>
           <div className="space-y-3">
             {milestones.map((m, i) => {
               const isCurrent = m === currentMilestone;
               return (
-                <div key={m.id} className="flex items-center gap-4">
+                <div key={m.id} className={`flex items-center gap-4 rounded-xl border px-4 py-3 transition-all ${
+                  m.atteint ? "bg-green-500/[0.04] border-green-500/15" : "bg-white/[0.02] border-white/[0.06]"
+                }`}>
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 border-2 ${
                     m.atteint   ? "bg-green-500/20 border-green-500 text-green-400"
                     : isCurrent ? "bg-blue-500/20 border-blue-500 text-blue-400"
@@ -270,23 +282,30 @@ export default function ProjectDetails() {
                   }`}>
                     {m.atteint ? <CheckCircle size={14} /> : isCurrent ? <Clock size={14} /> : <span className="text-xs">{i + 1}</span>}
                   </div>
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium ${!m.atteint && !isCurrent ? "text-gray-600" : "text-white"}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${!m.atteint && !isCurrent ? "text-gray-500" : "text-white"}`}>
                       {m.titre}
                     </p>
+                    {m.atteint && m.atteint_le && (
+                      <p className="text-green-500/70 text-xs mt-0.5">
+                        Validé le {new Date(m.atteint_le).toLocaleDateString("fr-FR")}
+                      </p>
+                    )}
                   </div>
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-gray-600 flex-shrink-0">
                     {new Date(m.date_cible).toLocaleDateString("fr-FR")}
                   </span>
-                  {isCurrent && (
-                    <span className="text-xs bg-blue-500/15 text-blue-400 border border-blue-500/25 rounded-full px-2 py-0.5">
-                      En cours
+                  {m.atteint ? (
+                    <span className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 rounded-full px-2.5 py-1 flex-shrink-0 flex items-center gap-1">
+                      <CheckCircle size={10} /> Validé
                     </span>
-                  )}
-                  {m.atteint && (
-                    <span className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 rounded-full px-2 py-0.5">
-                      Validé
-                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleValidateMilestone(m.id)}
+                      className="flex-shrink-0 text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 text-green-400 rounded-full px-2.5 py-1 transition-all flex items-center gap-1"
+                    >
+                      <CheckCircle size={10} /> Valider
+                    </button>
                   )}
                 </div>
               );

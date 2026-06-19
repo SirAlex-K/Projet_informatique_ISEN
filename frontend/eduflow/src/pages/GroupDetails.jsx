@@ -1,6 +1,9 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Crown, Users, CheckCircle, Clock, Send } from "lucide-react";
+import {
+  Crown, Users, CheckCircle, Clock, Send,
+  Flag, FileText, Download, AlertCircle,
+} from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../services/api";
 
@@ -22,28 +25,36 @@ export default function GroupDetails() {
   const projectId = params.get("projectId");
   const groupId   = params.get("groupId");
 
-  const [group,    setGroup]    = useState(null);
-  const [project,  setProject]  = useState(null);
-  const [tasks,    setTasks]    = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [input,    setInput]    = useState("");
-  const [loading,  setLoading]  = useState(true);
+  const [group,      setGroup]      = useState(null);
+  const [project,    setProject]    = useState(null);
+  const [tasks,      setTasks]      = useState([]);
+  const [messages,   setMessages]   = useState([]);
+  const [milestones, setMilestones] = useState([]);
+  const [livrables,  setLivrables]  = useState([]);
+  const [input,      setInput]      = useState("");
+  const [loading,    setLoading]    = useState(true);
   const bottomRef = useRef(null);
 
   useEffect(() => {
     if (!projectId || !groupId) { setLoading(false); return; }
     const load = async () => {
       try {
-        const [pRes, gRes, tRes, msgRes] = await Promise.all([
+        const [pRes, gRes, tRes, msgRes, msRes, livRes] = await Promise.all([
           api.get(`/projects/${projectId}`),
           api.get(`/projects/${projectId}/groups/${groupId}`),
           api.get(`/projects/${projectId}/tasks`),
           api.get(`/projects/${projectId}/messages?group_id=${groupId}`),
+          api.get(`/projects/${projectId}/milestones`),
+          api.get(`/projects/${projectId}/deliverables`),
         ]);
         setProject(pRes.data);
         setGroup(gRes.data);
         setTasks(tRes.data);
         setMessages(msgRes.data);
+        setMilestones(msRes.data);
+        // Filtrer les livrables déposés par des membres de ce groupe
+        const groupMemberIds = new Set(gRes.data.members.map(m => m.user_id));
+        setLivrables(livRes.data.filter(l => groupMemberIds.has(l.uploaded_by)));
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     };
@@ -67,8 +78,23 @@ export default function GroupDetails() {
     } catch (e) { console.error(e); }
   };
 
+  const handleValidateMilestone = async (msId) => {
+    try {
+      const res = await api.put(`/milestones/${msId}/reach`);
+      setMilestones(prev => prev.map(m => m.id === msId ? res.data : m));
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDownload = (liv) => {
+    const a = document.createElement("a");
+    a.href = `http://localhost:3000/${liv.chemin_fichier}`;
+    a.download = liv.nom_fichier;
+    a.click();
+  };
+
   const done     = tasks.filter(t => t.statut === "done").length;
   const progress = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+  const nbAtteints = milestones.filter(m => m.atteint).length;
 
   if (loading) return (
     <div className="min-h-screen bg-[#020817] flex items-center justify-center">
@@ -124,14 +150,19 @@ export default function GroupDetails() {
                 <p className="text-gray-400 text-xs">Progression</p>
                 <p className="text-xl font-bold text-green-400">{progress}%</p>
               </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5">
+                <p className="text-gray-400 text-xs">Jalons</p>
+                <p className="text-xl font-bold text-purple-400">{nbAtteints}/{milestones.length}</p>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Colonne gauche */}
+          {/* ── Colonne gauche ── */}
           <div className="space-y-6">
+
             {/* Membres */}
             <div className="bg-[#0B1220] border border-white/[0.06] rounded-2xl p-5">
               <h2 className="text-sm font-bold flex items-center gap-2 mb-4">
@@ -181,10 +212,114 @@ export default function GroupDetails() {
                 </div>
               ))}
             </div>
+
+            {/* Jalons */}
+            <div className="bg-[#0B1220] border border-white/[0.06] rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold flex items-center gap-2">
+                  <Flag size={14} className="text-purple-400" /> Jalons
+                </h2>
+                <span className="text-xs text-gray-600">{nbAtteints}/{milestones.length} validé{nbAtteints > 1 ? "s" : ""}</span>
+              </div>
+
+              {milestones.length === 0 ? (
+                <p className="text-gray-600 text-xs italic">Aucun jalon défini</p>
+              ) : (
+                <div className="space-y-3">
+                  {milestones.map(m => (
+                    <div key={m.id} className={`rounded-xl border p-3 transition-all ${
+                      m.atteint
+                        ? "bg-green-500/[0.05] border-green-500/20"
+                        : "bg-white/[0.02] border-white/[0.06]"
+                    }`}>
+                      <div className="flex items-start gap-2.5">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          m.atteint ? "bg-green-500/20 text-green-400" : "bg-white/[0.05] text-gray-600"
+                        }`}>
+                          {m.atteint ? <CheckCircle size={13} /> : <Clock size={13} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-semibold leading-snug ${m.atteint ? "text-gray-300" : "text-white"}`}>
+                            {m.titre}
+                          </p>
+                          <p className="text-gray-600 text-[11px] mt-0.5">
+                            Échéance : {new Date(m.date_cible).toLocaleDateString("fr-FR")}
+                          </p>
+                          {m.atteint && m.atteint_le && (
+                            <p className="text-green-500/70 text-[11px] mt-0.5">
+                              Validé le {new Date(m.atteint_le).toLocaleDateString("fr-FR")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {!m.atteint && (
+                        <button
+                          onClick={() => handleValidateMilestone(m.id)}
+                          className="mt-2.5 w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 text-green-400 rounded-lg py-1.5 transition-all"
+                        >
+                          <CheckCircle size={11} /> Valider
+                        </button>
+                      )}
+                      {m.atteint && (
+                        <div className="mt-2 flex items-center gap-1.5 justify-center">
+                          <span className="text-[11px] text-green-400 font-semibold flex items-center gap-1">
+                            <CheckCircle size={11} /> Validé
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Livrables */}
+            <div className="bg-[#0B1220] border border-white/[0.06] rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold flex items-center gap-2">
+                  <FileText size={14} className="text-blue-400" /> Livrables
+                </h2>
+                <span className="text-xs text-gray-600">{livrables.length} fichier{livrables.length !== 1 ? "s" : ""}</span>
+              </div>
+
+              {livrables.length === 0 ? (
+                <div className="flex items-center gap-2 text-gray-600 text-xs italic py-2">
+                  <AlertCircle size={13} /> Aucun livrable déposé
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {livrables.map(liv => (
+                    <div key={liv.id} className="flex items-center gap-3 bg-white/[0.02] border border-white/[0.06] rounded-xl px-3 py-2.5 hover:border-blue-500/20 transition-all">
+                      <div className="w-7 h-7 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileText size={13} className="text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold truncate">{liv.nom_fichier}</p>
+                        <p className="text-gray-600 text-[11px]">
+                          {liv.uploader ? `${liv.uploader.prenom} ${liv.uploader.nom?.toUpperCase()}` : "—"} · {Math.round((liv.taille || 0) / 1024)} Ko
+                        </p>
+                        <p className="text-gray-700 text-[11px]">
+                          {new Date(liv.uploaded_at).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDownload(liv)}
+                        className="p-1.5 rounded-lg text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 transition-all flex-shrink-0"
+                        title="Télécharger"
+                      >
+                        <Download size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
 
-          {/* Colonne droite — Kanban + Chat */}
+          {/* ── Colonne droite — Kanban + Chat ── */}
           <div className="lg:col-span-2 space-y-6">
+
             {/* Kanban */}
             <div className="bg-[#0B1220] border border-white/[0.06] rounded-2xl p-5">
               <h2 className="text-sm font-bold mb-4">Kanban</h2>
@@ -249,6 +384,7 @@ export default function GroupDetails() {
                 </button>
               </div>
             </div>
+
           </div>
         </div>
 
