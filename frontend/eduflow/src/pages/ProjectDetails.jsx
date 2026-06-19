@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Crown, Users, BookOpen, CheckCircle, Clock, Flag } from "lucide-react";
+import { Crown, Users, BookOpen, CheckCircle, Clock, Flag, Plus, X } from "lucide-react";
 import api from "../services/api";
 
 const AVATAR_COLORS = [
@@ -17,12 +17,37 @@ export default function ProjectDetails() {
   const [groups,     setGroups]     = useState([]);
   const [milestones, setMilestones] = useState([]);
   const [loading,    setLoading]    = useState(true);
-  const [sujetFilter, setSujetFilter] = useState("tous");
+  const [sujetFilter,   setSujetFilter]   = useState("tous");
+  const [newTitre,      setNewTitre]      = useState("");
+  const [newDate,       setNewDate]       = useState("");
+  const [showForm,      setShowForm]      = useState(false);
+  const [savingMs,      setSavingMs]      = useState(false);
 
   const handleValidateMilestone = async (msId) => {
     try {
       const res = await api.put(`/milestones/${msId}/reach`);
       setMilestones(prev => prev.map(m => m.id === msId ? res.data : m));
+    } catch (e) { console.error(e); }
+  };
+
+  const handleCreateMilestone = async () => {
+    if (!newTitre.trim() || !newDate) return;
+    setSavingMs(true);
+    try {
+      const res = await api.post(`/projects/${projectId}/milestones`, {
+        titre: newTitre.trim(),
+        date_cible: newDate,
+      });
+      setMilestones(prev => [...prev, res.data]);
+      setNewTitre(""); setNewDate(""); setShowForm(false);
+    } catch (e) { console.error(e); }
+    finally { setSavingMs(false); }
+  };
+
+  const handleDeleteMilestone = async (msId) => {
+    try {
+      await api.delete(`/milestones/${msId}`);
+      setMilestones(prev => prev.filter(m => m.id !== msId));
     } catch (e) { console.error(e); }
   };
 
@@ -115,29 +140,132 @@ export default function ProjectDetails() {
         </div>
       </div>
 
-      {/* Barre de progression jalons */}
-      <div className="bg-[#0B1220] border border-white/10 rounded-2xl p-5 mb-8">
-        <div className="flex justify-between mb-3">
-          <div>
-            <h2 className="text-sm font-bold">Progression des jalons</h2>
-            {currentMilestone && (
-              <p className="text-gray-500 text-xs mt-0.5">
-                En cours : {currentMilestone.titre} · {new Date(currentMilestone.date_cible).toLocaleDateString("fr-FR")}
-              </p>
-            )}
+      {/* ── JALONS ── */}
+      <div className="bg-[#0B1220] border border-white/10 rounded-2xl p-6 mb-8">
+        {/* En-tête */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold flex items-center gap-2">
+            <Flag size={16} className="text-purple-400" /> Jalons
+            <span className="text-xs text-gray-600 font-normal">{nbAtteints}/{milestones.length} validé{nbAtteints > 1 ? "s" : ""}</span>
+          </h2>
+          <button
+            onClick={() => setShowForm(v => !v)}
+            className="flex items-center gap-1.5 text-xs font-semibold bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 text-purple-300 px-3 py-1.5 rounded-xl transition-all"
+          >
+            <Plus size={13} /> Ajouter un jalon
+          </button>
+        </div>
+
+        {/* Formulaire création */}
+        {showForm && (
+          <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4 mb-4 flex gap-3 items-end flex-wrap">
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-xs text-gray-500 mb-1.5">Titre du jalon</label>
+              <input
+                type="text"
+                placeholder="Ex : Rendu rapport final"
+                value={newTitre}
+                onChange={e => setNewTitre(e.target.value)}
+                className="w-full bg-[#020817] border border-white/[0.08] rounded-xl px-3 py-2 text-sm outline-none focus:border-purple-500/40 text-white placeholder-gray-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1.5">Date cible</label>
+              <input
+                type="date"
+                value={newDate}
+                onChange={e => setNewDate(e.target.value)}
+                className="bg-[#020817] border border-white/[0.08] rounded-xl px-3 py-2 text-sm outline-none focus:border-purple-500/40 text-white"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCreateMilestone}
+                disabled={!newTitre.trim() || !newDate || savingMs}
+                className="flex items-center gap-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white px-4 py-2 rounded-xl transition-all"
+              >
+                <Plus size={13} /> {savingMs ? "..." : "Créer"}
+              </button>
+              <button
+                onClick={() => { setShowForm(false); setNewTitre(""); setNewDate(""); }}
+                className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/[0.05] transition-all"
+              >
+                <X size={14} />
+              </button>
+            </div>
           </div>
-          <span className="text-purple-400 font-bold">{progression}%</span>
-        </div>
-        <div className="w-full bg-white/5 rounded-full h-2">
-          <div
-            className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all"
-            style={{ width: `${progression}%` }}
-          />
-        </div>
-        <div className="flex justify-between mt-1.5">
-          <span className="text-xs text-gray-600">{nbAtteints} validé{nbAtteints > 1 ? "s" : ""}</span>
-          <span className="text-xs text-gray-600">{milestones.length - nbAtteints} restant{milestones.length - nbAtteints > 1 ? "s" : ""}</span>
-        </div>
+        )}
+
+        {/* Liste jalons */}
+        {milestones.length === 0 ? (
+          <p className="text-gray-600 text-sm text-center py-4 italic">Aucun jalon défini — ajoutez-en un ci-dessus.</p>
+        ) : (
+          <div className="space-y-2 mb-5">
+            {milestones.map((m, i) => {
+              const isCurrent = m === currentMilestone;
+              return (
+                <div key={m.id} className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-all group ${
+                  m.atteint ? "bg-green-500/[0.04] border-green-500/15" : "bg-white/[0.02] border-white/[0.06]"
+                }`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 border-2 ${
+                    m.atteint   ? "bg-green-500/20 border-green-500 text-green-400"
+                    : isCurrent ? "bg-blue-500/20 border-blue-500 text-blue-400"
+                    :             "bg-white/[0.03] border-white/10 text-gray-600"
+                  }`}>
+                    {m.atteint ? <CheckCircle size={14} /> : isCurrent ? <Clock size={14} /> : <span className="text-xs font-bold">{i + 1}</span>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${!m.atteint && !isCurrent ? "text-gray-500" : "text-white"}`}>
+                      {m.titre}
+                    </p>
+                    {m.atteint && m.atteint_le ? (
+                      <p className="text-green-500/70 text-xs mt-0.5">Validé le {new Date(m.atteint_le).toLocaleDateString("fr-FR")}</p>
+                    ) : (
+                      <p className="text-gray-600 text-xs mt-0.5">Échéance : {new Date(m.date_cible).toLocaleDateString("fr-FR")}</p>
+                    )}
+                  </div>
+                  {m.atteint ? (
+                    <span className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 rounded-full px-2.5 py-1 flex items-center gap-1 flex-shrink-0">
+                      <CheckCircle size={10} /> Validé
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleValidateMilestone(m.id)}
+                      className="flex-shrink-0 text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 text-green-400 rounded-full px-2.5 py-1 transition-all flex items-center gap-1"
+                    >
+                      <CheckCircle size={10} /> Valider
+                    </button>
+                  )}
+                  {!m.atteint && (
+                    <button
+                      onClick={() => handleDeleteMilestone(m.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Barre de progression */}
+        {milestones.length > 0 && (
+          <div className="border-t border-white/[0.06] pt-4">
+            <div className="flex justify-between mb-2">
+              <span className="text-xs text-gray-500">Progression des jalons</span>
+              <span className="text-xs font-bold text-purple-400">{progression}%</span>
+            </div>
+            <div className="w-full bg-white/5 rounded-full h-2">
+              <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-500" style={{ width: `${progression}%` }} />
+            </div>
+            <div className="flex justify-between mt-1.5">
+              <span className="text-xs text-gray-600">{nbAtteints} validé{nbAtteints > 1 ? "s" : ""}</span>
+              <span className="text-xs text-gray-600">{milestones.length - nbAtteints} restant{milestones.length - nbAtteints > 1 ? "s" : ""}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Groupes */}
@@ -259,60 +387,6 @@ export default function ProjectDetails() {
         </div>
       )}
 
-      {/* Jalons */}
-      {milestones.length > 0 && (
-        <div className="mt-8 bg-[#0B1220] border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-bold flex items-center gap-2">
-              <Flag size={16} className="text-purple-400" /> Jalons
-            </h2>
-            <span className="text-xs text-gray-500">{nbAtteints}/{milestones.length} validé{nbAtteints > 1 ? "s" : ""}</span>
-          </div>
-          <div className="space-y-3">
-            {milestones.map((m, i) => {
-              const isCurrent = m === currentMilestone;
-              return (
-                <div key={m.id} className={`flex items-center gap-4 rounded-xl border px-4 py-3 transition-all ${
-                  m.atteint ? "bg-green-500/[0.04] border-green-500/15" : "bg-white/[0.02] border-white/[0.06]"
-                }`}>
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 border-2 ${
-                    m.atteint   ? "bg-green-500/20 border-green-500 text-green-400"
-                    : isCurrent ? "bg-blue-500/20 border-blue-500 text-blue-400"
-                    : "bg-white/[0.03] border-white/10 text-gray-600"
-                  }`}>
-                    {m.atteint ? <CheckCircle size={14} /> : isCurrent ? <Clock size={14} /> : <span className="text-xs">{i + 1}</span>}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${!m.atteint && !isCurrent ? "text-gray-500" : "text-white"}`}>
-                      {m.titre}
-                    </p>
-                    {m.atteint && m.atteint_le && (
-                      <p className="text-green-500/70 text-xs mt-0.5">
-                        Validé le {new Date(m.atteint_le).toLocaleDateString("fr-FR")}
-                      </p>
-                    )}
-                  </div>
-                  <span className="text-xs text-gray-600 flex-shrink-0">
-                    {new Date(m.date_cible).toLocaleDateString("fr-FR")}
-                  </span>
-                  {m.atteint ? (
-                    <span className="text-xs bg-green-500/10 text-green-400 border border-green-500/20 rounded-full px-2.5 py-1 flex-shrink-0 flex items-center gap-1">
-                      <CheckCircle size={10} /> Validé
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleValidateMilestone(m.id)}
-                      className="flex-shrink-0 text-xs bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 hover:border-green-500/40 text-green-400 rounded-full px-2.5 py-1 transition-all flex items-center gap-1"
-                    >
-                      <CheckCircle size={10} /> Valider
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
     </div>
     </div>
