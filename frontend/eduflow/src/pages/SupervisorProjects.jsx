@@ -8,6 +8,7 @@ import {
   LogOut,
   ClipboardCheck,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -20,6 +21,16 @@ export default function SupervisorProjects() {
   const [loading, setLoading] = useState(true);
 
   const handleLogout = () => { logout(); navigate("/"); };
+
+  const handleDelete = async (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm("Supprimer ce projet ? Cette action est irréversible.")) return;
+    try {
+      await api.delete(`/projects/${id}`);
+      setProjects(prev => prev.filter(p => p.id !== id));
+    } catch (err) { console.error(err); }
+  };
 
   useEffect(() => {
     api.get("/projects")
@@ -126,25 +137,34 @@ export default function SupervisorProjects() {
             )}
 
             {projects.map(project => (
-              <Link key={project.id} to={`/supervisor/project-details?id=${project.id}`}>
-                <div className="bg-[#0B1220] border border-white/10 rounded-2xl overflow-hidden hover:border-purple-500 transition">
-                  <div className="p-5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                        <FolderKanban size={24} className="text-purple-400" />
+              <div key={project.id} className="relative group">
+                <Link to={`/supervisor/project-details?id=${project.id}`}>
+                  <div className="bg-[#0B1220] border border-white/10 rounded-2xl overflow-hidden hover:border-purple-500 transition">
+                    <div className="p-5 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                          <FolderKanban size={24} className="text-purple-400" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold mb-1">{project.titre}</h2>
+                          <p className="text-gray-400 text-sm">
+                            {project.members?.length || 0} membre{project.members?.length !== 1 ? "s" : ""} assigné{project.members?.length !== 1 ? "s" : ""}
+                            {project.statut ? ` • ${project.statut}` : ""}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-xl font-bold mb-1">{project.titre}</h2>
-                        <p className="text-gray-400 text-sm">
-                          {project.members?.length || 0} membre{project.members?.length !== 1 ? "s" : ""} assigné{project.members?.length !== 1 ? "s" : ""}
-                          {project.statut ? ` • ${project.statut}` : ""}
-                        </p>
-                      </div>
+                      <div className="text-gray-500 text-2xl">→</div>
                     </div>
-                    <div className="text-gray-500 text-2xl">→</div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+                <button
+                  onClick={(e) => handleDelete(e, project.id)}
+                  className="absolute top-3 right-3 p-2 rounded-xl bg-[#0B1220] border border-white/[0.06] text-gray-600 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 opacity-0 group-hover:opacity-100 transition-all"
+                  title="Supprimer le projet"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
             ))}
           </div>
 
