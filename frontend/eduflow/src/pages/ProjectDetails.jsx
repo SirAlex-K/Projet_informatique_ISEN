@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Crown, Users, BookOpen, CheckCircle, Clock, Flag, Plus, X } from "lucide-react";
+import { Crown, Users, BookOpen, CheckCircle, Clock, Flag, Plus, X, ChevronDown } from "lucide-react";
 import api from "../services/api";
 
 const AVATAR_COLORS = [
@@ -22,7 +22,8 @@ export default function ProjectDetails() {
   const [newTitre,      setNewTitre]      = useState("");
   const [newDate,       setNewDate]       = useState("");
   const [showForm,      setShowForm]      = useState(false);
-  const [savingMs,      setSavingMs]      = useState(false);
+  const [savingMs,         setSavingMs]         = useState(false);
+  const [milestonesExpanded, setMilestonesExpanded] = useState(false);
 
   const handleValidateMilestone = async (msId) => {
     try {
@@ -206,7 +207,7 @@ export default function ProjectDetails() {
           <p className="text-gray-600 text-sm text-center py-4 italic">Aucun jalon défini — ajoutez-en un ci-dessus.</p>
         ) : (
           <div className="space-y-2 mb-5">
-            {milestones.map((m, i) => {
+            {(milestonesExpanded ? milestones : milestones.slice(0, 2)).map((m, i) => {
               const isCurrent = m === currentMilestone;
               return (
                 <div key={m.id} className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-all group ${
@@ -253,6 +254,15 @@ export default function ProjectDetails() {
                 </div>
               );
             })}
+            {milestones.length > 2 && (
+              <button
+                onClick={() => setMilestonesExpanded(v => !v)}
+                className="w-full text-xs font-semibold text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all"
+              >
+                <ChevronDown size={13} className={`transition-transform duration-200 ${milestonesExpanded ? "rotate-180" : ""}`} />
+                {milestonesExpanded ? "Réduire" : `Voir ${milestones.length - 2} jalon${milestones.length - 2 > 1 ? "s" : ""} de plus`}
+              </button>
+            )}
           </div>
         )}
 
@@ -315,7 +325,7 @@ export default function ProjectDetails() {
         </div>
       ) : (
         <>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {displayedGroups.map(group => {
             const memberCount = group.members.length;
             const fillPct     = Math.round((memberCount / group.capacite_max) * 100);
@@ -324,20 +334,20 @@ export default function ProjectDetails() {
             return (
               <div
                 key={group.id}
-                className="bg-gradient-to-br from-[#0B1220] to-[#111827] border border-white/10 rounded-2xl p-5 hover:border-purple-500/40 transition-all duration-200"
+                className="bg-gradient-to-br from-[#0B1220] to-[#111827] border border-white/10 rounded-xl p-4 hover:border-purple-500/40 transition-all duration-200 flex flex-col"
               >
                 {/* En-tête */}
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start mb-2.5">
                   <div>
-                    <h3 className="text-lg font-bold">Groupe {group.numero}</h3>
+                    <h3 className="text-sm font-bold">Groupe {group.numero}</h3>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {memberCount}/{group.capacite_max} membres
                       {isFull && <span className="text-orange-400 ml-1">· Complet</span>}
                     </p>
                   </div>
                   {group.sujet ? (
-                    <div className="flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-xl max-w-[180px]">
-                      <BookOpen size={12} className="text-purple-400 flex-shrink-0" />
+                    <div className="flex items-center gap-1 bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-lg max-w-[140px]">
+                      <BookOpen size={10} className="text-purple-400 flex-shrink-0" />
                       <span className="text-xs text-purple-300 truncate">{group.sujet.libelle}</span>
                     </div>
                   ) : (
@@ -346,7 +356,7 @@ export default function ProjectDetails() {
                 </div>
 
                 {/* Barre de remplissage */}
-                <div className="w-full bg-white/5 rounded-full h-1.5 mb-4">
+                <div className="w-full bg-white/5 rounded-full h-1 mb-3">
                   <div
                     className={`h-full rounded-full transition-all ${
                       isFull ? "bg-orange-500" : "bg-gradient-to-r from-purple-500 to-blue-500"
@@ -356,34 +366,35 @@ export default function ProjectDetails() {
                 </div>
 
                 {/* Membres */}
+                <div className="flex-1">
                 {memberCount === 0 ? (
-                  <p className="text-xs text-gray-600 italic text-center py-4">Aucun membre</p>
+                  <p className="text-xs text-gray-600 italic text-center py-3">Aucun membre</p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {group.members.map(m => (
-                      <div key={m.user_id} className="flex items-center gap-3 bg-white/[0.02] rounded-xl px-3 py-2.5">
-                        <div className={`w-8 h-8 rounded-full ${AVATAR_COLORS[m.user_id % AVATAR_COLORS.length]} flex items-center justify-center text-xs font-bold flex-shrink-0`}>
+                      <div key={m.user_id} className="flex items-center gap-2 bg-white/[0.02] rounded-lg px-2.5 py-2">
+                        <div className={`w-6 h-6 rounded-full ${AVATAR_COLORS[m.user_id % AVATAR_COLORS.length]} flex items-center justify-center text-[10px] font-bold flex-shrink-0`}>
                           {m.user?.prenom?.[0]}{m.user?.nom?.[0]}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold truncate">{m.user?.prenom} {m.user?.nom?.toUpperCase()}</p>
-                          <p className="text-xs text-gray-500 truncate">{m.user?.email}</p>
+                          <p className="text-xs font-semibold truncate">{m.user?.prenom} {m.user?.nom?.toUpperCase()}</p>
                         </div>
                         {m.role_in_project === "lead" && (
-                          <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
-                            <Crown size={10} className="text-amber-400" />
-                            <span className="text-xs text-amber-300">Leader</span>
+                          <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                            <Crown size={9} className="text-amber-400" />
+                            <span className="text-[10px] text-amber-300">Leader</span>
                           </div>
                         )}
                       </div>
                     ))}
                   </div>
                 )}
+                </div>
 
-                <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                <div className="mt-3 pt-3 border-t border-white/[0.06]">
                   <Link
                     to={`/supervisor/group-details?groupId=${group.id}&projectId=${projectId}`}
-                    className="flex items-center justify-center gap-2 w-full bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 hover:border-purple-500/40 text-purple-300 text-xs font-semibold py-2.5 rounded-xl transition-all duration-200"
+                    className="flex items-center justify-center gap-2 w-full bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 hover:border-purple-500/40 text-purple-300 text-xs font-semibold py-2 rounded-lg transition-all duration-200"
                   >
                     Consulter →
                   </Link>

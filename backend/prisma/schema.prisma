@@ -160,7 +160,7 @@ model ProjectGroup {
   project_id   Int
   numero       Int
   capacite_max Int             @default(5)
-  sujet_id     Int?            @unique
+  sujet_id     Int?
   created_at   DateTime        @default(now())
 
   project      Project         @relation(fields: [project_id], references: [id], onDelete: Cascade)
@@ -184,7 +184,7 @@ model ProjectSubject {
   libelle    String
 
   project    Project       @relation(fields: [project_id], references: [id], onDelete: Cascade)
-  chosen_by  ProjectGroup?
+  chosen_by  ProjectGroup[]
 
   @@map("project_subjects")
 }

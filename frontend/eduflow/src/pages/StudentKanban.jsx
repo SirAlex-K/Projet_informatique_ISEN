@@ -38,7 +38,9 @@ function Avatar({ member, size = "sm", showTooltip = false }) {
 
 function AssignModal({ task, members, onClose, onSave }) {
   const [selected, setSelected] = useState(task.assigned_to ? new Set([task.assigned_to]) : new Set());
-  const toggle = (id) => { setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
+  const toggle = (id) => {
+    setSelected(prev => prev.has(id) ? new Set() : new Set([id]));
+  };
   const selectedId = [...selected][0] || null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => e.target === e.currentTarget && onClose()}>

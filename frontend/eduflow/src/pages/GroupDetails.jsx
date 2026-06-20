@@ -2,10 +2,32 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Crown, Users, CheckCircle, Clock, Send,
-  Flag, FileText, Download, AlertCircle,
+  Flag, FileText, Download, AlertCircle, ChevronDown,
+  Paperclip, Image, X, Pencil, Trash2, Check,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../services/api";
+
+const FILE_BASE = "http://localhost:3000/";
+
+function FileAttachment({ msg, isMe }) {
+  if (!msg.fichier_url) return null;
+  const url = FILE_BASE + msg.fichier_url;
+  if (msg.fichier_type === "image") {
+    return (
+      <a href={url} target="_blank" rel="noreferrer" className="block mt-2">
+        <img src={url} alt={msg.fichier_nom} className="max-w-[220px] max-h-[180px] rounded-xl object-cover border border-white/10" />
+      </a>
+    );
+  }
+  return (
+    <a href={url} target="_blank" rel="noreferrer"
+      className={`mt-2 flex items-center gap-2 rounded-xl px-3 py-2 text-xs hover:opacity-80 transition w-fit border ${isMe ? "bg-purple-700/50 border-purple-400/20 text-purple-100" : "bg-white/[0.06] border-white/10 text-gray-300"}`}>
+      <FileText size={14} className="text-red-400 flex-shrink-0" />
+      <span className="truncate max-w-[160px]">{msg.fichier_nom}</span>
+    </a>
+  );
+}
 
 const AVATAR_COLORS = [
   "bg-blue-600", "bg-purple-600", "bg-emerald-600",
@@ -32,8 +54,13 @@ export default function GroupDetails() {
   const [milestones, setMilestones] = useState([]);
   const [livrables,  setLivrables]  = useState([]);
   const [input,      setInput]      = useState("");
+  const [pendingFile, setPendingFile] = useState(null);
+  const [editingId,  setEditingId]  = useState(null);
+  const [editText,   setEditText]   = useState("");
+  const [milestonesExpanded, setMilestonesExpanded] = useState(false);
   const [loading,    setLoading]    = useState(true);
-  const bottomRef = useRef(null);
+  const bottomRef  = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!projectId || !groupId) { setLoading(false); return; }
@@ -70,11 +97,34 @@ export default function GroupDetails() {
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text) return;
+    if (!text && !pendingFile) return;
     try {
-      const res = await api.post(`/projects/${projectId}/messages`, { contenu: text, group_id: parseInt(groupId) });
+      const formData = new FormData();
+      if (text) formData.append("contenu", text);
+      formData.append("group_id", String(groupId));
+      if (pendingFile) formData.append("fichier", pendingFile);
+      const res = await api.post(`/projects/${projectId}/messages`, formData);
       setMessages(prev => [...prev, res.data]);
       setInput("");
+      setPendingFile(null);
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteMessage = async (msgId) => {
+    if (!window.confirm("Supprimer ce message ?")) return;
+    try {
+      await api.delete(`/messages/${msgId}`);
+      setMessages(prev => prev.filter(m => m.id !== msgId));
+    } catch (e) { console.error(e); }
+  };
+
+  const handleEditSave = async (msgId) => {
+    const text = editText.trim();
+    if (!text) return;
+    try {
+      const res = await api.put(`/messages/${msgId}`, { contenu: text });
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, contenu: res.data.contenu } : m));
+      setEditingId(null);
     } catch (e) { console.error(e); }
   };
 
@@ -226,7 +276,7 @@ export default function GroupDetails() {
                 <p className="text-gray-600 text-xs italic">Aucun jalon défini</p>
               ) : (
                 <div className="space-y-3">
-                  {milestones.map(m => (
+                  {(milestonesExpanded ? milestones : milestones.slice(0, 2)).map(m => (
                     <div key={m.id} className={`rounded-xl border p-3 transition-all ${
                       m.atteint
                         ? "bg-green-500/[0.05] border-green-500/20"
@@ -269,6 +319,15 @@ export default function GroupDetails() {
                       )}
                     </div>
                   ))}
+                  {milestones.length > 2 && (
+                    <button
+                      onClick={() => setMilestonesExpanded(v => !v)}
+                      className="w-full text-xs font-semibold text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/40 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all"
+                    >
+                      <ChevronDown size={12} className={`transition-transform duration-200 ${milestonesExpanded ? "rotate-180" : ""}`} />
+                      {milestonesExpanded ? "Réduire" : `Voir ${milestones.length - 2} de plus`}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -334,7 +393,17 @@ export default function GroupDetails() {
                     <div className="space-y-2">
                       {tasks.filter(t => t.statut === col.id).map(task => (
                         <div key={task.id} className="bg-[#0d1117] border border-white/[0.06] rounded-lg p-2.5 text-xs text-gray-300">
-                          {task.titre}
+                          <p className="font-medium leading-snug mb-1.5">{task.titre}</p>
+                          {task.assignee ? (
+                            <div className="flex items-center gap-1.5">
+                              <div className={`w-4 h-4 rounded-full ${AVATAR_COLORS[task.assignee.id % AVATAR_COLORS.length]} flex items-center justify-center text-[9px] font-bold flex-shrink-0`}>
+                                {task.assignee.prenom[0]}{task.assignee.nom[0]}
+                              </div>
+                              <span className="text-gray-500 truncate">{task.assignee.prenom} {task.assignee.nom?.toUpperCase()}</span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-700 italic">Non assigné</span>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -350,38 +419,105 @@ export default function GroupDetails() {
                 {messages.length === 0 && (
                   <p className="text-gray-600 text-xs text-center py-8">Aucun message — écrivez le premier</p>
                 )}
-                {messages.map(msg => {
+                {messages.map((msg, idx) => {
                   const isMe = msg.sender_id === user?.id;
+                  const prevMsg = messages[idx - 1];
+                  const showAuthor = !prevMsg || prevMsg.sender_id !== msg.sender_id;
+                  const isEditing = editingId === msg.id;
                   return (
-                    <div key={msg.id} className={`flex gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
-                      <div className={`w-7 h-7 rounded-full ${AVATAR_COLORS[(msg.sender_id || 0) % AVATAR_COLORS.length]} flex items-center justify-center text-[10px] font-bold flex-shrink-0`}>
-                        {msg.sender?.prenom?.[0]}{msg.sender?.nom?.[0]}
-                      </div>
-                      <div className={`max-w-[70%] rounded-2xl px-3.5 py-2.5 text-sm ${isMe ? "bg-purple-600 rounded-tr-sm" : "bg-white/[0.05] border border-white/[0.07] rounded-tl-sm"}`}>
-                        {!isMe && <p className="text-xs text-gray-400 mb-1">{msg.sender?.prenom} {msg.sender?.nom?.toUpperCase()}</p>}
-                        <p>{msg.contenu}</p>
+                    <div key={msg.id} className={`flex gap-2 group ${isMe ? "flex-row-reverse" : ""} ${!showAuthor ? (isMe ? "pr-9" : "pl-9") : ""}`}>
+                      {showAuthor && (
+                        <div className={`w-7 h-7 rounded-full ${AVATAR_COLORS[(msg.sender_id || 0) % AVATAR_COLORS.length]} flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5`}>
+                          {msg.sender?.prenom?.[0]}{msg.sender?.nom?.[0]}
+                        </div>
+                      )}
+                      <div className={`max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                        {showAuthor && (
+                          <div className="flex items-center gap-2 mb-1">
+                            {!isMe && <span className="text-xs text-gray-400">{msg.sender?.prenom} {msg.sender?.nom?.toUpperCase()}</span>}
+                            <span className="text-gray-700 text-[10px]">{new Date(msg.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
+                            {isMe && !isEditing && (
+                              <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {msg.contenu && (
+                                  <button onClick={() => { setEditingId(msg.id); setEditText(msg.contenu); }}
+                                    className="p-1 rounded-lg text-gray-600 hover:text-purple-400 hover:bg-purple-500/10 transition" title="Modifier">
+                                    <Pencil size={11} />
+                                  </button>
+                                )}
+                                <button onClick={() => handleDeleteMessage(msg.id)}
+                                  className="p-1 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition" title="Supprimer">
+                                  <Trash2 size={11} />
+                                </button>
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {isEditing ? (
+                          <div className="flex flex-col gap-2 w-full">
+                            <textarea value={editText} onChange={e => setEditText(e.target.value)}
+                              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEditSave(msg.id); } if (e.key === "Escape") setEditingId(null); }}
+                              rows={2} autoFocus className="w-full bg-[#0d1117] border border-purple-500/40 rounded-xl px-3 py-2 text-sm outline-none resize-none" />
+                            <div className="flex gap-2 justify-end">
+                              <button onClick={() => setEditingId(null)} className="flex items-center gap-1 text-xs text-gray-500 hover:text-white px-2 py-1 rounded-lg hover:bg-white/[0.04] transition">
+                                <X size={11} /> Annuler
+                              </button>
+                              <button onClick={() => handleEditSave(msg.id)} className="flex items-center gap-1 text-xs text-purple-300 bg-purple-500/20 hover:bg-purple-500/30 px-2 py-1 rounded-lg transition">
+                                <Check size={11} /> Sauvegarder
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className={`rounded-2xl px-3.5 py-2.5 text-sm ${isMe ? "bg-purple-600 rounded-tr-sm" : "bg-white/[0.05] border border-white/[0.07] rounded-tl-sm"}`}>
+                            {msg.contenu && <p>{msg.contenu}</p>}
+                            <FileAttachment msg={msg} isMe={isMe} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })}
                 <div ref={bottomRef} />
               </div>
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  placeholder="Écrire au groupe..."
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleSend()}
-                  className="flex-1 bg-[#020817] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-purple-500/40"
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={!input.trim()}
-                  className="w-10 h-10 rounded-xl bg-purple-600 hover:bg-purple-500 flex items-center justify-center transition disabled:opacity-30"
-                >
-                  <Send size={15} />
-                </button>
+              <div className="flex flex-col gap-2">
+                {pendingFile && (
+                  <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-xs text-gray-300">
+                    {pendingFile.type.startsWith("image/") ? <Image size={13} className="text-purple-400" /> : <FileText size={13} className="text-red-400" />}
+                    <span className="flex-1 truncate">{pendingFile.name}</span>
+                    <button onClick={() => setPendingFile(null)} className="text-gray-600 hover:text-white transition"><X size={13} /></button>
+                  </div>
+                )}
+                <div className="flex items-center gap-3 bg-[#020817] border border-white/[0.08] rounded-xl px-4 py-2.5 focus-within:border-purple-500/40 transition-all">
+                  <input
+                    type="text"
+                    placeholder="Écrire au groupe..."
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && !pendingFile && handleSend()}
+                    className="flex-1 bg-transparent text-sm outline-none placeholder-gray-700"
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    className="hidden"
+                    onChange={e => { setPendingFile(e.target.files?.[0] || null); e.target.value = ""; }}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`p-1.5 rounded-lg transition ${pendingFile ? "text-purple-400 bg-purple-500/10" : "text-gray-600 hover:text-white hover:bg-white/[0.05]"}`}
+                    title="Joindre une image ou un PDF"
+                  >
+                    <Paperclip size={15} />
+                  </button>
+                  <button
+                    onClick={handleSend}
+                    disabled={!input.trim() && !pendingFile}
+                    className="w-8 h-8 rounded-lg bg-purple-600 hover:bg-purple-500 flex items-center justify-center transition disabled:opacity-30 flex-shrink-0"
+                  >
+                    <Send size={14} />
+                  </button>
+                </div>
+                <p className="text-center text-gray-700 text-xs">Entrée pour envoyer · <span className="text-gray-600">PDF, PNG, JPG acceptés</span></p>
               </div>
             </div>
 
