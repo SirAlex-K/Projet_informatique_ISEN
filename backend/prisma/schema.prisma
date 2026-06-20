@@ -73,6 +73,7 @@ enum NotificationType {
   comment_added       // Nouveau commentaire
   milestone_reached   // Jalon atteint
   project_updated     // Projet mis à jour
+  new_message         // Nouveau message
 }
 
 // ============================================
@@ -98,7 +99,7 @@ model User {
   role          UserRole  @default(student)
   classe        String?   @db.VarChar(50)
   formation     String?   @db.VarChar(10)
-  promo         String?   @db.VarChar(4)
+  promo         String?   @db.VarChar(10)
   avatar_url    String?
   created_at    DateTime  @default(now())
 
@@ -166,6 +167,7 @@ model ProjectGroup {
   sujet        ProjectSubject? @relation(fields: [sujet_id], references: [id], onDelete: SetNull)
   members      TeamMember[]
   messages     Message[]
+  evaluations  Evaluation[]
 
   @@unique([project_id, numero])
   @@map("project_groups")
@@ -268,13 +270,16 @@ model Deliverable {
 // Chat par projet — un canal par projet
 // ============================================
 model Message {
-  id         Int           @id @default(autoincrement())
-  project_id Int
-  group_id   Int?
-  sender_id  Int
-  contenu    String
-  is_read    Boolean       @default(false)
-  created_at DateTime      @default(now())
+  id           Int           @id @default(autoincrement())
+  project_id   Int
+  group_id     Int?
+  sender_id    Int
+  contenu      String?
+  fichier_url  String?
+  fichier_nom  String?
+  fichier_type String?
+  is_read      Boolean       @default(false)
+  created_at   DateTime      @default(now())
 
   project    Project       @relation(fields: [project_id], references: [id], onDelete: Cascade)
   group      ProjectGroup? @relation(fields: [group_id], references: [id], onDelete: Cascade)
@@ -393,16 +398,18 @@ model DeliverableReview {
 // Notes de soutenance par l'encadrant (CDC §7)
 // ============================================
 model Evaluation {
-  id           Int      @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   project_id   Int
+  group_id     Int?
   evaluator_id Int
   note         Float
   commentaire  String?
-  evaluated_at DateTime @default(now())
+  evaluated_at DateTime      @default(now())
 
   // Relations
-  project      Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
-  evaluator    User     @relation("EvaluatorEvaluations", fields: [evaluator_id], references: [id], onDelete: Cascade)
+  project      Project       @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  group        ProjectGroup? @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  evaluator    User          @relation("EvaluatorEvaluations", fields: [evaluator_id], references: [id], onDelete: Cascade)
 
   @@map("evaluations")
 }

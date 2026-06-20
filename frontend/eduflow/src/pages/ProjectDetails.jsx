@@ -18,6 +18,7 @@ export default function ProjectDetails() {
   const [milestones, setMilestones] = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [sujetFilter,   setSujetFilter]   = useState("tous");
+  const [showAll,       setShowAll]       = useState(false);
   const [newTitre,      setNewTitre]      = useState("");
   const [newDate,       setNewDate]       = useState("");
   const [showForm,      setShowForm]      = useState(false);
@@ -90,6 +91,10 @@ export default function ProjectDetails() {
     if (sujetFilter === "sans") return !g.sujet_id;
     return g.sujet?.id === parseInt(sujetFilter);
   });
+
+  const INITIAL_LIMIT  = 10;
+  const displayedGroups = showAll ? filteredGroups : filteredGroups.slice(0, INITIAL_LIMIT);
+  const hiddenCount     = filteredGroups.length - INITIAL_LIMIT;
 
   return (
     <div className="min-h-screen bg-[#020817] text-white">
@@ -287,7 +292,7 @@ export default function ProjectDetails() {
           ].map(opt => (
             <button
               key={opt.value}
-              onClick={() => setSujetFilter(opt.value)}
+              onClick={() => { setSujetFilter(opt.value); setShowAll(false); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
                 sujetFilter === opt.value
                   ? "bg-purple-600 text-white"
@@ -309,8 +314,9 @@ export default function ProjectDetails() {
           Aucun groupe correspond à ce filtre.
         </div>
       ) : (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {filteredGroups.map(group => {
+          {displayedGroups.map(group => {
             const memberCount = group.members.length;
             const fillPct     = Math.round((memberCount / group.capacite_max) * 100);
             const isFull      = memberCount >= group.capacite_max;
@@ -386,6 +392,28 @@ export default function ProjectDetails() {
             );
           })}
         </div>
+
+        {/* Voir plus / Voir moins */}
+        {filteredGroups.length > INITIAL_LIMIT && (
+          <div className="mt-5 text-center">
+            {showAll ? (
+              <button
+                onClick={() => setShowAll(false)}
+                className="px-6 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/[0.04] text-sm font-medium transition-all"
+              >
+                ↑ Réduire la liste
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAll(true)}
+                className="px-6 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 text-purple-300 text-sm font-semibold transition-all"
+              >
+                Voir plus · {hiddenCount} groupe{hiddenCount > 1 ? "s" : ""} masqué{hiddenCount > 1 ? "s" : ""}
+              </button>
+            )}
+          </div>
+        )}
+        </>
       )}
 
 

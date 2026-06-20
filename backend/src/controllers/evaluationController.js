@@ -61,6 +61,33 @@ const createEvaluation = async (req, res) => {
   }
 };
 
+// PUT /api/evaluations/:id — supervisor only
+const updateEvaluation = async (req, res) => {
+  try {
+    const ev = await prisma.evaluation.findUnique({ where: { id: parseInt(req.params.id) } });
+    if (!ev) return res.status(404).json({ message: 'Évaluation introuvable' });
+    if (ev.evaluator_id !== req.user.id)
+      return res.status(403).json({ message: 'Non autorisé' });
+    const { note, commentaire } = req.body;
+    if (note !== undefined && (parseFloat(note) < 0 || parseFloat(note) > 20))
+      return res.status(400).json({ message: 'La note doit être entre 0 et 20' });
+    const updated = await prisma.evaluation.update({
+      where: { id: parseInt(req.params.id) },
+      data: {
+        ...(note !== undefined ? { note: parseFloat(note) } : {}),
+        ...(commentaire !== undefined ? { commentaire } : {}),
+      },
+      include: {
+        evaluator: { select: { id: true, nom: true, prenom: true } },
+        group: { select: { id: true, numero: true, sujet: { select: { libelle: true } } } }
+      }
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: 'Erreur serveur', error: err.message });
+  }
+};
+
 // DELETE /api/evaluations/:id — supervisor only
 const deleteEvaluation = async (req, res) => {
   try {
@@ -75,4 +102,4 @@ const deleteEvaluation = async (req, res) => {
   }
 };
 
-module.exports = { getEvaluations, createEvaluation, deleteEvaluation };
+module.exports = { getEvaluations, createEvaluation, updateEvaluation, deleteEvaluation };

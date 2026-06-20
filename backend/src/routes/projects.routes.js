@@ -46,7 +46,7 @@ router.post('/:id/deliverables', auth, upload.single('file'), uploadDeliverable)
 
 // Messages
 router.get('/:id/messages',  auth, getMessages);
-router.post('/:id/messages', auth, sendMessage);
+router.post('/:id/messages', auth, upload.single('fichier'), sendMessage);
 
 // Commentaires
 router.get('/:id/comments',  auth, getProjectComments);

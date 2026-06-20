@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   GraduationCap, FolderKanban, MessageSquare, LayoutDashboard,
@@ -21,6 +21,10 @@ export default function StudentPage() {
   const [group,      setGroup]      = useState(null);
   const [membership, setMembership] = useState(null);
   const [loading,    setLoading]    = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifs, setNotifs] = useState([]);
+  const [showNotifs, setShowNotifs] = useState(false);
+  const bellRef = useRef(null);
 
   useEffect(() => {
     api.get("/auth/me/project").then(({ data }) => {
@@ -42,6 +46,32 @@ export default function StudentPage() {
   }, [navigate]);
 
   const handleLogout = () => { logout(); navigate("/"); };
+
+  useEffect(() => {
+    const fetchCount = () =>
+      api.get("/notifications/unread-count").then(r => setUnreadCount(r.data.count)).catch(() => {});
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e) => { if (bellRef.current && !bellRef.current.contains(e.target)) setShowNotifs(false); };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const handleBellClick = async () => {
+    if (!showNotifs) {
+      const r = await api.get("/notifications").catch(() => ({ data: [] }));
+      setNotifs(r.data);
+      if (unreadCount > 0) {
+        await api.put("/notifications/read-all").catch(() => {});
+        setUnreadCount(0);
+      }
+    }
+    setShowNotifs(v => !v);
+  };
 
   if (loading) {
     return (
@@ -132,9 +162,37 @@ export default function StudentPage() {
             <p className="text-gray-500 text-sm mt-0.5">Vue d'ensemble de votre projet</p>
           </div>
           <div className="flex items-center gap-4">
-            <button className="relative p-2 rounded-xl hover:bg-white/[0.05] transition-colors">
-              <Bell size={20} className="text-gray-400" />
-            </button>
+            <div className="relative" ref={bellRef}>
+              <button
+                onClick={handleBellClick}
+                className="relative p-2 rounded-xl hover:bg-white/[0.05] transition-colors"
+              >
+                <Bell size={20} className="text-gray-400" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center px-1">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              {showNotifs && (
+                <div className="absolute right-0 top-12 w-80 bg-[#0B1220] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                    <span className="text-sm font-semibold">Notifications</span>
+                    <span className="text-xs text-gray-500">{notifs.length} au total</span>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifs.length === 0 ? (
+                      <p className="text-gray-500 text-sm text-center py-8">Aucune notification</p>
+                    ) : notifs.map(n => (
+                      <div key={n.id} className={`px-4 py-3 border-b border-white/[0.05] hover:bg-white/[0.03] transition-colors ${!n.is_read ? "bg-blue-500/[0.04]" : ""}`}>
+                        <p className="text-sm text-white leading-snug">{n.contenu}</p>
+                        <p className="text-xs text-gray-600 mt-1">{new Date(n.created_at).toLocaleString("fr-FR")}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-2.5 flex items-center gap-3">
               <div className={`w-8 h-8 rounded-full ${AVATAR_COLORS[(user?.id || 0) % AVATAR_COLORS.length]} flex items-center justify-center text-sm font-bold`}>
                 {user?.prenom?.[0]}{user?.nom?.[0]}

@@ -22,10 +22,10 @@ async function main() {
     create: { nom: 'Admin', prenom: 'ISEN', email: 'admin@isen.fr', password_hash: adminHash, role: 'admin' }
   });
 
-  // ---- Supervisor (données réelles PDF) ----
+  // ---- Supervisor ----
   const supervisor = await prisma.user.upsert({
     where: { email: 'meryem.benyoussef@junia.com' },
-    update: {},
+    update: { nom: 'Benyoussef', prenom: 'Meryem' },
     create: { nom: 'Benyoussef', prenom: 'Meryem', email: 'meryem.benyoussef@junia.com', password_hash: hash, role: 'supervisor' }
   });
 

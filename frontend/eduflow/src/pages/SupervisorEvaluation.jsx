@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {
   GraduationCap, FolderKanban, MessageSquare, LayoutDashboard,
   Bell, LogOut, ClipboardCheck, Save, ChevronDown, Users, CheckCircle,
+  Trash2, Pencil, X, Check,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -37,6 +38,12 @@ export default function SupervisorEvaluation() {
   const [error,           setError]           = useState("");
   const [success,         setSuccess]         = useState("");
 
+  // Edit state
+  const [editingId,   setEditingId]   = useState(null);
+  const [editNote,    setEditNote]    = useState("");
+  const [editComment, setEditComment] = useState("");
+  const [editSaving,  setEditSaving]  = useState(false);
+
   useEffect(() => {
     api.get("/projects").then(res => {
       setProjects(res.data);
@@ -48,6 +55,7 @@ export default function SupervisorEvaluation() {
     if (!selectedProject) return;
     setSelectedGroup(null);
     setNote(""); setCommentaire(""); setError(""); setSuccess("");
+    setEditingId(null);
     Promise.all([
       api.get(`/projects/${selectedProject.id}/groups`),
       api.get(`/projects/${selectedProject.id}/evaluations`),
@@ -60,6 +68,12 @@ export default function SupervisorEvaluation() {
   // Groupes pas encore notés
   const evaluatedGroupIds = new Set(evaluations.map(e => e.group_id).filter(Boolean));
   const pendingGroups = groups.filter(g => !evaluatedGroupIds.has(g.id));
+
+  // Évaluations affichables (avec un groupe identifiable)
+  const visibleEvals = evaluations.filter(ev => {
+    const gid = ev.group?.id || ev.group_id;
+    return gid != null;
+  });
 
   const handleSave = async () => {
     if (!selectedProject || !selectedGroup || !note) {
@@ -81,6 +95,46 @@ export default function SupervisorEvaluation() {
       setError(e.response?.data?.message || "Erreur lors de l'enregistrement.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async (evId) => {
+    if (!window.confirm("Supprimer cette évaluation ? Cette action est irréversible.")) return;
+    try {
+      await api.delete(`/evaluations/${evId}`);
+      setEvaluations(prev => prev.filter(e => e.id !== evId));
+    } catch (e) {
+      console.error("delete eval:", e);
+      setError(e.response?.data?.message || "Erreur lors de la suppression.");
+    }
+  };
+
+  const startEdit = (ev) => {
+    setEditingId(ev.id);
+    setEditNote(String(ev.note));
+    setEditComment(ev.commentaire || "");
+    setError("");
+  };
+
+  const handleEditSave = async (evId) => {
+    const n = parseFloat(editNote);
+    if (isNaN(n) || n < 0 || n > 20) {
+      setError("La note doit être entre 0 et 20.");
+      return;
+    }
+    setEditSaving(true);
+    setError("");
+    try {
+      const res = await api.put(`/evaluations/${evId}`, { note: n, commentaire: editComment });
+      setEvaluations(prev => prev.map(e =>
+        e.id === evId ? { ...e, note: res.data.note, commentaire: res.data.commentaire } : e
+      ));
+      setEditingId(null);
+    } catch (e) {
+      console.error("update eval:", e.response?.status, e.response?.data, e.message);
+      setError(e.response?.data?.message || `Erreur ${e.response?.status || ""} lors de la modification.`);
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -272,30 +326,30 @@ export default function SupervisorEvaluation() {
           <div className="bg-[#0B1220] border border-white/[0.06] rounded-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-white/[0.06]">
               <h2 className="text-base font-bold">Évaluations enregistrées</h2>
-              <p className="text-gray-500 text-xs mt-0.5">{evaluations.length} évaluation{evaluations.length !== 1 ? "s" : ""} au total</p>
+              <p className="text-gray-500 text-xs mt-0.5">{visibleEvals.length} évaluation{visibleEvals.length !== 1 ? "s" : ""} au total</p>
             </div>
 
-            {evaluations.length === 0 ? (
+            {visibleEvals.length === 0 ? (
               <div className="py-12 text-center text-gray-600 text-sm">Aucune évaluation pour ce projet.</div>
             ) : (
               <div className="divide-y divide-white/[0.04]">
-                {evaluations.map((ev, i) => {
-                  // Cherche le groupe dans l'état local (contient les membres) ou dans ev.group
+                {visibleEvals.map((ev, i) => {
                   const groupId = ev.group?.id || ev.group_id;
                   const fullGroup = groups.find(g => g.id === groupId) || null;
                   const groupNumero = fullGroup?.numero ?? ev.group?.numero ?? null;
                   const groupSujet = fullGroup?.sujet?.libelle ?? ev.group?.sujet?.libelle ?? null;
                   const members = fullGroup?.members || [];
+                  const isEditing = editingId === ev.id;
 
                   return (
-                    <div key={ev.id ?? i} className="px-6 py-4 hover:bg-white/[0.02] transition">
+                    <div key={ev.id ?? i} className="px-6 py-4 hover:bg-white/[0.02] transition group">
                       <div className="flex items-start gap-4">
                         {/* Groupe + membres */}
                         <div className="flex items-start gap-3 flex-1 min-w-0">
                           <div className={`w-9 h-9 rounded-full ${AVATAR_COLORS[(groupId || 0) % AVATAR_COLORS.length]} flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5`}>
                             {groupNumero ?? "?"}
                           </div>
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm font-bold">
                               {groupNumero != null ? `Groupe ${groupNumero}` : "Groupe inconnu"}
                             </p>
@@ -314,20 +368,84 @@ export default function SupervisorEvaluation() {
                             ) : (
                               <p className="text-xs text-gray-700 mt-1 italic">Membres non disponibles</p>
                             )}
+
+                            {/* Mode édition : commentaire */}
+                            {isEditing && (
+                              <div className="mt-3">
+                                <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Commentaire</label>
+                                <textarea
+                                  rows={2}
+                                  value={editComment}
+                                  onChange={e => setEditComment(e.target.value)}
+                                  className="mt-1 w-full bg-[#020817] border border-purple-500/30 rounded-xl px-3 py-2 text-xs text-white resize-none outline-none"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        {/* Note */}
-                        <div className="text-right flex-shrink-0">
-                          <span className={`text-2xl font-extrabold ${getNoteColor(ev.note)}`}>{ev.note}</span>
-                          <span className="text-gray-600 text-xs">/20</span>
-                          <p className="text-gray-600 text-[11px] mt-0.5">
-                            {new Date(ev.evaluated_at).toLocaleDateString("fr-FR")}
-                          </p>
+                        {/* Note + actions */}
+                        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                          {isEditing ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number" min="0" max="20" step="0.5"
+                                value={editNote}
+                                onChange={e => setEditNote(e.target.value)}
+                                className="w-20 bg-[#020817] border border-purple-500/30 rounded-xl px-3 py-1.5 text-sm text-white text-center outline-none"
+                              />
+                              <span className="text-gray-600 text-xs">/20</span>
+                            </div>
+                          ) : (
+                            <div className="text-right">
+                              <span className={`text-2xl font-extrabold ${getNoteColor(ev.note)}`}>{ev.note}</span>
+                              <span className="text-gray-600 text-xs">/20</span>
+                              <p className="text-gray-600 text-[11px] mt-0.5">
+                                {new Date(ev.evaluated_at).toLocaleDateString("fr-FR")}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Boutons actions */}
+                          {isEditing ? (
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => setEditingId(null)}
+                                className="flex items-center gap-1 text-xs text-gray-500 hover:text-white px-2 py-1 rounded-lg hover:bg-white/[0.04] transition"
+                              >
+                                <X size={12} /> Annuler
+                              </button>
+                              <button
+                                onClick={() => handleEditSave(ev.id)}
+                                disabled={editSaving}
+                                className="flex items-center gap-1 text-xs text-purple-300 bg-purple-500/20 hover:bg-purple-500/30 px-2 py-1 rounded-lg transition disabled:opacity-40"
+                              >
+                                <Check size={12} /> {editSaving ? "..." : "Sauvegarder"}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => startEdit(ev)}
+                                className="p-1.5 rounded-lg text-gray-600 hover:text-blue-400 hover:bg-blue-500/10 transition"
+                                title="Modifier"
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(ev.id)}
+                                className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition"
+                                title="Supprimer"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {ev.commentaire && (
+                      {/* Commentaire (mode lecture) */}
+                      {!isEditing && ev.commentaire && (
                         <p className="mt-2.5 ml-12 text-xs text-gray-500 italic bg-white/[0.02] rounded-lg px-3 py-2 border border-white/[0.04]">
                           "{ev.commentaire}"
                         </p>

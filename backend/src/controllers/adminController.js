@@ -10,7 +10,7 @@ const bcrypt = require('bcryptjs');
 // Valeurs institutionnelles fixes
 const OPTIONS = {
   formations: ['ISEN', 'HEI', 'ISA'],
-  promos: ['2026', '2027'],
+  promos: ['2025-2026', '2026-2027', '2027-2028', '2028-2029', '2029-2030'],
   classesByFormation: {
     ISEN: ['CIR 1', 'CIR 2', 'CIR 3', 'CSI 1', 'CSI 2', 'CSI 3'],
     HEI:  ['HEI 1', 'HEI 2', 'HEI 3'],

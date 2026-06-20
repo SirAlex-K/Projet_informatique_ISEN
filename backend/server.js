@@ -19,6 +19,7 @@ app.use('/api/deliverables',  require('./src/routes/deliverable_reviews.routes')
 app.use('/api/evaluations',   require('./src/routes/evaluations.routes'));
 app.use('/api/notifications', require('./src/routes/notifications.routes'));
 app.use('/api/dashboard',     require('./src/routes/dashboard.routes'));
+app.use('/api/messages',      require('./src/routes/messages.routes'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'API Plateforme Projets ISEN — opérationnelle ✅' });

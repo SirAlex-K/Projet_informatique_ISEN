@@ -2,7 +2,7 @@
 import {
   GraduationCap, FolderKanban, MessageSquare, LayoutDashboard, Bell, LogOut,
   FileText, Star, UserPlus, X, Check, Crown, GripVertical, Circle, Plus, Trash2,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Pencil,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -108,7 +108,42 @@ function AddTaskModal({ colId, colLabel, onClose, onAdd }) {
   );
 }
 
-function TaskCard({ task, members, colDot, onAssignClick, onDelete, isLeader, onDragStart, onDragEnd, isDragging }) {
+function EditTaskModal({ task, onClose, onSave }) {
+  const [title, setTitle] = useState(task.titre || "");
+  const [desc, setDesc]   = useState(task.description || "");
+  const handleSubmit = () => { if (!title.trim()) return; onSave(task.id, title.trim(), desc.trim()); onClose(); };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-[#0d1526] border border-white/[0.08] rounded-2xl w-full max-w-sm mx-4 shadow-2xl shadow-black/60">
+        <div className="px-5 py-4 border-b border-white/[0.06] flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">Modifier la tâche</p>
+            <h2 className="text-base font-bold text-white">Éditer la carte</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-gray-500 hover:text-white transition-colors flex-shrink-0 mt-0.5"><X size={16} /></button>
+        </div>
+        <div className="p-4 space-y-4">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1.5">Titre <span className="text-red-400">*</span></label>
+            <input autoFocus type="text" value={title} onChange={e => setTitle(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSubmit()}
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-blue-500/[0.04] transition-all" />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1.5">Description</label>
+            <textarea rows={3} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Détails de la tâche…"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 focus:bg-blue-500/[0.04] transition-all resize-none" />
+          </div>
+        </div>
+        <div className="px-4 pb-4 flex gap-2">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-gray-400 hover:text-white text-sm font-medium hover:bg-white/[0.04] transition-all">Annuler</button>
+          <button onClick={handleSubmit} disabled={!title.trim()} className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg shadow-blue-500/20">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TaskCard({ task, members, colDot, onAssignClick, onDelete, onEdit, isLeader, onDragStart, onDragEnd, isDragging }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const assignee = members.find(m => m.id === task.assigned_to);
   const handleDeleteClick = e => { e.stopPropagation(); if (confirmDelete) { onDelete(task.id); } else { setConfirmDelete(true); } };
@@ -130,7 +165,10 @@ function TaskCard({ task, members, colDot, onAssignClick, onDelete, isLeader, on
                 <button onClick={handleDeleteClick} className="text-xs text-red-400 hover:text-red-300 font-semibold px-2 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-all">Confirmer</button>
               </>
             ) : (
-              <button onClick={handleDeleteClick} title="Supprimer" className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150"><Trash2 size={13} /></button>
+              <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all duration-150">
+                <button onClick={e => { e.stopPropagation(); onEdit(task); }} title="Modifier" className="p-1.5 rounded-lg text-gray-600 hover:text-blue-400 hover:bg-blue-500/10 transition-all"><Pencil size={13} /></button>
+                <button onClick={handleDeleteClick} title="Supprimer" className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all"><Trash2 size={13} /></button>
+              </div>
             )}
           </div>
         )}
@@ -156,7 +194,7 @@ function TaskCard({ task, members, colDot, onAssignClick, onDelete, isLeader, on
   );
 }
 
-function Column({ col, tasks, members, onAssignClick, onAddClick, onDeleteTask, isLeader, onDragStart, onDragEnd, onDragOver, onDrop, isDragOver, draggedTaskId }) {
+function Column({ col, tasks, members, onAssignClick, onAddClick, onDeleteTask, onEditTask, isLeader, onDragStart, onDragEnd, onDragOver, onDrop, isDragOver, draggedTaskId }) {
   return (
     <div className="flex-1 min-w-[220px] max-w-[300px] flex flex-col">
       <div className={`border-t-2 ${col.color} pt-3 mb-4`}>
@@ -179,7 +217,7 @@ function Column({ col, tasks, members, onAssignClick, onAddClick, onDeleteTask, 
       <div onDragOver={e => onDragOver(e, col.id)} onDrop={e => onDrop(e, col.id)}
         className={`space-y-3 flex-1 rounded-xl p-1 -m-1 transition-all duration-200 ${isDragOver ? "bg-white/[0.04] ring-2 ring-blue-500/30" : ""}`}>
         {tasks.map(task => (
-          <TaskCard key={task.id} task={task} members={members} colDot={col.dot} onAssignClick={onAssignClick} onDelete={onDeleteTask}
+          <TaskCard key={task.id} task={task} members={members} colDot={col.dot} onAssignClick={onAssignClick} onDelete={onDeleteTask} onEdit={onEditTask}
             isLeader={isLeader} onDragStart={onDragStart} onDragEnd={onDragEnd} isDragging={draggedTaskId === task.id} />
         ))}
         {tasks.length === 0 && (
@@ -202,6 +240,7 @@ export default function StudentKanban() {
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState(null);
   const [addTaskTarget, setAddTaskTarget] = useState(null);
+  const [editTaskTarget, setEditTaskTarget] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -237,6 +276,13 @@ export default function StudentKanban() {
     try {
       await api.delete(`/tasks/${taskId}`);
       setTasks(prev => prev.filter(t => t.id !== taskId));
+    } catch (e) { console.error(e); }
+  };
+
+  const handleEditTask = async (taskId, titre, description) => {
+    try {
+      const res = await api.put(`/tasks/${taskId}`, { titre, description });
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, titre: res.data.titre, description: res.data.description } : t));
     } catch (e) { console.error(e); }
   };
 
@@ -363,6 +409,7 @@ export default function StudentKanban() {
                   onAddClick={col => setAddTaskTarget(col)}
                   onAssignClick={setActiveTask}
                   onDeleteTask={handleDeleteTask}
+                  onEditTask={setEditTaskTarget}
                   onDragStart={handleDragStart} onDragEnd={handleDragEnd}
                   onDragOver={handleDragOver} onDrop={handleDrop}
                   isDragOver={dragOverCol === col.id}
@@ -376,6 +423,7 @@ export default function StudentKanban() {
 
       {activeTask && <AssignModal task={activeTask} members={members} onClose={() => setActiveTask(null)} onSave={handleAssignSave} />}
       {addTaskTarget && <AddTaskModal colId={addTaskTarget.id} colLabel={addTaskTarget.label} onClose={() => setAddTaskTarget(null)} onAdd={handleAddTask} />}
+      {editTaskTarget && <EditTaskModal task={editTaskTarget} onClose={() => setEditTaskTarget(null)} onSave={handleEditTask} />}
     </div>
   );
 }

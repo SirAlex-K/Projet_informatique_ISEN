@@ -1,0 +1,747 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schéma BDD — Plateforme Projets ISEN 2026</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0a0f1e; color:#e2e8f0; font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+
+  /* NAV TABS */
+  nav { background:#111827; border-bottom:1px solid #1e293b; display:flex; gap:4px; padding:12px 24px; position:sticky; top:0; z-index:100; }
+  nav button { background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:14px; font-weight:500; padding:8px 20px; border-radius:8px; transition:all .2s; }
+  nav button.active { background:#1e3a5f; color:#60a5fa; }
+  nav button:hover:not(.active) { background:#1e293b; color:#e2e8f0; }
+  nav h1 { color:#60a5fa; font-size:16px; font-weight:700; margin-right:24px; display:flex; align-items:center; gap:8px; }
+
+  /* TABS CONTENT */
+  .tab { display:none; padding:32px 24px; }
+  .tab.active { display:block; }
+
+  /* ENUMS SECTION */
+  .section-title { color:#94a3b8; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-bottom:16px; margin-top:32px; }
+  .section-title:first-child { margin-top:0; }
+
+  .enums-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-bottom:24px; }
+  .enum-card { background:#111827; border:1px solid #1e293b; border-radius:10px; padding:14px; }
+  .enum-name { color:#a78bfa; font-size:12px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .enum-name::before { content:'E'; background:#4c1d95; color:#a78bfa; font-size:9px; font-weight:900; padding:1px 5px; border-radius:4px; }
+  .enum-val { color:#64748b; font-size:11px; padding:2px 0; border-bottom:1px solid #0f172a; }
+  .enum-val:last-child { border:none; }
+
+  /* TABLES GRID */
+  .tables-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+  .table-card { background:#111827; border:1px solid #1e293b; border-radius:12px; overflow:hidden; }
+  .table-header { padding:12px 16px; display:flex; align-items:center; gap:10px; }
+  .table-header h3 { font-size:13px; font-weight:700; }
+  .table-badge { font-size:9px; font-weight:800; padding:2px 7px; border-radius:4px; letter-spacing:.05em; }
+
+  /* Color themes per table group */
+  .tbl-user   .table-header { background:#0c1f3a; border-bottom:2px solid #1d4ed8; }
+  .tbl-user   h3 { color:#60a5fa; }
+  .tbl-user   .table-badge { background:#1e3a5f; color:#60a5fa; }
+
+  .tbl-project .table-header { background:#0d2318; border-bottom:2px solid #16a34a; }
+  .tbl-project h3 { color:#4ade80; }
+  .tbl-project .table-badge { background:#14532d; color:#4ade80; }
+
+  .tbl-task   .table-header { background:#2a1505; border-bottom:2px solid #d97706; }
+  .tbl-task   h3 { color:#fbbf24; }
+  .tbl-task   .table-badge { background:#451a03; color:#fbbf24; }
+
+  .tbl-social .table-header { background:#1a0f2e; border-bottom:2px solid #7c3aed; }
+  .tbl-social h3 { color:#c084fc; }
+  .tbl-social .table-badge { background:#2e1065; color:#c084fc; }
+
+  .tbl-eval   .table-header { background:#1a1020; border-bottom:2px solid #db2777; }
+  .tbl-eval   h3 { color:#f472b6; }
+  .tbl-eval   .table-badge { background:#500724; color:#f472b6; }
+
+  table { width:100%; border-collapse:collapse; }
+  th { background:#0f172a; color:#475569; font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:6px 16px; text-align:left; }
+  td { padding:6px 16px; font-size:12px; border-bottom:1px solid #0f172a; }
+  tr:last-child td { border:none; }
+  tr:hover td { background:#0f172a40; }
+
+  .col-name { color:#e2e8f0; font-weight:500; font-family:monospace; }
+  .col-type { color:#64748b; }
+  .badge-pk  { background:#1e3a5f; color:#60a5fa; font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; }
+  .badge-fk  { background:#1a2e1a; color:#4ade80; font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; }
+  .badge-uq  { background:#2a1a1a; color:#f87171; font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px; }
+  .nullable  { color:#475569; font-size:10px; }
+
+  /* RELATIONS SECTION */
+  .relations-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:14px; margin-top:0; }
+  .rel-card { background:#111827; border:1px solid #1e293b; border-radius:10px; padding:14px 16px; font-size:12px; }
+  .rel-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .rel-from { color:#60a5fa; font-weight:700; font-family:monospace; font-size:13px; }
+  .rel-arrow { color:#475569; font-size:14px; flex-shrink:0; letter-spacing:1px; }
+  .rel-to   { color:#4ade80; font-weight:700; font-family:monospace; font-size:13px; }
+  .rel-label { margin-left:auto; background:#0f172a; color:#64748b; font-size:10px; padding:2px 8px; border-radius:4px; white-space:nowrap; font-family:monospace; }
+  .rel-desc { color:#64748b; font-size:11px; font-style:italic; border-left:2px solid #1e293b; padding-left:8px; line-height:1.6; }
+
+  /* MCD SVG */
+  #mcd-container { overflow:auto; background:#080d18; border-radius:12px; border:1px solid #1e293b; }
+  #mcd-container svg { display:block; }
+
+  /* LEGEND */
+  .legend { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; }
+  .leg-item { display:flex; align-items:center; gap:6px; font-size:12px; color:#64748b; }
+  .leg-dot { width:12px; height:12px; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <h1>🗄 BDD ISEN 2026</h1>
+  <button class="active" onclick="switchTab('schema')">Schéma complet</button>
+  <button onclick="switchTab('relations')">Relations</button>
+  <button onclick="switchTab('mcd')">MCD</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════ SCHEMA -->
+<div id="tab-schema" class="tab active">
+
+  <div class="section-title">Énumérations (7 ENUMs)</div>
+  <div class="enums-grid">
+    <div class="enum-card">
+      <div class="enum-name">UserRole</div>
+      <div class="enum-val">admin</div>
+      <div class="enum-val">student</div>
+      <div class="enum-val">supervisor</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">ProjectStatut</div>
+      <div class="enum-val">propose</div><div class="enum-val">valide</div>
+      <div class="enum-val">en_cours</div><div class="enum-val">en_retard</div>
+      <div class="enum-val">livre</div><div class="enum-val">soutenu</div>
+      <div class="enum-val">cloture</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">TaskStatut</div>
+      <div class="enum-val">todo</div><div class="enum-val">en_cours</div><div class="enum-val">done</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">Priorite</div>
+      <div class="enum-val">basse</div><div class="enum-val">normale</div><div class="enum-val">haute</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">RoleInProject</div>
+      <div class="enum-val">member</div><div class="enum-val">lead</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">NotificationType</div>
+      <div class="enum-val">task_assigned</div><div class="enum-val">task_updated</div>
+      <div class="enum-val">deliverable_uploaded</div><div class="enum-val">deliverable_reviewed</div>
+      <div class="enum-val">comment_added</div><div class="enum-val">milestone_reached</div>
+      <div class="enum-val">project_updated</div><div class="enum-val">new_message</div>
+    </div>
+    <div class="enum-card">
+      <div class="enum-name">DeliverableDecision</div>
+      <div class="enum-val">accepte</div><div class="enum-val">rejete</div><div class="enum-val">revision</div>
+    </div>
+  </div>
+
+  <div class="section-title">Tables (14 modèles)</div>
+  <div class="tables-grid">
+
+    <!-- users -->
+    <div class="table-card tbl-user">
+      <div class="table-header"><h3>users</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">nom</td><td class="col-type">VarChar(100)</td><td></td></tr>
+        <tr><td class="col-name">prenom</td><td class="col-type">VarChar(100)</td><td></td></tr>
+        <tr><td class="col-name">email</td><td class="col-type">VarChar(150)</td><td><span class="badge-uq">UQ</span></td></tr>
+        <tr><td class="col-name">password_hash</td><td class="col-type">String</td><td></td></tr>
+        <tr><td class="col-name">role</td><td class="col-type">UserRole</td><td></td></tr>
+        <tr><td class="col-name">classe</td><td class="col-type">VarChar(50)</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">formation</td><td class="col-type">VarChar(10)</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">promo</td><td class="col-type">VarChar(10)</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">avatar_url</td><td class="col-type">String</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- projects -->
+    <div class="table-card tbl-project">
+      <div class="table-header"><h3>projects</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">titre</td><td class="col-type">VarChar(200)</td><td></td></tr>
+        <tr><td class="col-name">description</td><td class="col-type">String</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">supervisor_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → users</span></td></tr>
+        <tr><td class="col-name">date_debut</td><td class="col-type">Date</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">date_fin</td><td class="col-type">Date</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">statut</td><td class="col-type">ProjectStatut</td><td></td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">DateTime</td><td></td></tr>
+        <tr><td class="col-name">updated_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- project_groups -->
+    <div class="table-card tbl-project">
+      <div class="table-header"><h3>project_groups</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → projects</span></td></tr>
+        <tr><td class="col-name">numero</td><td class="col-type">Int</td><td></td></tr>
+        <tr><td class="col-name">capacite_max</td><td class="col-type">Int</td><td>défaut: 5</td></tr>
+        <tr><td class="col-name">sujet_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → project_subjects</span> <span class="badge-uq">UQ</span></td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">DateTime</td><td></td></tr>
+        <tr><td colspan="3" style="color:#334155;font-size:11px;padding:6px 16px;">UQ: (project_id, numero)</td></tr>
+      </table>
+    </div>
+
+    <!-- project_subjects -->
+    <div class="table-card tbl-project">
+      <div class="table-header"><h3>project_subjects</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → projects</span></td></tr>
+        <tr><td class="col-name">libelle</td><td class="col-type">String</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- team_members -->
+    <div class="table-card tbl-project">
+      <div class="table-header"><h3>team_members</h3><span class="table-badge">PIVOT</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span> <span class="badge-fk">FK → projects</span></td></tr>
+        <tr><td class="col-name">user_id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span> <span class="badge-fk">FK → users</span></td></tr>
+        <tr><td class="col-name">group_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → project_groups</span> <span class="nullable">nullable</span></td></tr>
+        <tr><td class="col-name">role_in_project</td><td class="col-type">RoleInProject</td><td>défaut: member</td></tr>
+        <tr><td class="col-name">joined_at</td><td class="col-type">DateTime</td><td></td></tr>
+        <tr><td colspan="3" style="color:#334155;font-size:11px;padding:6px 16px;">PK composite: (project_id, user_id)</td></tr>
+      </table>
+    </div>
+
+    <!-- tasks -->
+    <div class="table-card tbl-task">
+      <div class="table-header"><h3>tasks</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → projects</span></td></tr>
+        <tr><td class="col-name">assigned_to</td><td class="col-type">Int</td><td><span class="badge-fk">FK → users</span> <span class="nullable">nullable</span></td></tr>
+        <tr><td class="col-name">titre</td><td class="col-type">VarChar(200)</td><td></td></tr>
+        <tr><td class="col-name">description</td><td class="col-type">String</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">statut</td><td class="col-type">TaskStatut</td><td>défaut: todo</td></tr>
+        <tr><td class="col-name">priorite</td><td class="col-type">Priorite</td><td>défaut: normale</td></tr>
+        <tr><td class="col-name">deadline</td><td class="col-type">Date</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">position</td><td class="col-type">Int</td><td>défaut: 0</td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">DateTime</td><td></td></tr>
+        <tr><td class="col-name">updated_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- task_history -->
+    <div class="table-card tbl-task">
+      <div class="table-header"><h3>task_history</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">task_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → tasks</span></td></tr>
+        <tr><td class="col-name">changed_by</td><td class="col-type">Int</td><td><span class="badge-fk">FK → users</span></td></tr>
+        <tr><td class="col-name">ancien_statut</td><td class="col-type">TaskStatut</td><td></td></tr>
+        <tr><td class="col-name">nouveau_statut</td><td class="col-type">TaskStatut</td><td></td></tr>
+        <tr><td class="col-name">changed_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- deliverables -->
+    <div class="table-card tbl-task">
+      <div class="table-header"><h3>deliverables</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → projects</span></td></tr>
+        <tr><td class="col-name">uploaded_by</td><td class="col-type">Int</td><td><span class="badge-fk">FK → users</span></td></tr>
+        <tr><td class="col-name">nom_fichier</td><td class="col-type">VarChar(255)</td><td></td></tr>
+        <tr><td class="col-name">chemin_fichier</td><td class="col-type">String</td><td></td></tr>
+        <tr><td class="col-name">type_fichier</td><td class="col-type">VarChar(50)</td><td></td></tr>
+        <tr><td class="col-name">taille</td><td class="col-type">Int</td><td>octets</td></tr>
+        <tr><td class="col-name">uploaded_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- deliverable_reviews -->
+    <div class="table-card tbl-eval">
+      <div class="table-header"><h3>deliverable_reviews</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">deliverable_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → deliverables</span></td></tr>
+        <tr><td class="col-name">reviewer_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → users</span></td></tr>
+        <tr><td class="col-name">decision</td><td class="col-type">DeliverableDecision</td><td></td></tr>
+        <tr><td class="col-name">commentaire</td><td class="col-type">String</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">reviewed_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- messages -->
+    <div class="table-card tbl-social">
+      <div class="table-header"><h3>messages</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → projects</span></td></tr>
+        <tr><td class="col-name">group_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → project_groups</span> <span class="nullable">nullable</span></td></tr>
+        <tr><td class="col-name">sender_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → users</span></td></tr>
+        <tr><td class="col-name">contenu</td><td class="col-type">String</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">fichier_url / nom / type</td><td class="col-type">String</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">is_read</td><td class="col-type">Boolean</td><td>défaut: false</td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- comments -->
+    <div class="table-card tbl-social">
+      <div class="table-header"><h3>comments</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → projects</span></td></tr>
+        <tr><td class="col-name">task_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → tasks</span> <span class="nullable">nullable</span></td></tr>
+        <tr><td class="col-name">author_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → users</span></td></tr>
+        <tr><td class="col-name">contenu</td><td class="col-type">String</td><td></td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">DateTime</td><td></td></tr>
+        <tr><td class="col-name">updated_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- notifications -->
+    <div class="table-card tbl-social">
+      <div class="table-header"><h3>notifications</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">user_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → users</span></td></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → projects</span> <span class="nullable">nullable</span></td></tr>
+        <tr><td class="col-name">type</td><td class="col-type">NotificationType</td><td></td></tr>
+        <tr><td class="col-name">contenu</td><td class="col-type">String</td><td></td></tr>
+        <tr><td class="col-name">is_read</td><td class="col-type">Boolean</td><td>défaut: false</td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- milestones -->
+    <div class="table-card tbl-project">
+      <div class="table-header"><h3>milestones</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → projects</span></td></tr>
+        <tr><td class="col-name">titre</td><td class="col-type">VarChar(200)</td><td></td></tr>
+        <tr><td class="col-name">description</td><td class="col-type">String</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">date_cible</td><td class="col-type">Date</td><td></td></tr>
+        <tr><td class="col-name">atteint</td><td class="col-type">Boolean</td><td>défaut: false</td></tr>
+        <tr><td class="col-name">atteint_le</td><td class="col-type">DateTime</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+    <!-- evaluations -->
+    <div class="table-card tbl-eval">
+      <div class="table-header"><h3>evaluations</h3><span class="table-badge">TABLE</span></div>
+      <table>
+        <tr><th>Colonne</th><th>Type</th><th></th></tr>
+        <tr><td class="col-name">id</td><td class="col-type">Int</td><td><span class="badge-pk">PK</span></td></tr>
+        <tr><td class="col-name">project_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → projects</span></td></tr>
+        <tr><td class="col-name">group_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → project_groups</span> <span class="nullable">nullable</span></td></tr>
+        <tr><td class="col-name">evaluator_id</td><td class="col-type">Int</td><td><span class="badge-fk">FK → users</span></td></tr>
+        <tr><td class="col-name">note</td><td class="col-type">Float</td><td></td></tr>
+        <tr><td class="col-name">commentaire</td><td class="col-type">String</td><td class="nullable">nullable</td></tr>
+        <tr><td class="col-name">evaluated_at</td><td class="col-type">DateTime</td><td></td></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ RELATIONS -->
+<div id="tab-relations" class="tab">
+  <div class="section-title">Toutes les relations (27 FK)</div>
+  <div class="relations-grid">
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">projects</span><span class="rel-label">supervisor_id</span></div>
+      <div class="rel-desc">Un encadrant supervise plusieurs projets. Chaque projet a exactement un encadrant responsable désigné à sa création.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">project_groups</span><span class="rel-label">project_id</span></div>
+      <div class="rel-desc">Un projet est divisé en plusieurs groupes de travail numérotés. Chaque groupe appartient à un unique projet.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">project_subjects</span><span class="rel-label">project_id</span></div>
+      <div class="rel-desc">Un projet propose plusieurs sujets au choix. Les sujets sont définis par l'encadrant et peuvent être sélectionnés par les groupes.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">project_subjects</span><span class="rel-arrow">──1:1──▶</span><span class="rel-to">project_groups</span><span class="rel-label">sujet_id (UQ)</span></div>
+      <div class="rel-desc">Un sujet est choisi par au plus un groupe (contrainte d'unicité). Une fois pris, le sujet n'est plus disponible pour les autres groupes.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">team_members</span><span class="rel-label">project_id</span></div>
+      <div class="rel-desc">Un projet regroupe l'ensemble de ses membres participants (étudiants inscrits). La table est une jointure N:N entre users et projects.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">team_members</span><span class="rel-label">user_id</span></div>
+      <div class="rel-desc">Un utilisateur peut être membre de plusieurs projets en même temps. La clé primaire composite (project_id, user_id) garantit l'unicité.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">project_groups</span><span class="rel-arrow">──0,1:N──▶</span><span class="rel-to">team_members</span><span class="rel-label">group_id (nullable)</span></div>
+      <div class="rel-desc">Un membre est optionnellement assigné à un groupe. Si group_id est NULL, le membre est inscrit au projet mais pas encore dans un groupe.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">tasks</span><span class="rel-label">project_id</span></div>
+      <div class="rel-desc">Un projet contient un tableau Kanban avec plusieurs tâches. Les tâches sont ordonnées par leur champ position.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──0,1:N──▶</span><span class="rel-to">tasks</span><span class="rel-label">assigned_to (nullable)</span></div>
+      <div class="rel-desc">Une tâche est optionnellement assignée à un membre de l'équipe. Si NULL, la tâche est non assignée et apparaît dans le Kanban sans responsable.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">tasks</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">task_history</span><span class="rel-label">task_id</span></div>
+      <div class="rel-desc">Chaque changement de statut d'une tâche génère un enregistrement d'historique horodaté, permettant de tracer l'évolution todo → en_cours → done.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">task_history</span><span class="rel-label">changed_by</span></div>
+      <div class="rel-desc">L'historique enregistre quel utilisateur a effectué le changement de statut, permettant un audit complet des modifications.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">deliverables</span><span class="rel-label">project_id</span></div>
+      <div class="rel-desc">Un projet peut recevoir plusieurs livrables déposés par les étudiants (rapports, présentations, code). Chaque fichier est lié à un projet.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">deliverables</span><span class="rel-label">uploaded_by</span></div>
+      <div class="rel-desc">Le dépôt d'un livrable est tracé : on sait quel étudiant ou encadrant a déposé le fichier et à quelle date.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">deliverables</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">deliverable_reviews</span><span class="rel-label">deliverable_id</span></div>
+      <div class="rel-desc">Un livrable peut faire l'objet de plusieurs révisions successives (accepté, rejeté, révision demandée) par l'encadrant.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">deliverable_reviews</span><span class="rel-label">reviewer_id</span></div>
+      <div class="rel-desc">L'encadrant ou l'évaluateur qui révise le livrable est identifié, avec sa décision et son commentaire enregistrés.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">messages</span><span class="rel-label">project_id</span></div>
+      <div class="rel-desc">La messagerie est organisée par projet : chaque message appartient à un canal de projet, accessible à tous ses membres.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">project_groups</span><span class="rel-arrow">──0,1:N──▶</span><span class="rel-to">messages</span><span class="rel-label">group_id (nullable)</span></div>
+      <div class="rel-desc">Un message peut être ciblé vers un sous-canal de groupe. Si group_id est NULL, le message est dans le canal général du projet.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">messages</span><span class="rel-label">sender_id</span></div>
+      <div class="rel-desc">Chaque message est envoyé par un utilisateur identifié. Le champ is_read permet de suivre si le destinataire a lu le message.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">milestones</span><span class="rel-label">project_id</span></div>
+      <div class="rel-desc">Un projet définit plusieurs jalons à atteindre (dates cibles). Chaque jalon peut être marqué comme atteint avec sa date de réalisation effective.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">notifications</span><span class="rel-label">user_id</span></div>
+      <div class="rel-desc">Une notification est destinée à un utilisateur précis. Le champ is_read permet de distinguer les notifications lues des non lues.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──0,1:N──▶</span><span class="rel-to">notifications</span><span class="rel-label">project_id (nullable)</span></div>
+      <div class="rel-desc">Une notification est optionnellement liée au contexte d'un projet (ex : tâche assignée, livrable soumis). Peut être une notification globale si NULL.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">comments</span><span class="rel-label">project_id</span></div>
+      <div class="rel-desc">Les commentaires sont rattachés à un projet. Ils permettent des échanges textuels sur l'avancement général du projet.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">tasks</span><span class="rel-arrow">──0,1:N──▶</span><span class="rel-to">comments</span><span class="rel-label">task_id (nullable)</span></div>
+      <div class="rel-desc">Un commentaire peut être associé à une tâche spécifique du Kanban pour des discussions contextuelles. Si NULL, c'est un commentaire général du projet.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">comments</span><span class="rel-label">author_id</span></div>
+      <div class="rel-desc">L'auteur du commentaire est un utilisateur de la plateforme (étudiant ou encadrant). Le contenu est modifiable (updated_at tracé).</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">projects</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">evaluations</span><span class="rel-label">project_id</span></div>
+      <div class="rel-desc">Un projet peut faire l'objet de plusieurs évaluations notées (jury, encadrant…). Chaque note est horodatée et peut porter un commentaire.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">project_groups</span><span class="rel-arrow">──0,1:N──▶</span><span class="rel-to">evaluations</span><span class="rel-label">group_id (nullable)</span></div>
+      <div class="rel-desc">L'évaluation cible optionnellement un groupe particulier du projet. Si NULL, l'évaluation concerne l'ensemble du projet sans distinction de groupe.</div>
+    </div>
+
+    <div class="rel-card">
+      <div class="rel-header"><span class="rel-from">users</span><span class="rel-arrow">──1:N──▶</span><span class="rel-to">evaluations</span><span class="rel-label">evaluator_id</span></div>
+      <div class="rel-desc">L'évaluateur (encadrant ou membre du jury) est un utilisateur de la plateforme. Son identité et sa note sont enregistrées pour chaque évaluation.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ MCD -->
+<div id="tab-mcd" class="tab">
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:#1d4ed8"></div>Utilisateur</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#16a34a"></div>Projet / Groupe</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#d97706"></div>Tâche / Livrable</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#7c3aed"></div>Social</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#db2777"></div>Évaluation</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#0891b2"></div>Jalon</div>
+  </div>
+  <div id="mcd-container">
+    <svg viewBox="0 0 1210 680" width="1210" height="680" xmlns="http://www.w3.org/2000/svg" style="background:#080d18;">
+
+      <defs>
+        <marker id="arr"   viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#475569"/></marker>
+        <marker id="arr-g" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#16a34a"/></marker>
+        <marker id="arr-b" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#1d4ed8"/></marker>
+        <marker id="arr-o" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#d97706"/></marker>
+        <marker id="arr-p" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#7c3aed"/></marker>
+        <marker id="arr-c" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#0891b2"/></marker>
+        <marker id="arr-r" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#db2777"/></marker>
+      </defs>
+
+      <!-- ══════════ LIGNES ══════════ -->
+
+      <!-- users → notifications -->
+      <line x1="420" y1="62" x2="176" y2="62" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr-p)"/>
+      <text x="298" y="56" fill="#7c3aed" font-size="9" text-anchor="middle" font-family="sans-serif">reçoit 1:N</text>
+
+      <!-- users → projects (supervise) -->
+      <line x1="505" y1="110" x2="458" y2="205" stroke="#1d4ed8" stroke-width="2" marker-end="url(#arr-b)"/>
+      <text x="468" y="163" fill="#1d4ed8" font-size="9" text-anchor="middle" font-family="sans-serif">supervise 1:N</text>
+
+      <!-- projects → milestones (bezier) -->
+      <path d="M545,247 C700,247 900,65 1015,62" fill="none" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arr-c)"/>
+      <text x="775" y="178" fill="#0891b2" font-size="9" text-anchor="middle" font-family="sans-serif">jalons 1:N</text>
+
+      <!-- projects ← team_members (horizontal) -->
+      <line x1="365" y1="247" x2="181" y2="247" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arr-g)"/>
+      <text x="273" y="241" fill="#16a34a" font-size="9" text-anchor="middle" font-family="sans-serif">1:N</text>
+
+      <!-- projects → project_groups (horizontal) -->
+      <line x1="545" y1="247" x2="665" y2="247" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arr-g)"/>
+      <text x="605" y="241" fill="#16a34a" font-size="9" text-anchor="middle" font-family="sans-serif">1:N</text>
+
+      <!-- project_groups → project_subjects (horizontal) -->
+      <line x1="840" y1="247" x2="970" y2="247" stroke="#16a34a" stroke-width="1.5" marker-end="url(#arr-g)"/>
+      <text x="905" y="241" fill="#16a34a" font-size="9" text-anchor="middle" font-family="sans-serif">1:1 sujet</text>
+
+      <!-- team_members → project_groups (arc sous la rangée) -->
+      <path d="M97,285 C97,348 752,348 752,285" fill="none" stroke="#475569" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+      <text x="424" y="357" fill="#475569" font-size="9" text-anchor="middle" font-family="sans-serif">group_id (nullable)</text>
+
+      <!-- projects → tasks (bezier) -->
+      <path d="M420,290 C420,368 92,368 92,405" fill="none" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-o)"/>
+      <text x="222" y="363" fill="#d97706" font-size="9" text-anchor="middle" font-family="sans-serif">1:N</text>
+
+      <!-- projects → comments -->
+      <line x1="438" y1="290" x2="305" y2="405" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-o)"/>
+      <text x="352" y="358" fill="#d97706" font-size="9" text-anchor="middle" font-family="sans-serif">1:N</text>
+
+      <!-- projects → deliverables -->
+      <line x1="458" y1="290" x2="515" y2="405" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-o)"/>
+      <text x="503" y="358" fill="#d97706" font-size="9" text-anchor="middle" font-family="sans-serif">1:N</text>
+
+      <!-- projects → messages -->
+      <line x1="480" y1="290" x2="720" y2="405" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr-p)"/>
+      <text x="625" y="353" fill="#7c3aed" font-size="9" text-anchor="middle" font-family="sans-serif">1:N</text>
+
+      <!-- projects → evaluations -->
+      <line x1="500" y1="285" x2="930" y2="405" stroke="#db2777" stroke-width="1.5" marker-end="url(#arr-r)"/>
+      <text x="740" y="345" fill="#db2777" font-size="9" text-anchor="middle" font-family="sans-serif">1:N</text>
+
+      <!-- project_groups → messages (quasi-verticale) -->
+      <line x1="745" y1="285" x2="742" y2="405" stroke="#7c3aed" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arr-p)"/>
+      <text x="713" y="350" fill="#7c3aed" font-size="9" text-anchor="end" font-family="sans-serif">group_id</text>
+
+      <!-- project_groups → evaluations -->
+      <line x1="800" y1="280" x2="940" y2="405" stroke="#db2777" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#arr-r)"/>
+      <text x="898" y="350" fill="#db2777" font-size="9" text-anchor="middle" font-family="sans-serif">group_id</text>
+
+      <!-- tasks → task_history (verticale) -->
+      <line x1="92" y1="477" x2="92" y2="580" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-o)"/>
+      <text x="108" y="533" fill="#d97706" font-size="9" font-family="sans-serif">1:N</text>
+
+      <!-- tasks → comments (horizontale) -->
+      <line x1="170" y1="441" x2="210" y2="441" stroke="#475569" stroke-width="1.2" marker-end="url(#arr)"/>
+      <text x="190" y="435" fill="#475569" font-size="9" text-anchor="middle" font-family="sans-serif">1:N</text>
+
+      <!-- deliverables → deliverable_reviews (verticale) -->
+      <line x1="527" y1="477" x2="530" y2="580" stroke="#db2777" stroke-width="1.5" marker-end="url(#arr-r)"/>
+      <text x="547" y="533" fill="#db2777" font-size="9" font-family="sans-serif">1:N</text>
+
+      <!-- ══════════ ENTITÉS ══════════ -->
+
+      <!-- notifications -->
+      <rect x="15" y="25" width="160" height="68" rx="8" fill="#1a0f2e" stroke="#7c3aed" stroke-width="2"/>
+      <rect x="15" y="25" width="160" height="24" rx="8" fill="#7c3aed"/>
+      <rect x="15" y="37" width="160" height="12" fill="#7c3aed"/>
+      <text x="95" y="41" fill="white" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">notifications</text>
+      <text x="95" y="59" fill="#e9d5ff" font-size="9" text-anchor="middle" font-family="monospace">id · user_id · project_id</text>
+      <text x="95" y="72" fill="#e9d5ff" font-size="9" text-anchor="middle" font-family="monospace">type · contenu · is_read</text>
+
+      <!-- users (entité centrale) -->
+      <rect x="420" y="18" width="180" height="92" rx="8" fill="#0c1f3a" stroke="#1d4ed8" stroke-width="2.5"/>
+      <rect x="420" y="18" width="180" height="26" rx="8" fill="#1d4ed8"/>
+      <rect x="420" y="32" width="180" height="12" fill="#1d4ed8"/>
+      <text x="510" y="35" fill="white" font-size="14" font-weight="700" text-anchor="middle" font-family="monospace">users</text>
+      <text x="510" y="55" fill="#93c5fd" font-size="9" text-anchor="middle" font-family="monospace">id · nom · prenom · email</text>
+      <text x="510" y="68" fill="#93c5fd" font-size="9" text-anchor="middle" font-family="monospace">role · classe · formation</text>
+      <text x="510" y="81" fill="#93c5fd" font-size="9" text-anchor="middle" font-family="monospace">promo · avatar_url</text>
+      <rect x="420" y="104" width="180" height="6" rx="3" fill="#1d4ed8" opacity="0.4"/>
+
+      <!-- milestones -->
+      <rect x="1020" y="25" width="165" height="68" rx="8" fill="#0a1f2e" stroke="#0891b2" stroke-width="2"/>
+      <rect x="1020" y="25" width="165" height="24" rx="8" fill="#0891b2"/>
+      <rect x="1020" y="37" width="165" height="12" fill="#0891b2"/>
+      <text x="1102" y="41" fill="white" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">milestones</text>
+      <text x="1102" y="59" fill="#bae6fd" font-size="9" text-anchor="middle" font-family="monospace">id · project_id · titre</text>
+      <text x="1102" y="72" fill="#bae6fd" font-size="9" text-anchor="middle" font-family="monospace">date_cible · atteint</text>
+
+      <!-- team_members (pivot) -->
+      <rect x="15" y="210" width="165" height="78" rx="8" fill="#0d2318" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <rect x="15" y="210" width="165" height="24" rx="8" fill="#166534"/>
+      <rect x="15" y="222" width="165" height="12" fill="#166534"/>
+      <text x="97" y="226" fill="white" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">team_members</text>
+      <text x="97" y="245" fill="#86efac" font-size="9" text-anchor="middle" font-family="monospace">project_id · user_id (PK)</text>
+      <text x="97" y="258" fill="#86efac" font-size="9" text-anchor="middle" font-family="monospace">group_id · role_in_project</text>
+      <text x="97" y="279" fill="#4ade80" font-size="8" text-anchor="middle" font-style="italic" font-family="sans-serif">table pivot N:N</text>
+
+      <!-- projects (entité centrale) -->
+      <rect x="365" y="205" width="180" height="85" rx="8" fill="#0d2318" stroke="#16a34a" stroke-width="2.5"/>
+      <rect x="365" y="205" width="180" height="26" rx="8" fill="#16a34a"/>
+      <rect x="365" y="219" width="180" height="12" fill="#16a34a"/>
+      <text x="455" y="222" fill="white" font-size="14" font-weight="700" text-anchor="middle" font-family="monospace">projects</text>
+      <text x="455" y="243" fill="#86efac" font-size="9" text-anchor="middle" font-family="monospace">id · titre · supervisor_id</text>
+      <text x="455" y="256" fill="#86efac" font-size="9" text-anchor="middle" font-family="monospace">statut · date_debut</text>
+      <text x="455" y="269" fill="#86efac" font-size="9" text-anchor="middle" font-family="monospace">date_fin · description</text>
+
+      <!-- project_groups -->
+      <rect x="665" y="210" width="175" height="75" rx="8" fill="#0d2318" stroke="#16a34a" stroke-width="2"/>
+      <rect x="665" y="210" width="175" height="24" rx="8" fill="#16a34a"/>
+      <rect x="665" y="222" width="175" height="12" fill="#16a34a"/>
+      <text x="752" y="226" fill="white" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">project_groups</text>
+      <text x="752" y="245" fill="#86efac" font-size="9" text-anchor="middle" font-family="monospace">id · project_id · numero</text>
+      <text x="752" y="258" fill="#86efac" font-size="9" text-anchor="middle" font-family="monospace">capacite_max · sujet_id</text>
+
+      <!-- project_subjects -->
+      <rect x="970" y="215" width="165" height="65" rx="8" fill="#0d2318" stroke="#16a34a" stroke-width="2"/>
+      <rect x="970" y="215" width="165" height="24" rx="8" fill="#16a34a"/>
+      <rect x="970" y="227" width="165" height="12" fill="#16a34a"/>
+      <text x="1052" y="231" fill="white" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">project_subjects</text>
+      <text x="1052" y="250" fill="#86efac" font-size="9" text-anchor="middle" font-family="monospace">id · project_id</text>
+      <text x="1052" y="263" fill="#86efac" font-size="9" text-anchor="middle" font-family="monospace">libelle</text>
+
+      <!-- tasks -->
+      <rect x="15" y="405" width="155" height="72" rx="8" fill="#2a1505" stroke="#d97706" stroke-width="2"/>
+      <rect x="15" y="405" width="155" height="24" rx="8" fill="#d97706"/>
+      <rect x="15" y="417" width="155" height="12" fill="#d97706"/>
+      <text x="92" y="421" fill="white" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">tasks</text>
+      <text x="92" y="440" fill="#fde68a" font-size="9" text-anchor="middle" font-family="monospace">id · titre · statut</text>
+      <text x="92" y="453" fill="#fde68a" font-size="9" text-anchor="middle" font-family="monospace">priorite · assigned_to</text>
+      <text x="92" y="466" fill="#fde68a" font-size="9" text-anchor="middle" font-family="monospace">deadline · position</text>
+
+      <!-- comments -->
+      <rect x="210" y="405" width="155" height="72" rx="8" fill="#1a0f2e" stroke="#7c3aed" stroke-width="2"/>
+      <rect x="210" y="405" width="155" height="24" rx="8" fill="#6d28d9"/>
+      <rect x="210" y="417" width="155" height="12" fill="#6d28d9"/>
+      <text x="287" y="421" fill="white" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">comments</text>
+      <text x="287" y="440" fill="#e9d5ff" font-size="9" text-anchor="middle" font-family="monospace">id · project_id</text>
+      <text x="287" y="453" fill="#e9d5ff" font-size="9" text-anchor="middle" font-family="monospace">task_id · author_id</text>
+      <text x="287" y="466" fill="#e9d5ff" font-size="9" text-anchor="middle" font-family="monospace">contenu</text>
+
+      <!-- deliverables -->
+      <rect x="445" y="405" width="165" height="72" rx="8" fill="#2a1505" stroke="#d97706" stroke-width="2"/>
+      <rect x="445" y="405" width="165" height="24" rx="8" fill="#d97706"/>
+      <rect x="445" y="417" width="165" height="12" fill="#d97706"/>
+      <text x="527" y="421" fill="white" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">deliverables</text>
+      <text x="527" y="440" fill="#fde68a" font-size="9" text-anchor="middle" font-family="monospace">id · nom_fichier · type</text>
+      <text x="527" y="453" fill="#fde68a" font-size="9" text-anchor="middle" font-family="monospace">taille · uploaded_by</text>
+      <text x="527" y="466" fill="#fde68a" font-size="9" text-anchor="middle" font-family="monospace">project_id</text>
+
+      <!-- messages -->
+      <rect x="660" y="405" width="160" height="72" rx="8" fill="#1a0f2e" stroke="#7c3aed" stroke-width="2"/>
+      <rect x="660" y="405" width="160" height="24" rx="8" fill="#7c3aed"/>
+      <rect x="660" y="417" width="160" height="12" fill="#7c3aed"/>
+      <text x="740" y="421" fill="white" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">messages</text>
+      <text x="740" y="440" fill="#e9d5ff" font-size="9" text-anchor="middle" font-family="monospace">id · project_id · group_id</text>
+      <text x="740" y="453" fill="#e9d5ff" font-size="9" text-anchor="middle" font-family="monospace">sender_id · contenu</text>
+      <text x="740" y="466" fill="#e9d5ff" font-size="9" text-anchor="middle" font-family="monospace">is_read</text>
+
+      <!-- evaluations -->
+      <rect x="875" y="405" width="165" height="72" rx="8" fill="#1a1020" stroke="#db2777" stroke-width="2"/>
+      <rect x="875" y="405" width="165" height="24" rx="8" fill="#db2777"/>
+      <rect x="875" y="417" width="165" height="12" fill="#db2777"/>
+      <text x="957" y="421" fill="white" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">evaluations</text>
+      <text x="957" y="440" fill="#fbcfe8" font-size="9" text-anchor="middle" font-family="monospace">id · project_id · group_id</text>
+      <text x="957" y="453" fill="#fbcfe8" font-size="9" text-anchor="middle" font-family="monospace">evaluator_id · note</text>
+      <text x="957" y="466" fill="#fbcfe8" font-size="9" text-anchor="middle" font-family="monospace">commentaire</text>
+
+      <!-- task_history -->
+      <rect x="15" y="580" width="155" height="68" rx="8" fill="#2a1505" stroke="#d97706" stroke-width="1.5"/>
+      <rect x="15" y="580" width="155" height="22" rx="8" fill="#92400e"/>
+      <rect x="15" y="591" width="155" height="11" fill="#92400e"/>
+      <text x="92" y="596" fill="white" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">task_history</text>
+      <text x="92" y="613" fill="#fde68a" font-size="9" text-anchor="middle" font-family="monospace">id · task_id · changed_by</text>
+      <text x="92" y="626" fill="#fde68a" font-size="9" text-anchor="middle" font-family="monospace">ancien · nouveau statut</text>
+
+      <!-- deliverable_reviews -->
+      <rect x="445" y="580" width="170" height="68" rx="8" fill="#1a1020" stroke="#db2777" stroke-width="1.5"/>
+      <rect x="445" y="580" width="170" height="22" rx="8" fill="#9d174d"/>
+      <rect x="445" y="591" width="170" height="11" fill="#9d174d"/>
+      <text x="530" y="596" fill="white" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">deliverable_reviews</text>
+      <text x="530" y="613" fill="#fbcfe8" font-size="9" text-anchor="middle" font-family="monospace">id · deliverable_id</text>
+      <text x="530" y="626" fill="#fbcfe8" font-size="9" text-anchor="middle" font-family="monospace">reviewer_id · decision</text>
+
+      <!-- Note FK users -->
+      <rect x="700" y="580" width="490" height="72" rx="6" fill="#111827" stroke="#1e293b" stroke-width="1"/>
+      <text x="715" y="598" fill="#94a3b8" font-size="10" font-weight="700" font-family="sans-serif">ℹ  users apparaît aussi comme FK dans les tables feuilles :</text>
+      <text x="715" y="614" fill="#64748b" font-size="9" font-family="sans-serif">assigned_to → tasks   ·   changed_by → task_history</text>
+      <text x="715" y="628" fill="#64748b" font-size="9" font-family="sans-serif">uploaded_by → deliverables   ·   reviewer_id → deliverable_reviews</text>
+      <text x="715" y="642" fill="#64748b" font-size="9" font-family="sans-serif">sender_id → messages   ·   author_id → comments   ·   evaluator_id → evaluations</text>
+
+    </svg>
+  </div>
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
