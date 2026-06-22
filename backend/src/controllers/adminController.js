@@ -4,8 +4,9 @@
 // Seul l'admin peut créer / modifier / supprimer
 // ============================================
 
-const prisma = require('../config/prisma');
-const bcrypt = require('bcryptjs');
+const prisma  = require('../config/prisma');
+const bcrypt  = require('bcryptjs');
+const mailer  = require('../config/mailer');
 
 // Valeurs institutionnelles fixes
 const OPTIONS = {
@@ -84,6 +85,65 @@ const createUser = async (req, res) => {
     });
 
     res.status(201).json(user);
+
+    // Envoi asynchrone des credentials par mail (non bloquant)
+    mailer.sendMail({
+      from: `"ProjectHub — JUNIA" <${process.env.MAIL_USER}>`,
+      to: email,
+      subject: 'Vos identifiants de connexion — Plateforme ProjectHub',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#111">
+          <p>Bonjour ${prenom} ${nom},</p>
+
+          <p>
+            Nous vous informons que votre compte a été créé sur la
+            <strong>plateforme ProjectHub</strong>. Vous pouvez dès à présent vous connecter
+            avec les identifiants suivants :
+          </p>
+
+          <p>
+            <u>Login</u> : <strong>${email}</strong><br/>
+            <u>Mot de passe</u> : <strong>${password}</strong>
+          </p>
+
+          <p>Nous vous conseillons de modifier votre mot de passe lors de votre première connexion.</p>
+
+          <p>Bonne journée.</p>
+
+          <hr style="border:none;border-top:1px solid #ccc;margin:24px 0"/>
+
+          <p style="color:#555;font-size:13px">
+            Pôle Informatique — ISEN JUNIA<br/>
+            Mail : <a href="mailto:${process.env.MAIL_USER}">${process.env.MAIL_USER}</a>
+          </p>
+
+          <hr style="border:none;border-top:1px solid #ccc;margin:24px 0"/>
+
+          <p>Hello ${prenom} ${nom},</p>
+
+          <p>
+            We would like to inform you that your account has been created on the
+            <strong>ProjectHub platform</strong>. You can now log in with the following credentials:
+          </p>
+
+          <p>
+            <u>Login</u>: <strong>${email}</strong><br/>
+            <u>Password</u>: <strong>${password}</strong>
+          </p>
+
+          <p>We recommend changing your password upon your first login.</p>
+
+          <p>Have a nice day.</p>
+
+          <p style="color:#555;font-size:13px">
+            IT Department — ISEN JUNIA<br/>
+            Mail : <a href="mailto:${process.env.MAIL_USER}">${process.env.MAIL_USER}</a>
+          </p>
+        </div>
+      `
+    }).then(() => console.log(`Mail envoyé à ${email}`))
+      .catch(err => console.error('Erreur envoi mail:', err.message, err.code));
+
   } catch (err) {
     res.status(500).json({ message: 'Erreur serveur', error: err.message });
   }

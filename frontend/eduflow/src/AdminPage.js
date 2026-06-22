@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import {
   Users, UserCheck, UserCircle, ShieldAlert,
-  Plus, Search, Pencil, Trash2, X, LogOut, ChevronDown,
+  Plus, Search, Pencil, Trash2, X, LogOut, ChevronDown, Eye, EyeOff,
 } from "lucide-react";
 import api from "./services/api";
 
@@ -52,10 +52,35 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({ nom: "", prenom: "", email: "", password: "", role: "student", classe: "", formation: "", promo: "" });
   const [formError, setFormError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => { fetchUsers(); fetchOptions(); }, []);
+
+  // Génère un mot de passe aléatoire de 8 caractères (lettres + chiffres)
+  const generatePassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  };
+
+  // Génère l'email automatiquement depuis prénom + nom (format junia.com)
+  const normalizeStr = (str) =>
+    str.trim().toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "") // supprime les accents
+      .replace(/\s+/g, "-")   // espaces → tirets (multi-prénoms)
+      .replace(/[^a-z0-9-]/g, ""); // supprime les caractères spéciaux
+
+  useEffect(() => {
+    if (editUser || emailTouched) return;
+    const p = normalizeStr(form.prenom);
+    const n = normalizeStr(form.nom);
+    if (p || n) {
+      const domain = form.role === "student" ? "student.junia.com" : "junia.com";
+      setForm(f => ({ ...f, email: `${p}${p && n ? "." : ""}${n}@${domain}` }));
+    }
+  }, [form.prenom, form.nom, form.role, editUser, emailTouched]);
 
   const fetchOptions = async () => {
     try {
@@ -83,8 +108,10 @@ export default function AdminPage() {
 
   const openAdd = () => {
     setEditUser(null);
-    setForm({ nom: "", prenom: "", email: "", password: "", role: "student", classe: "", formation: "", promo: "" });
+    setForm({ nom: "", prenom: "", email: "", password: generatePassword(), role: "student", classe: "", formation: "", promo: "" });
     setFormError("");
+    setEmailTouched(false);
+    setShowPassword(false);
     setShowModal(true);
   };
 
@@ -348,12 +375,45 @@ export default function AdminPage() {
 
               <div>
                 <label className={LABEL_CLS}>Email *</label>
-                <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="prenom.nom@junia.com" className={INPUT_CLS} />
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={e => { setEmailTouched(true); setForm({ ...form, email: e.target.value }); }}
+                  placeholder="prenom.nom@junia.com"
+                  className={INPUT_CLS}
+                />
               </div>
 
               <div>
                 <label className={LABEL_CLS}>{editUser ? "Nouveau mot de passe (optionnel)" : "Mot de passe *"}</label>
-                <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="••••••••" className={INPUT_CLS} />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={form.password}
+                      onChange={e => setForm({ ...form, password: e.target.value })}
+                      placeholder="••••••••"
+                      className={INPUT_CLS + " font-mono tracking-widest pr-10"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-purple-400 transition"
+                    >
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                  {!editUser && (
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, password: generatePassword() }))}
+                      className="flex-shrink-0 px-3 rounded-xl border border-white/[0.08] text-gray-500 hover:text-purple-400 hover:border-purple-500/30 text-xs transition"
+                      title="Regénérer"
+                    >
+                      ↻
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div>
